@@ -1,6 +1,11 @@
-MIT License
+The following license and copyright statement apply to all software in the
+repository that is sourced from the SMPyBandits repository owned by Lilian
+Besson (Naereen). This includes all code that was present in commit
+64e6cd77a0f869037a93b46070103f41856a1363.
 
-Copyright (c) 2024 Cody Boon
+The MIT License (MIT)
+
+Copyright (c) 2016-2018 Lilian Besson (Naereen), https://GitHub.com/Naereen
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
