@@ -39,7 +39,7 @@ class LinUCB(ContextualBasePolicy):
         self.b = np.zeros(self.dimension)
 
     def __str__(self):
-        return r"linUCB3($\alpha: {:.3g}$)".format(self.alpha)
+        return r"linUCB($\alpha: {:.3g}$)".format(self.alpha)
 
     def getReward(self, arm, reward, context):
         r"""Give a reward: accumulate rewards on that arm k, then update the weight :math:`w_k(t)` and renormalize the weights.
