@@ -34,10 +34,10 @@ import numpy as np
 # Local imports
 try:
     from .Arm import Arm
-    from .kullback import klGamma
+    from ..Policies.kullback import klGamma
 except ImportError:
     from Arm import Arm
-    from kullback import klGamma
+    from SMPyBandits.Policies.kullback import klGamma
 
 oo = float('+inf')  # Nice way to write +infinity
 

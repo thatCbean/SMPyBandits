@@ -15,11 +15,11 @@ import numpy.random as rn
 try:
     from .BaseMPPolicy import BaseMPPolicy
     from .ChildPointer import ChildPointer
-    from .with_proba import with_proba
+    from ..with_proba import with_proba
 except ImportError:
     from BaseMPPolicy import BaseMPPolicy
     from ChildPointer import ChildPointer
-    from with_proba import with_proba
+    from SMPyBandits.Policies import with_proba
 
 
 

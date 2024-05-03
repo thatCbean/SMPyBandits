@@ -19,9 +19,9 @@ import numpy as np
 from random import random
 
 try:
-    from .with_proba import with_proba
+    from ..with_proba import with_proba
 except ImportError:
-    from with_proba import with_proba
+    from SMPyBandits.Policies import with_proba
 
 
 # --- Utility functions

@@ -10,11 +10,11 @@ __version__ = "0.9"
 try:
     from .Beta import Beta, bernoulliBinarization
 
-    from .with_proba import with_proba
+    from ..with_proba import with_proba
 except (ImportError, SystemError):
     from Beta import Beta, bernoulliBinarization
 
-    from with_proba import with_proba
+    from SMPyBandits.Policies import with_proba
 
 try:
     from numpy.random import beta as betavariate  # Faster! Yes!

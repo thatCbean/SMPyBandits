@@ -31,10 +31,10 @@ from numpy.random import binomial as npbinomial
 # Local imports
 try:
     from .Arm import Arm
-    from .kullback import klBin
+    from ..Policies.kullback import klBin
 except ImportError:
     from Arm import Arm
-    from kullback import klBin
+    from SMPyBandits.Policies.kullback import klBin
 
 
 class Binomial(Arm):
