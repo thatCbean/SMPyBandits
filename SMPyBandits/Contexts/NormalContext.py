@@ -28,7 +28,10 @@ class NormalContext(BaseContext):
 
     def draw_context(self):
         res = multivariate_normal(self.means, self.covariance_matrix)
-        return res / np.linalg.norm(res)
+        # ress = np.maximum(res, 0)
+        ress = np.abs(res)
+        print("Context: res: {}, ress: {}".format(res, ress))
+        return ress / np.linalg.norm(ress) if np.linalg.norm(ress) > 1 else ress
 
     def get_means(self):
         return self.means / self.means.sum()
