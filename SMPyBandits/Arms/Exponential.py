@@ -35,11 +35,10 @@ from scipy.optimize import minimize
 # Local imports
 try:
     from .Arm import Arm
-    from .kullback import klExp
+    from ..Policies.kullback import klExp
 except ImportError:
     from Arm import Arm
-    from kullback import klExp
-
+    from SMPyBandits.Policies.kullback import klExp
 
 def p_of_expectation(expectation, trunc=1):
     """Use a numerical solver (:func:`scipy.optimize.minimize`) to find the value p giving an arm Exp(p) of a given expectation."""

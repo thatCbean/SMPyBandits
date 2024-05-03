@@ -21,10 +21,10 @@ import numpy.random as rn
 
 try:
     from .rhoRand import oneRhoRand, rhoRand
-    from .with_proba import with_proba
+    from ..with_proba import with_proba
 except ImportError:
     from rhoRand import oneRhoRand, rhoRand
-    from with_proba import with_proba
+    from SMPyBandits.Policies import with_proba
 
 
 def new_rank(rank, maxRank, forceChange=False):

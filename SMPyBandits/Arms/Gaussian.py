@@ -34,10 +34,10 @@ from scipy.special import erf
 # Local imports
 try:
     from .Arm import Arm
-    from .kullback import klGauss
+    from ..Policies.kullback import klGauss
 except ImportError:
     from Arm import Arm
-    from kullback import klGauss
+    from SMPyBandits.Policies.kullback import klGauss
 
 oo = float('+inf')  # Nice way to write +infinity
 

@@ -32,10 +32,10 @@ from numpy.random import random as nprandom
 # Local imports
 try:
     from .Arm import Arm
-    from .kullback import klBern
+    from ..Policies.kullback import klBern
 except ImportError:
     from Arm import Arm
-    from kullback import klBern
+    from SMPyBandits.Policies.kullback import klBern
 
 
 class UniformArm(Arm):

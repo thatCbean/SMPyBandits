@@ -25,11 +25,11 @@ from scipy.special import btdtri
 try:
     from .Posterior import Posterior
 
-    from .with_proba import with_proba
+    from ..with_proba import with_proba
 except (ImportError, SystemError):
     from Posterior import Posterior
 
-    from with_proba import with_proba
+    from SMPyBandits.Policies import with_proba
 
 
 # --- Utility functions

@@ -31,10 +31,10 @@ from scipy.stats import poisson
 # Local imports
 try:
     from .Arm import Arm
-    from .kullback import klPoisson
+    from ..Policies.kullback import klPoisson
 except ImportError:
     from Arm import Arm
-    from kullback import klPoisson
+    from SMPyBandits.Policies.kullback import klPoisson
 
 
 class Poisson(Arm):
