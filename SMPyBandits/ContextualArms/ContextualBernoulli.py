@@ -15,7 +15,8 @@ class ContextualBernoulli(ContextualArm):
 
     """ An arm that generates a reward using a Bernoulli distribution with a probability based on context """
     def __init__(self, theta):
-        assert isinstance(theta, np.ndarray)
+        if not isinstance(theta, np.ndarray):
+            theta = np.array(theta)
         super(__class__, self).__init__()
         self.lower = 0
         self.amplitude = 1
