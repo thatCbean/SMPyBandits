@@ -57,7 +57,7 @@ class ContextualMAB(object):
         context_params = configuration["context_params"]
         print(" - with 'context_params' =", arm_params)  # DEBUG
 
-        assert isinstance(context_params, (dict, tuple, list)), "Error: Context params must be "
+        assert isinstance(context_params, (dict, tuple, list)), "Error: Context params must be iterable"
         self.context = context_type(*context_params)
 
         # Compute the means and stats
