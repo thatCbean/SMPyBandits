@@ -171,7 +171,7 @@ class Evaluator(object):
                 and "arm_type" in configuration_arms \
                 and "params" in configuration_arms:
                 # PieceWiseStationaryMAB or NonStationaryMAB or ChangingAtEachRepMAB
-                if "listOfMeans"  in configuration_arms["params"] \
+                if "listOfMeans" in configuration_arms["params"] \
                     and "changePoints" in configuration_arms["params"]:
                         new_mab_problem = PieceWiseStationaryMAB(configuration_arms)
                 elif "newMeans" in configuration_arms["params"] \
