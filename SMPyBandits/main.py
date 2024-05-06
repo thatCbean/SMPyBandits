@@ -118,7 +118,7 @@ if getenv('XKCD', 'False') == 'True' and interactive and not saveallfigs:
 if not interactive:
     import matplotlib
     print("Warning: Non interactive simulations, switching from '{}' backend to 'agg'...".format(matplotlib.get_backend()))  # DEBUG
-    matplotlib.use("agg", warn=True, force=True)
+    matplotlib.use("agg", force=True)
 
 if interactive:
     import seaborn as sns
