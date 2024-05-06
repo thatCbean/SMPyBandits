@@ -1200,16 +1200,16 @@ configuration.update({
 })
 
 
-# # Tiny configuration, for the paper.pdf illustration.
-# configuration.update({
-#     # Policies that should be simulated, and their parameters.
-#     "policies": [
-#         {"archtype": UCBalpha, "params": { "alpha": 1 } },
-#         {"archtype": klUCB, "params": {} },
-#         {"archtype": klUCBPlusPlus, "params": { "horizon": 10000 } },
-#         {"archtype": Thompson, "params": {} },
-#     ]
-# })
+# Tiny configuration, for the paper.pdf illustration.
+configuration.update({
+    # Policies that should be simulated, and their parameters.
+    "policies": [
+        {"archtype": UCBalpha, "params": { "alpha": 1 } },
+        {"archtype": klUCB, "params": {} },
+        {"archtype": klUCBPlusPlus, "params": { "horizon": 10000 } },
+        {"archtype": Thompson, "params": {} },
+    ]
+})
 
 
 # Tiny configuration, for testing the WrapRange policy.
