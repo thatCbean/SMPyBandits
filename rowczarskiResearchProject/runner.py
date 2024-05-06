@@ -1,12 +1,44 @@
-
+from SMPyBandits.Environment import Evaluator
 from SMPyBandits.Environment.EvaluatorContextual import EvaluatorContextual
 from rowczarskiResearchProject.configuration.Configuration import Configuration
+from rowczarskiResearchProject.environment.EnvironmentBernoulliContextual import environments as environments_bernoulli_contextual
+from rowczarskiResearchProject.policy.PoliciesDefault import policies as policies_default
+from rowczarskiResearchProject.plotting.Plotting import Plotting
 
-configuration = Configuration().getConfigurations()
 
-print(configuration)
+# Configure environments
+environments = environments_bernoulli_contextual
 
-evaluator = EvaluatorContextual(configuration)
+# Configure policies
+policies = policies_default
 
-evaluator.startAllEnv()
+configuration = Configuration(environments=environments, policies=policies).getConfigurations()
 
+evaluator = EvaluatorContextual(configuration) # For environments with context
+# evaluator = Evaluator(configuration) # Only when using non-contextual environments
+
+N = len(evaluator.envs)
+
+# Create the folder for the plots
+plotter = Plotting(evaluator, configuration=configuration, saveAllFigures=True)
+
+
+for environmentId, environment in enumerate(evaluator.envs):
+    # hash for this specific run
+    hashValue = abs(hash((tuple(configuration.keys()), tuple(
+        [(len(k) if isinstance(k, (dict, tuple, list)) else k) for k in configuration.values()]))))
+
+    evaluator.startOneEnv(environmentId, environment)
+
+    # Display the final regrets and rankings for that env
+    evaluator.printLastRegrets(environmentId)
+    evaluator.printFinalRanking(environmentId, moreAccurate=True)
+    # evaluator.printRunningTimes(environmentId) TODO: Fix this
+    evaluator.printMemoryConsumption(environmentId)
+    evaluator.printNumberOfCPDetections(environmentId)
+
+    # Plotting
+    plotter.create_subfolder(N, environment, environmentId, hashValue)
+    plotter.plot_all(environmentId)
+
+    # TODO: Save the configuration for reproducibility
