@@ -13,10 +13,8 @@ import pickle
 
 from SMPyBandits.Policies import BasePolicy
 
-from SMPyBandits.Contexts.BaseContext import BaseContext
-from SMPyBandits.ContextualArms.ContextualArm import ContextualArm
-from SMPyBandits.ContextualPolicies.ContextualBasePolicy import ContextualBasePolicy
-from SMPyBandits.Environment.ContextualMAB import ContextualMAB
+from SMPyBandits.ContextualBandits.ContextualPolicies.ContextualBasePolicy import ContextualBasePolicy
+from SMPyBandits.ContextualBandits.ContextualEnvironments.ContextualMAB import ContextualMAB
 
 USE_PICKLE = False  #: Should we save the figure objects to a .pickle file at the end of the simulation?
 import random
@@ -39,17 +37,17 @@ def _nbOfArgs(function):
 
 try:
     # Local imports, libraries
-    from .usejoblib import USE_JOBLIB, Parallel, delayed
-    from .usetqdm import USE_TQDM, tqdm
+    from SMPyBandits.Environment.usejoblib import USE_JOBLIB, Parallel, delayed
+    from SMPyBandits.Environment.usetqdm import USE_TQDM, tqdm
     # Local imports, tools and config
-    from .plotsettings import BBOX_INCHES, signature, maximizeWindow, palette, makemarkers, add_percent_formatter, \
+    from SMPyBandits.Environment.plotsettings import BBOX_INCHES, signature, maximizeWindow, palette, makemarkers, add_percent_formatter, \
         legend, show_and_save, nrows_ncols, violin_or_box_plot, adjust_xticks_subplots, table_to_latex
-    from .sortedDistance import weightedDistance, manhattan, kendalltau, spearmanr, gestalt, meanDistance, \
+    from SMPyBandits.Environment.sortedDistance import weightedDistance, manhattan, kendalltau, spearmanr, gestalt, meanDistance, \
         sortedDistance
     # Local imports, objects and functions
-    from .MAB import MAB, MarkovianMAB, ChangingAtEachRepMAB, NonStationaryMAB, PieceWiseStationaryMAB, IncreasingMAB
-    from .Result import Result
-    from .memory_consumption import getCurrentMemory, sizeof_fmt
+    from SMPyBandits.Environment.MAB import MAB, MarkovianMAB, ChangingAtEachRepMAB, NonStationaryMAB, PieceWiseStationaryMAB, IncreasingMAB
+    from SMPyBandits.Environment.Result import Result
+    from SMPyBandits.Environment.memory_consumption import getCurrentMemory, sizeof_fmt
 except ImportError:
     # Local imports, libraries
     from usejoblib import USE_JOBLIB, Parallel, delayed
@@ -200,6 +198,16 @@ class EvaluatorContextual(object):
             if isinstance(configuration_envs, dict) \
                     and "arm_type" in configuration_envs \
                     and "arm_params" in configuration_envs \
+                    and "context_type" in configuration_envs \
+                    and "context_params" in configuration_envs:
+                dim = get_dimension(configuration_envs)
+                assert self.dimension == -1 or self.dimension == dim, "Error: All contexts must have the same dimension"
+                self.dimension = dim
+                self.envs.append(ContextualMAB(configuration_envs))
+            if isinstance(configuration_envs, dict) \
+                    and "arm_type" in configuration_envs \
+                    and "arm_params_lists" in configuration_envs \
+                    and "change_points" in configuration_envs \
                     and "context_type" in configuration_envs \
                     and "context_params" in configuration_envs:
                 dim = get_dimension(configuration_envs)
@@ -732,7 +740,7 @@ class EvaluatorContextual(object):
                     self.envs[envId].nbArms, self.repetitions) if moreAccurate else r"$\mathbb{E}_{%d}[r_s]$" % (
                     self.repetitions), ylabel2))
             if not self.envs[envId].isChangingAtEachRepetition and not self.nb_break_points > 0:
-                plt.ylim(0.80 * minArm, 1.10 * maxArm)
+                plt.ylim(0.80 * minArm, 1.40 * maxArm)
             # if self.nb_break_points > 0:
             #     plt.ylim(0, 1)  # FIXME do better!
             plt.title("Mean rewards for different bandit algorithms, averaged ${}$ times\n${}$ arms{}: {}".format(

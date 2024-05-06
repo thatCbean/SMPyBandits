@@ -57,7 +57,6 @@ class ContextualArm(object):
     def calculate_mean(self, context):
         raise NotImplementedError("This method calculate_mean(context) has to be implemented in the class inheriting from ContextualArm.")
 
-
     @staticmethod
     def kl(x, y):
         """ The kl(x, y) to use for this arm."""
@@ -67,6 +66,7 @@ class ContextualArm(object):
     def oneLR(mumax, mu):
         """ One term of the Lai & Robbins lower bound for Gaussian arms: (mumax - mu) / KL(mu, mumax). """
         raise NotImplementedError("This method oneLR(mumax, mu) has to be implemented in the class inheriting from Arm.")
+
 
     @staticmethod
     def oneHOI(mumax, mu):

@@ -1,9 +1,9 @@
 import numpy as np
 
-from SMPyBandits.Contexts.NormalContext import NormalContext
-from SMPyBandits.ContextualArms.ContextualBernoulli import ContextualBernoulli
-from SMPyBandits.ContextualPolicies.LinUCB import LinUCB
-from SMPyBandits.Environment.EvaluatorContextual import EvaluatorContextual
+from SMPyBandits.ContextualBandits.Contexts import NormalContext
+from SMPyBandits.ContextualBandits.ContextualArms import ContextualBernoulli
+from SMPyBandits.ContextualBandits.ContextualPolicies import LinUCB
+from SMPyBandits.ContextualBandits.ContextualEnvironments import EvaluatorContextual
 from SMPyBandits.Policies import UCB, Exp3
 
 # Code based on:

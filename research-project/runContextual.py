@@ -1,9 +1,9 @@
 import numpy as np
 
-from SMPyBandits.Contexts.NormalContext import NormalContext
-from SMPyBandits.ContextualArms.ContextualBernoulli import ContextualBernoulli
-from SMPyBandits.ContextualPolicies.LinUCB import LinUCB
-from SMPyBandits.Environment.EvaluatorContextual import EvaluatorContextual
+from SMPyBandits.ContextualBandits.Contexts import NormalContext
+from SMPyBandits.ContextualBandits.ContextualArms.ContextualBernoulliArm import ContextualBernoulliArm
+from SMPyBandits.ContextualBandits.ContextualPolicies.LinUCB import LinUCB
+from SMPyBandits.ContextualBandits.ContextualEnvironments.EvaluatorContextual import EvaluatorContextual
 from SMPyBandits.Policies import UCB, Exp3
 
 # Code based on:
@@ -11,7 +11,7 @@ from SMPyBandits.Policies import UCB, Exp3
 
 environments = [
     {
-        "arm_type": ContextualBernoulli,
+        "arm_type": ContextualBernoulliArm,
         "arm_params": [[0.1, 0.2, 0.15], [0.1, 0.12, 0.11], [0.3, 0.04, 0.1]],
         "context_type": NormalContext,
         "context_params": [[0.2, 0.1, 0.3], np.identity(3) * [0.1, 0.2, 0.3], 3]
