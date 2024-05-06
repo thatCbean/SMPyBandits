@@ -2,15 +2,19 @@ from SMPyBandits.Environment import Evaluator
 from SMPyBandits.Environment.EvaluatorContextual import EvaluatorContextual
 from rowczarskiResearchProject.configuration.Configuration import Configuration
 from rowczarskiResearchProject.environment.EnvironmentBernoulliContextual import environments as environments_bernoulli_contextual
+from rowczarskiResearchProject.environment.EnvironmentSparse import environments as environments_sparse
+from rowczarskiResearchProject.policy.PoliciesSparse import policies as policies_sparse
 from rowczarskiResearchProject.policy.PoliciesDefault import policies as policies_default
 from rowczarskiResearchProject.plotting.Plotting import Plotting
 
 
 # Configure environments
-environments = environments_bernoulli_contextual
+#environments = environments_bernoulli_contextual
+environments = environments_sparse
 
 # Configure policies
-policies = policies_default
+#policies = policies_default
+policies = policies_sparse
 
 configuration = Configuration(environments=environments, policies=policies).getConfigurations()
 
