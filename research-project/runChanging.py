@@ -1,18 +1,25 @@
 import numpy as np
 
-from SMPyBandits.ContextualBandits.Contexts import NormalContext
-from SMPyBandits.ContextualBandits.ContextualArms.ContextualBernoulliArm import ContextualBernoulliArm
-from SMPyBandits.ContextualBandits.ContextualPolicies import LinUCB
-from SMPyBandits.ContextualBandits.ContextualEnvironments import EvaluatorContextual
+from SMPyBandits.ContextualBandits.Contexts.NormalContext import NormalContext
+from SMPyBandits.ContextualBandits.ContextualArms.SlowChangingArm import SlowChangingArm
+from SMPyBandits.ContextualBandits.ContextualArms.RewardFunctions.BernoulliRewardFunction import bernoulliReward, debugBernoulliReward
+from SMPyBandits.ContextualBandits.ContextualPolicies.LinUCB import LinUCB
+from SMPyBandits.ContextualBandits.ContextualEnvironments.EvaluatorContextual import EvaluatorContextual
 from SMPyBandits.Policies import UCB, Exp3
 
 # Code based on:
 # https://github.com/SMPyBandits/SMPyBandits/blob/master/notebooks/Example_of_a_small_Single-Player_Simulation.ipynb
 
+horizon = 1000
+
 environments = [
     {
-        "arm_type": ContextualBernoulliArm,
-        "arm_params": [[0.1, 0.2, 0.15], [0.1, 0.12, 0.11], [0.3, 0.04, 0.1]],
+        "arm_type": SlowChangingArm,
+        "arm_params": [
+                       (np.array([[0.1, 0.2, 0.15], [0.3, 0.1, 0.05]]), bernoulliReward, horizon, True),
+                       (np.array([[0.3, 0.3, 0.3], [0.1, 0.5, 0.3]]), bernoulliReward, horizon, True),
+                       (np.array([[0.1, 0.2, 0.3], [0.4, 0.1, 0.1], [0.2, 0.2, 0.2]]), bernoulliReward, horizon, True)
+                       ],
         "context_type": NormalContext,
         "context_params": [[0.2, 0.1, 0.3], np.identity(3) * [0.1, 0.2, 0.3], 3]
     }
@@ -25,7 +32,7 @@ policies = [
 ]
 
 configuration = {
-    "horizon": 1000,
+    "horizon": horizon,
     "repetitions": 10,
     "n_jobs": 4,
     "verbosity": 6,

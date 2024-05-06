@@ -204,16 +204,16 @@ class EvaluatorContextual(object):
                 assert self.dimension == -1 or self.dimension == dim, "Error: All contexts must have the same dimension"
                 self.dimension = dim
                 self.envs.append(ContextualMAB(configuration_envs))
-            if isinstance(configuration_envs, dict) \
-                    and "arm_type" in configuration_envs \
-                    and "arm_params_lists" in configuration_envs \
-                    and "change_points" in configuration_envs \
-                    and "context_type" in configuration_envs \
-                    and "context_params" in configuration_envs:
-                dim = get_dimension(configuration_envs)
-                assert self.dimension == -1 or self.dimension == dim, "Error: All contexts must have the same dimension"
-                self.dimension = dim
-                self.envs.append(ContextualMAB(configuration_envs))
+            # if isinstance(configuration_envs, dict) \
+            #         and "arm_type" in configuration_envs \
+            #         and "arm_params_lists" in configuration_envs \
+            #         and "change_points" in configuration_envs \
+            #         and "context_type" in configuration_envs \
+            #         and "context_params" in configuration_envs:
+            #     dim = get_dimension(configuration_envs)
+            #     assert self.dimension == -1 or self.dimension == dim, "Error: All contexts must have the same dimension"
+            #     self.dimension = dim
+            #     self.envs.append(ContextualMAB(configuration_envs))
 
     def __initPolicies__(self, env):
         """ Create or initialize policies."""
