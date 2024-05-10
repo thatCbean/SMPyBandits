@@ -54,6 +54,7 @@ if __name__ != "__main__":
         RestedRottingConstant, RestedRottingExponential, RestedRottingGaussian, RestedRottingPoisson
     from .RestlessArm import RestlessArm, RestlessBernoulli, RestlessBinomial, RestlessConstant, RestlessExponential, \
         RestlessGaussian, RestlessPoisson
+    from .Adversarial import Adversarial
 
     mapping_ARM_TYPE = {
         "Constant": Constant,
@@ -69,6 +70,7 @@ if __name__ != "__main__":
         "Exponential": ExponentialFromMean, "Exp": ExponentialFromMean, "E": ExponentialFromMean,
         "Gamma": GammaFromMean,
         "DiscreteArm": DiscreteArm,
+        "Adversarial": Adversarial,
     }
 
 
