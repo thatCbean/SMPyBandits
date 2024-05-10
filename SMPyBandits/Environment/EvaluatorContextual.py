@@ -231,23 +231,15 @@ class EvaluatorContextual(object):
     def compute_cache_rewards(self, env):
         """ Compute only once the rewards, then launch the experiments with the same matrix (r_{k,t})."""
         rewards = np.zeros((len(env.arms), self.repetitions, self.horizon))
-        contexts = np.zeros((self.repetitions, self.horizon, self.dimension))
+        contexts = np.zeros((self.repetitions, self.horizon, len(env.arms), self.dimension))
         print(
             "\n===> Pre-computing the rewards ... Of shape {} ...\n    In order for all simulated algorithms to face the same random rewards (robust comparison of A1,..,An vs Aggr(A1,..,An)) ...\n".format(
                 np.shape(rewards)))  # DEBUG
-        # for armId, arm in tqdm(enumerate(env.arms), desc="Arms"):
-        #     if hasattr(arm, 'draw_nparray'):  # XXX Use this method to speed up computation
-        #
-        #         contexts[armId], rewards[armId] = arm.draw_nparray((self.repetitions, self.horizon))
-        #     else:  # Slower
-        #         for repeatId in tqdm(range(self.repetitions), desc="Repetitions"):
-        #             for t in tqdm(range(self.horizon), desc="Time steps"):
-        #                 rewards[armId, repeatId, t] = env.draw(armId, t)
         for repetitionId in tqdm(range(self.repetitions), desc="Repetitions"):
             for t in tqdm(range(self.horizon), desc="Time steps"):
-                context = env.draw_context()
-                contexts[repetitionId, t] = context
                 for arm_id in tqdm(range(len(env.arms)), desc="Arms"):
+                    context = env.draw_context()
+                    contexts[repetitionId, t, arm_id] = context
                     rewards[arm_id, repetitionId, t] = env.draw_with_context(arm_id, context, t)
 
         return contexts, rewards

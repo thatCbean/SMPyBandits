@@ -52,18 +52,18 @@ class LinUCB(ContextualBasePolicy):
            w'_k(t+1) &= w_k(t) \times \exp\left( \frac{\tilde{r}_k(t)}{\gamma_t N_k(t)} \right) \\
            w(t+1) &= w'(t+1) / \sum_{k=1}^{K} w'_k(t+1).
         """
-        super(LinUCB, self).getReward(arm, reward, context)  # XXX Call to BasePolicy
-        self.A = self.A + np.matmul(context, np.transpose(context))
-        self.b = self.b + np.multiply(context, reward)
+        super(LinUCB, self).getReward(arm, reward, context[arm])  # XXX Call to BasePolicy
+        self.A = self.A + np.matmul(context[arm], np.transpose(context[arm]))
+        self.b = self.b + np.multiply(context[arm], reward)
 
     def choice(self, context):
         theta_t = np.matmul(np.linalg.inv(self.A), self.b)
         max_val = -1
         index = -1
         for i in range(self.k):
-            p_ta = (np.matmul(np.transpose(theta_t), context) +
+            p_ta = (np.matmul(np.transpose(theta_t), context[i]) +
                     self.alpha * math.sqrt(
-                        np.matmul(np.transpose(context), np.matmul(np.linalg.inv(self.A), context))))
+                        np.matmul(np.transpose(context[i]), np.matmul(np.linalg.inv(self.A), context[i]))))
             if p_ta > max_val:
                 max_val = p_ta
                 index = i
