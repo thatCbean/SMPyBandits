@@ -54,21 +54,5 @@ class ContextualArm(object):
         assert contexts.shape == shape or np.multiply(contexts.shape) == np.multiply(shape)
         np.array([self.draw(context) for context in contexts.flat]).reshape(shape)
 
-    def calculate_mean(self, context):
-        raise NotImplementedError("This method calculate_mean(context) has to be implemented in the class inheriting from ContextualArm.")
-
-    @staticmethod
-    def kl(x, y):
-        """ The kl(x, y) to use for this arm."""
-        raise NotImplementedError("This method kl(x, y) has to be implemented in the class inheriting from Arm.")
-
-    @staticmethod
-    def oneLR(mumax, mu):
-        """ One term of the Lai & Robbins lower bound for Gaussian arms: (mumax - mu) / KL(mu, mumax). """
-        raise NotImplementedError("This method oneLR(mumax, mu) has to be implemented in the class inheriting from Arm.")
-
-
-    @staticmethod
-    def oneHOI(mumax, mu):
-        """ One term for the HOI factor for this arm."""
-        return 1 - (mumax - mu)
+    def is_nonzero(self):
+        raise NotImplementedError("This method is_nonzero() has to be implemented in the class inheriting from ContextualArm.")
