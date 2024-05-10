@@ -27,46 +27,25 @@ import seaborn as sns
 
 import inspect
 
-
-def _nbOfArgs(function):
-    try:
-        return len(inspect.signature(function).parameters)
-    except NameError:
-        return len(inspect.getargspec(function).args)
-
-
-try:
-    # Local imports, libraries
-    from SMPyBandits.Environment.usejoblib import USE_JOBLIB, Parallel, delayed
-    from SMPyBandits.Environment.usetqdm import USE_TQDM, tqdm
-    # Local imports, tools and config
-    from SMPyBandits.Environment.plotsettings import BBOX_INCHES, signature, maximizeWindow, palette, makemarkers, add_percent_formatter, \
-        legend, show_and_save, nrows_ncols, violin_or_box_plot, adjust_xticks_subplots, table_to_latex
-    from SMPyBandits.Environment.sortedDistance import weightedDistance, manhattan, kendalltau, spearmanr, gestalt, meanDistance, \
-        sortedDistance
-    # Local imports, objects and functions
-    from SMPyBandits.Environment.MAB import MAB, MarkovianMAB, ChangingAtEachRepMAB, NonStationaryMAB, PieceWiseStationaryMAB, IncreasingMAB
-    from SMPyBandits.Environment.Result import Result
-    from SMPyBandits.Environment.memory_consumption import getCurrentMemory, sizeof_fmt
-except ImportError:
-    # Local imports, libraries
-    from usejoblib import USE_JOBLIB, Parallel, delayed
-    from usetqdm import USE_TQDM, tqdm
-    # Local imports, tools and config
-    from plotsettings import BBOX_INCHES, signature, maximizeWindow, palette, makemarkers, add_percent_formatter, \
-        legend, show_and_save, nrows_ncols, violin_or_box_plot, adjust_xticks_subplots, table_to_latex
-    from sortedDistance import weightedDistance, manhattan, kendalltau, spearmanr, gestalt, meanDistance, sortedDistance
-    # Local imports, objects and functions
-    from MAB import MAB, MarkovianMAB, ChangingAtEachRepMAB, NonStationaryMAB, PieceWiseStationaryMAB, IncreasingMAB
-    from Result import Result
-    from memory_consumption import getCurrentMemory, sizeof_fmt
+# Local imports, libraries
+from SMPyBandits.Environment.usejoblib import USE_JOBLIB, Parallel, delayed
+from SMPyBandits.Environment.usetqdm import USE_TQDM, tqdm
+# Local imports, tools and config
+from SMPyBandits.Environment.plotsettings import BBOX_INCHES, signature, maximizeWindow, palette, makemarkers, \
+    add_percent_formatter, \
+    legend, show_and_save, nrows_ncols, violin_or_box_plot, adjust_xticks_subplots, table_to_latex
+from SMPyBandits.Environment.sortedDistance import weightedDistance, manhattan, kendalltau, spearmanr, gestalt, \
+    meanDistance, \
+    sortedDistance
+# Local imports, objects and functions
+from SMPyBandits.Environment.Result import Result
+from SMPyBandits.Environment.memory_consumption import getCurrentMemory, sizeof_fmt
 
 REPETITIONS = 1  #: Default nb of repetitions
 DELTA_T_PLOT = 50  #: Default sampling rate for plotting
 
 plot_lowerbound = True  #: Default is to plot the lower-bound
 
-USE_BOX_PLOT = False  #: True to use boxplot, False to use violinplot.
 USE_BOX_PLOT = True  #: True to use boxplot, False to use violinplot.
 
 # Parameters for the random events
@@ -75,14 +54,18 @@ random_invert = False  #: Use basic random events of inverting the arms?
 nb_break_points = 0  #: Default nb of random events
 
 # Flag for experimental aspects
-STORE_ALL_REWARDS = True  #: Store all rewards?
 STORE_ALL_REWARDS = False  #: Store all rewards?
-STORE_REWARDS_SQUARED = True  #: Store rewards squared?
 STORE_REWARDS_SQUARED = False  #: Store rewards squared?
 MORE_ACCURATE = False  #: Use the count of selections instead of rewards for a more accurate mean/var reward measure.
-MORE_ACCURATE = True  #: Use the count of selections instead of rewards for a more accurate mean/var reward measure.
 FINAL_RANKS_ON_AVERAGE = True  #: Final ranks are printed based on average on last 1% rewards and not only the last rewards
 USE_JOBLIB_FOR_POLICIES = False  #: Don't use joblib to parallelize the simulations on various policies (we parallelize the random Monte Carlo repetitions)
+
+
+def _nbOfArgs(function):
+    try:
+        return len(inspect.signature(function).parameters)
+    except NameError:
+        return len(inspect.getargspec(function).args)
 
 
 def get_dimension(config):
@@ -108,29 +91,15 @@ class EvaluatorContextual(object):
                                                                          DELTA_T_PLOT)  #: Sampling rate for plotting
         print("Sampling rate for plotting, delta_t_plot:", self.delta_t_plot)
         print("Number of jobs for parallelization:", self.cfg['n_jobs'])
-        # Parameters for the random events
-        self.random_shuffle = self.cfg.get('random_shuffle', random_shuffle)  #: Random shuffling of arms?
-        self.random_invert = self.cfg.get('random_invert', random_invert)  #: Random inversion of arms?
-        self.nb_break_points = self.cfg.get('nb_break_points', nb_break_points)  #: How many random events?
-        self.plot_lowerbound = self.cfg.get('plot_lowerbound', plot_lowerbound)  #: Should we plot the lower-bound?
-        self.signature = signature
+
         # Flags
-        self.moreAccurate = moreAccurate  #: Use the count of selections instead of rewards for a more accurate mean/var reward measure.
         self.finalRanksOnAverage = finalRanksOnAverage  #: Final display of ranks are done on average rewards?
         self.averageOn = averageOn  #: How many last steps for final rank average rewards
         self.useJoblibForPolicies = useJoblibForPolicies  #: Use joblib to parallelize for loop on policies (useless)
         self.useJoblib = USE_JOBLIB and self.cfg[
             'n_jobs'] != 1  #: Use joblib to parallelize for loop on repetitions (useful)
-        self.cache_rewards = True  #: Should we cache and precompute rewards
-        self.environment_bayesian = self.cfg.get('environment_bayesian', False)  #: Is the environment Bayesian?
-        self.showplot = self.cfg.get('showplot', True)  #: Show the plot (interactive display or not)
-        self.use_box_plot = USE_BOX_PLOT or (
-                self.repetitions == 1)  #: To use box plot (or violin plot if False). Force to use boxplot if repetitions=1.
-
-        self.change_labels = self.cfg.get('change_labels',
-                                          {})  #: Possibly empty dictionary to map 'policyId' to new labels (overwrite their name).
-        self.append_labels = self.cfg.get('append_labels',
-                                          {})  #: Possibly empty dictionary to map 'policyId' to new labels (by appending the result from 'append_labels').
+        self.useBoxBlot = USE_BOX_PLOT
+        self.showplot = True
 
         # Internal object memory
         self.envs = []  #: List of environments
@@ -138,53 +107,28 @@ class EvaluatorContextual(object):
         self.dimension = -1
         self.__initEnvironments__()
 
-        # Update signature for non stationary problems
-        if self.nb_break_points > 1:
-            changePoints = getattr(self.envs[0], 'changePoints', [])
-            changePoints = sorted([tau for tau in changePoints if tau > 0])
-            if self.random_shuffle:
-                self.signature = (r", $\Upsilon_T={}$ random arms shuffling".format(len(changePoints))) + self.signature
-            elif self.random_invert:
-                self.signature = (r", $\Upsilon_T={}$ arms inversion".format(len(changePoints))) + self.signature
-            # else:
-            #     # self.signature = (r", $\Upsilon_T={}$ change point{}{}".format(len(changePoints), "s" if len(changePoints) > 1 else "", " ${}$".format(list(changePoints)) if len(changePoints) > 0 else "") + self.signature)
-            #     self.signature = (r", $\Upsilon_T={}$".format(len(changePoints)) + self.signature)
-
         # Internal vectorial memory
-        self.rewards = np.zeros((self.nbPolicies, len(self.envs),
+        self.rewards = np.zeros((self.repetitions, self.nbPolicies, len(self.envs),
                                  self.horizon))  #: For each env, history of rewards, ie accumulated rewards
-        self.lastCumRewards = np.zeros((self.nbPolicies, len(self.envs),
-                                        self.repetitions))  #: For each env, last accumulated rewards, to compute variance and histogram of whole regret R_T
+        self.sumRewards = np.zeros((self.nbPolicies, len(self.envs),
+                                    self.repetitions))  #: For each env, last accumulated rewards, to compute variance and histogram of whole regret R_T
         self.minCumRewards = np.full((self.nbPolicies, len(self.envs), self.horizon),
                                      +np.inf)  #: For each env, history of minimum of rewards, to compute amplitude (+- STD)
         self.maxCumRewards = np.full((self.nbPolicies, len(self.envs), self.horizon),
                                      -np.inf)  #: For each env, history of maximum of rewards, to compute amplitude (+- STD)
 
-        if STORE_REWARDS_SQUARED:
-            self.rewardsSquared = np.zeros(
-                (self.nbPolicies, len(self.envs), self.horizon))  #: For each env, history of rewards squared
-        if STORE_ALL_REWARDS:
-            self.allRewards = np.zeros((self.nbPolicies, len(self.envs), self.horizon,
-                                        self.repetitions))  #: For each env, full history of rewards
-
-        self.bestArmPulls = dict()  #: For each env, keep the history of best arm pulls
-        self.pulls = dict()  #: For each env, keep cumulative counts of all arm pulls
-        if self.moreAccurate: self.allPulls = dict()  #: For each env, keep cumulative counts of all arm pulls
-        self.lastPulls = dict()  #: For each env, keep cumulative counts of all arm pulls
         self.runningTimes = dict()  #: For each env, keep the history of running times
         self.memoryConsumption = dict()  #: For each env, keep the history of running times
         self.numberOfCPDetections = dict()  #: For each env, store the number of change-point detections by each algorithms, to print it's average at the end (to check if a certain Change-Point detector algorithm detects too few or too many changes).
+        self.all_contexts = dict()
+        self.all_rewards = dict()
         # XXX: WARNING no memorized vectors should have dimension duration * repetitions, that explodes the RAM consumption!
         for envId in range(len(self.envs)):
-            self.bestArmPulls[envId] = np.zeros((self.nbPolicies, self.horizon), dtype=np.int32)
-            self.pulls[envId] = np.zeros((self.nbPolicies, self.envs[envId].nbArms), dtype=np.int32)
-            if self.moreAccurate: self.allPulls[envId] = np.zeros(
-                (self.nbPolicies, self.envs[envId].nbArms, self.horizon), dtype=np.int32)
-            self.lastPulls[envId] = np.zeros((self.nbPolicies, self.envs[envId].nbArms, self.repetitions),
-                                             dtype=np.int32)
             self.runningTimes[envId] = np.zeros((self.nbPolicies, self.repetitions))
             self.memoryConsumption[envId] = np.zeros((self.nbPolicies, self.repetitions))
             self.numberOfCPDetections[envId] = np.zeros((self.nbPolicies, self.repetitions), dtype=np.int32)
+            self.all_contexts[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
+            self.all_rewards[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
         print("Number of environments to try:", len(self.envs))
         # To speed up plotting
         self._times = np.arange(1, 1 + self.horizon)
@@ -204,16 +148,6 @@ class EvaluatorContextual(object):
                 assert self.dimension == -1 or self.dimension == dim, "Error: All contexts must have the same dimension"
                 self.dimension = dim
                 self.envs.append(ContextualMAB(configuration_envs))
-            # if isinstance(configuration_envs, dict) \
-            #         and "arm_type" in configuration_envs \
-            #         and "arm_params_lists" in configuration_envs \
-            #         and "change_points" in configuration_envs \
-            #         and "context_type" in configuration_envs \
-            #         and "context_params" in configuration_envs:
-            #     dim = get_dimension(configuration_envs)
-            #     assert self.dimension == -1 or self.dimension == dim, "Error: All contexts must have the same dimension"
-            #     self.dimension = dim
-            #     self.envs.append(ContextualMAB(configuration_envs))
 
     def __initPolicies__(self, env):
         """ Create or initialize policies."""
@@ -229,35 +163,20 @@ class EvaluatorContextual(object):
                 self.policies.append(policy)
         for policyId in range(self.nbPolicies):
             self.policies[policyId].__cachedstr__ = str(self.policies[policyId])
-            if policyId in self.append_labels:
-                self.policies[policyId].__cachedstr__ += self.append_labels[policyId]
-            if policyId in self.change_labels:
-                self.policies[policyId].__cachedstr__ = self.change_labels[policyId]
 
     # --- Start computation
 
     def compute_cache_rewards(self, env):
         """ Compute only once the rewards, then launch the experiments with the same matrix (r_{k,t})."""
-        rewards = np.zeros((len(env.arms), self.repetitions, self.horizon))
-        contexts = np.zeros((self.repetitions, self.horizon, self.dimension))
+        rewards = np.zeros((self.repetitions, self.horizon, env.nbArms))
+        contexts = np.zeros((self.repetitions, self.horizon, env.nbArms, self.dimension))
         print(
             "\n===> Pre-computing the rewards ... Of shape {} ...\n    In order for all simulated algorithms to face the same random rewards (robust comparison of A1,..,An vs Aggr(A1,..,An)) ...\n".format(
                 np.shape(rewards)))  # DEBUG
-        # for armId, arm in tqdm(enumerate(env.arms), desc="Arms"):
-        #     if hasattr(arm, 'draw_nparray'):  # XXX Use this method to speed up computation
-        #
-        #         contexts[armId], rewards[armId] = arm.draw_nparray((self.repetitions, self.horizon))
-        #     else:  # Slower
-        #         for repeatId in tqdm(range(self.repetitions), desc="Repetitions"):
-        #             for t in tqdm(range(self.horizon), desc="Time steps"):
-        #                 rewards[armId, repeatId, t] = env.draw(armId, t)
         for repetitionId in tqdm(range(self.repetitions), desc="Repetitions"):
             for t in tqdm(range(self.horizon), desc="Time steps"):
-                context = env.draw_context()
-                contexts[repetitionId, t] = context
                 for arm_id in tqdm(range(len(env.arms)), desc="Arms"):
-                    rewards[arm_id, repetitionId, t] = env.draw_with_context(arm_id, context, t)
-
+                    contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id] = env.draw(arm_id, t)
         return contexts, rewards
 
     def startAllEnv(self):
@@ -274,307 +193,28 @@ class EvaluatorContextual(object):
         # Precompute rewards
         # if self.cache_rewards:
         all_contexts, all_rewards = self.compute_cache_rewards(env)
-
-        # else:
-        #     all_contexts, all_rewards = None, None
+        self.all_contexts[envId], self.all_rewards[envId] = all_contexts, all_rewards
 
         def store(r, policyId, repeatId):
             """ Store the result of the #repeatId experiment, for the #policyId policy."""
-            self.rewards[policyId, envId, :] += r.rewards
-            self.lastCumRewards[policyId, envId, repeatId] = np.sum(r.rewards)
-            if hasattr(self, 'rewardsSquared'):
-                self.rewardsSquared[policyId, envId, :] += (r.rewards ** 2)
-            if hasattr(self, 'allRewards'):
-                self.allRewards[policyId, envId, :, repeatId] = r.rewards
+            self.rewards[repeatId][policyId][envId] = r.rewards
+            self.sumRewards[policyId, envId, repeatId] = np.sum(r.rewards)
             if hasattr(self, 'minCumRewards'):
                 self.minCumRewards[policyId, envId, :] = np.minimum(self.minCumRewards[policyId, envId, :], np.cumsum(
                     r.rewards)) if repeatId > 1 else np.cumsum(r.rewards)
             if hasattr(self, 'maxCumRewards'):
                 self.maxCumRewards[policyId, envId, :] = np.maximum(self.maxCumRewards[policyId, envId, :], np.cumsum(
                     r.rewards)) if repeatId > 1 else np.cumsum(r.rewards)
-            self.bestArmPulls[envId][policyId, :] += np.cumsum(np.in1d(r.choices, r.indexes_bestarm))
-            self.pulls[envId][policyId, :] += r.pulls
-            if self.moreAccurate:
-                # Make allPulls by selecting rows of an identity matrix using r.choices
-                # The identity matrix is made with shape (nbArms, nbArms)
-                select_rows = r.choices.reshape(1, -1)
-                self.allPulls[envId][policyId, :, :] += np.transpose(
-                    np.identity(self.envs[envId].nbArms, dtype=int)[select_rows][0])
             self.memoryConsumption[envId][policyId, repeatId] = r.memory_consumption
-            self.lastPulls[envId][policyId, :, repeatId] = r.pulls
             self.runningTimes[envId][policyId, repeatId] = r.running_time
             self.numberOfCPDetections[envId][policyId, repeatId] = r.number_of_cp_detections
 
         # Start for all policies
         for policyId, policy in enumerate(self.policies):
             print("\n\n\n- Evaluating policy #{}/{}: {} ...".format(policyId + 1, self.nbPolicies, policy))
-            if self.useJoblib:
-                seeds = np.random.randint(low=0, high=100 * self.repetitions, size=self.repetitions)
-                repeatIdout = 0
-                for r in Parallel(n_jobs=self.cfg['n_jobs'], pre_dispatch='3*n_jobs',
-                                  verbose=self.cfg['verbosity'])(
-                    delayed(delayed_play)(env, policy, self.horizon, random_shuffle=self.random_shuffle,
-                                          random_invert=self.random_invert, nb_break_points=self.nb_break_points,
-                                          all_rewards=all_rewards, all_contexts=all_contexts, seed=seeds[repeatId],
-                                          repeatId=repeatId,
-                                          useJoblib=self.useJoblib)
-                    for repeatId in tqdm(range(self.repetitions), desc="Repeat||")
-                ):
-                    store(r, policyId, repeatIdout)
-                    repeatIdout += 1
-            else:
-                for repeatId in tqdm(range(self.repetitions), desc="Repeat"):
-                    r = delayed_play(env, policy, self.horizon, random_shuffle=self.random_shuffle,
-                                     random_invert=self.random_invert, nb_break_points=self.nb_break_points,
-                                     all_rewards=all_rewards, all_contexts=all_contexts, repeatId=repeatId,
-                                     useJoblib=self.useJoblib)
-                    store(r, policyId, repeatId)
-
-    # --- Save to disk methods
-
-    def saveondisk(self, filepath="saveondisk_Evaluator.hdf5"):
-        """ Save the content of the internal data to into a HDF5 file on the disk.
-
-        - See http://docs.h5py.org/en/stable/quick.html if needed.
-        """
-        import h5py
-        # 1. create the h5py file
-        h5file = h5py.File(filepath, "w")
-
-        # 2. store main attributes and all other attributes, if they exist
-        for name_of_attr in [
-            "horizon", "repetitions", "nbPolicies",
-            "delta_t_plot", "random_shuffle", "random_invert", "nb_break_points", "plot_lowerbound", "signature",
-            "moreAccurate", "finalRanksOnAverage", "averageOn", "useJoblibForPolicies", "useJoblib", "cache_rewards",
-            "environment_bayesian", "showplot", "change_labels", "append_labels"
-        ]:
-            if not hasattr(self, name_of_attr): continue
-            value = getattr(self, name_of_attr)
-            if isinstance(value, str):
-                value = np.string_(value)
-            try:
-                h5file.attrs[name_of_attr] = value
-            except (ValueError, TypeError):
-                print(
-                    "Error: when saving the Evaluator object to a HDF5 file, the attribute named {} (value {} of type {}) couldn't be saved. Skipping...".format(
-                        name_of_attr, value, type(value)))  # DEBUG
-
-        # 2.bis. store list of names of policies
-        labels = [np.string_(policy.__cachedstr__) for policy in self.policies]
-        h5file.attrs["labels"] = labels
-
-        # 3. store some arrays that are shared between envs?
-        for name_of_dataset in ["rewards", "rewardsSquared", "allRewards"]:
-            if not hasattr(self, name_of_dataset): continue
-            data = getattr(self, name_of_dataset)
-            try:
-                h5file.create_dataset(name_of_dataset, data=data)
-            except (ValueError, TypeError) as e:
-                print(
-                    "Error: when saving the Evaluator object to a HDF5 file, the dataset named {} (value of type {} and shape {} and dtype {}) couldn't be saved. Skipping...".format(
-                        name_of_dataset, type(data), data.shape, data.dtype))  # DEBUG
-                print("Exception:\n", e)  # DEBUG
-
-        # 4. for each environment
-        h5file.attrs["number_of_envs"] = len(self.envs)
-        for envId in range(len(self.envs)):
-            # 4.a. create subgroup for this env
-            sbgrp = h5file.create_group("env_{}".format(envId))
-            # 4.b. store attribute of the MAB problem
-            mab = self.envs[envId]
-            for name_of_attr in ["isChangingAtEachRepetition", "isMarkovian", "_sparsity", "means", "nbArms", "maxArm",
-                                 "minArm"]:
-                if not hasattr(mab, name_of_attr): continue
-                value = getattr(mab, name_of_attr)
-                if isinstance(value, str): value = np.string_(value)
-                try:
-                    sbgrp.attrs[name_of_attr] = value
-                except (ValueError, TypeError):
-                    print(
-                        "Error: when saving the Evaluator object to a HDF5 file, the attribute named {} (value {} of type {}) couldn't be saved. Skipping...".format(
-                            name_of_attr, value, type(value)))  # DEBUG
-            # 4.c. store data for that env
-            for name_of_dataset in ["allPulls", "lastPulls", "runningTimes", "memoryConsumption",
-                                    "numberOfCPDetections"]:
-                if not (hasattr(self, name_of_dataset) and envId in getattr(self, name_of_dataset)): continue
-                data = getattr(self, name_of_dataset)[envId]
-                try:
-                    sbgrp.create_dataset(name_of_dataset, data=data)
-                except (ValueError, TypeError) as e:
-                    print(
-                        "Error: when saving the Evaluator object to a HDF5 file, the dataset named {} (value of type {} and shape {} and dtype {}) couldn't be saved. Skipping...".format(
-                            name_of_dataset, type(data), data.shape, data.dtype))  # DEBUG
-                    print("Exception:\n", e)  # DEBUG
-
-            # 4.d. compute and store data for that env
-            for methodName in ["getRunningTimes", "getMemoryConsumption", "getNumberOfCPDetections", "getBestArmPulls",
-                               "getPulls", "getRewards", "getCumulatedRegret", "getLastRegrets", "getAverageRewards"]:
-                if not hasattr(self, methodName): continue
-                name_of_dataset = methodName.replace("get", "")
-                name_of_dataset = name_of_dataset[0].lower() + name_of_dataset[1:]
-                if name_of_dataset in sbgrp: name_of_dataset = methodName  # XXX be sure to not use twice the same name, e.g., for getRunningTimes and runningTimes
-                method = getattr(self, methodName)
-                if _nbOfArgs(method) > 2:
-                    if isinstance(method(0, envId=envId), tuple):
-                        data = np.array([method(policyId, envId=envId)[0] for policyId in range(len(self.policies))])
-                    else:
-                        data = np.array([method(policyId, envId=envId) for policyId in range(len(self.policies))])
-                else:
-                    if isinstance(method(envId), tuple):
-                        data = method(envId)[0]
-                    else:
-                        data = method(envId)
-                try:
-                    sbgrp.create_dataset(name_of_dataset, data=data)
-                except (ValueError, TypeError) as e:
-                    print(
-                        "Error: when saving the Evaluator object to a HDF5 file, the dataset named {} (value of type {} and shape {} and dtype {}) couldn't be saved. Skipping...".format(
-                            name_of_dataset, type(data), data.shape, data.dtype))  # DEBUG
-                    print("Exception:\n", e)  # DEBUG
-
-        # 5. when done, close the file
-        h5file.close()
-
-    # def loadfromdisk(self, filepath):
-    #     """ Update internal memory of the Evaluator object by loading data the opened HDF5 file.
-
-    #     .. warning:: FIXME this is not YET implemented!
-    #     """
-    #     # FIXME I just have to fill all the internal matrices from the HDF5 file ?
-    #     raise NotImplementedError
-
-    # --- Get data
-
-    def getPulls(self, policyId, envId=0):
-        """Extract mean pulls."""
-        return self.pulls[envId][policyId, :] / float(self.repetitions)
-
-    def getBestArmPulls(self, policyId, envId=0):
-        """Extract mean best arm pulls."""
-        # We have to divide by a arange() = cumsum(ones) to get a frequency
-        return self.bestArmPulls[envId][policyId, :] / (float(self.repetitions) * self._times)
-
-    def getRewards(self, policyId, envId=0):
-        """Extract mean rewards."""
-        return self.rewards[policyId, envId, :] / float(self.repetitions)
-
-    def getAverageWeightedSelections(self, policyId, envId=0):
-        """Extract weighted count of selections."""
-        weighted_selections = np.zeros(self.horizon)
-        for armId in range(self.envs[envId].nbArms):
-            mean_selections = self.allPulls[envId][policyId, armId, :] / float(self.repetitions)
-            # DONE this is now fixed for non-stationary bandits
-            if hasattr(self.envs[envId], 'get_allMeans'):
-                meanOfThisArm = self.envs[envId].get_allMeans(horizon=self.horizon)[armId, :]
-            else:
-                meanOfThisArm = self.envs[envId].means[armId]
-            weighted_selections += meanOfThisArm * mean_selections
-        return weighted_selections
-
-    def getMaxRewards(self, envId=0):
-        """Extract max mean rewards."""
-        return np.max(self.rewards[:, envId, :] / float(self.repetitions))
-
-    def getCumulatedRegret_LessAccurate(self, policyId, envId=0):
-        """Compute cumulative regret, based on accumulated rewards."""
-        return np.cumsum(self.envs[envId].get_maxArm(self.horizon) - self.getRewards(policyId, envId))
-
-    def getCumulatedRegret_MoreAccurate(self, policyId, envId=0):
-        """Compute cumulative regret, based on counts of selections and not actual rewards."""
-        assert self.moreAccurate, "Error: getCumulatedRegret_MoreAccurate() is only available when using the 'moreAccurate' option (it consumes more memory!)."  # DEBUG
-        instant_oracle_performance = self.envs[envId].get_maxArm(self.horizon)
-        instant_performance = self.getAverageWeightedSelections(policyId, envId)
-        instant_loss = instant_oracle_performance - instant_performance
-        return np.cumsum(instant_loss)
-        # return np.cumsum(self.envs[envId].get_maxArm(self.horizon) - self.getAverageWeightedSelections(policyId, envId))
-
-    def getCumulatedRegret(self, policyId, envId=0, moreAccurate=None):
-        """Using either the more accurate or the less accurate regret count."""
-        moreAccurate = moreAccurate if moreAccurate is not None else self.moreAccurate
-        # print("Computing the vector of mean cumulated regret with '{}' accurate method...".format("more" if moreAccurate else "less"))  # DEBUG
-        return self.getCumulatedRegret_MoreAccurate(policyId,
-                                                    envId=envId) if moreAccurate else self.getCumulatedRegret_LessAccurate(
-            policyId, envId=envId)
-
-    def getLastRegrets_LessAccurate(self, policyId, envId=0):
-        """Extract last regrets, based on accumulated rewards."""
-        return np.sum(self.envs[envId].get_maxArm(self.horizon)) - self.lastCumRewards[policyId, envId, :]
-
-    def getAllLastWeightedSelections(self, policyId, envId=0):
-        """Extract weighted count of selections."""
-        all_last_weighted_selections = np.zeros(self.repetitions)
-        for armId in range(self.envs[envId].nbArms):
-            if hasattr(self.envs[envId], 'get_allMeans'):
-                meanOfThisArm = self.envs[envId].get_allMeans(horizon=self.horizon)[armId, :]
-                # DONE this is now fixed for non-stationary bandits
-            else:
-                meanOfThisArm = self.envs[envId].means[armId]
-            if hasattr(self, 'allPulls'):
-                all_selections = self.allPulls[envId][policyId, armId, :] / float(self.repetitions)
-                if np.size(meanOfThisArm) == 1:  # problem was stationary!
-                    last_selections = np.sum(all_selections)  # no variance, but we don't care!
-                    all_last_weighted_selections += meanOfThisArm * last_selections
-                else:  # problem was non stationary!
-                    last_selections = all_selections
-                    all_last_weighted_selections += np.sum(meanOfThisArm * last_selections)
-            else:
-                last_selections = self.lastPulls[envId][policyId, armId, :]
-                all_last_weighted_selections += meanOfThisArm * last_selections
-        return all_last_weighted_selections
-
-    def getLastRegrets_MoreAccurate(self, policyId, envId=0):
-        """Extract last regrets, based on counts of selections and not actual rewards."""
-        return np.sum(self.envs[envId].get_maxArm(self.horizon)) - self.getAllLastWeightedSelections(policyId,
-                                                                                                     envId=envId)
-
-    def getLastRegrets(self, policyId, envId=0, moreAccurate=None):
-        """Using either the more accurate or the less accurate regret count."""
-        moreAccurate = moreAccurate if moreAccurate is not None else self.moreAccurate
-        # print("Computing the vector of last cumulated regrets (on repetitions) with '{}' accurate method...".format("more" if moreAccurate else "less"))  # DEBUG
-        return self.getLastRegrets_MoreAccurate(policyId,
-                                                envId=envId) if moreAccurate else self.getLastRegrets_LessAccurate(
-            policyId, envId=envId)
-
-    def getAverageRewards(self, policyId, envId=0):
-        """Extract mean rewards (not `rewards` but `cumsum(rewards)/cumsum(1)`."""
-        return np.cumsum(self.getRewards(policyId, envId)) / self._times
-
-    def getRewardsSquared(self, policyId, envId=0):
-        """Extract rewards squared."""
-        return self.rewardsSquared[policyId, envId, :] / float(self.repetitions)
-
-    def getSTDRegret(self, policyId, envId=0, meanReward=False):
-        """Extract standard deviation of rewards.
-
-        .. warning:: FIXME experimental!
-        """
-        # X = self._times
-        # YMAX = self.getMaxRewards(envId=envId)
-        # Y = self.getRewards(policyId, envId)
-        # Y2 = self.getRewardsSquared(policyId, envId)
-        # if meanReward:  # Cumulated expectation on time
-        #     Ycum2 = (np.cumsum(Y) / X)**2
-        #     Y2cum = np.cumsum(Y2) / X
-        #     assert np.all(Y2cum >= Ycum2), "Error: getSTDRegret found a nan value in the standard deviation (ie a point where Y2cum < Ycum2)."  # DEBUG
-        #     stdY = np.sqrt(Y2cum - Ycum2)
-        #     YMAX *= 20  # XXX make it look smaller, for the plots
-        # else:  # Expectation on nb of repetitions
-        #     # https://en.wikipedia.org/wiki/Algebraic_formula_for_the_variance#In_terms_of_raw_moments
-        #     # std(Y) = sqrt( E[Y**2] - E[Y]**2 )
-        #     # stdY = np.cumsum(np.sqrt(Y2 - Y**2))
-        #     stdY = np.sqrt(Y2 - Y**2)
-        #     YMAX *= np.log(2 + self.horizon)  # Normalize the std variation
-        #     YMAX *= 50  # XXX make it look larger, for the plots
-        # # Renormalize this standard deviation
-        # # stdY /= YMAX
-        allRewards = self.allRewards[policyId, envId, :, :]
-        return np.std(np.cumsum(allRewards, axis=0), axis=1)
-
-    def getMaxMinReward(self, policyId, envId=0):
-        """Extract amplitude of rewards as maxCumRewards - minCumRewards."""
-        return (self.maxCumRewards[policyId, envId, :] - self.minCumRewards[policyId, envId, :]) / (
-                float(self.repetitions) ** 0.5)
-        # return self.maxCumRewards[policyId, envId, :] - self.minCumRewards[policyId, envId, :]
+            for repeatId in tqdm(range(self.repetitions), desc="Repeat"):
+                r = delayed_play(env, policy, self.horizon, all_contexts, all_rewards, repeatId=repeatId)
+                store(r, policyId, repeatId)
 
     def getRunningTimes(self, envId=0):
         """Get the means and stds and list of running time of the different policies."""
@@ -600,40 +240,78 @@ class EvaluatorContextual(object):
         stds = [np.std(number_of_cp_detections) for number_of_cp_detections in all_number_of_cp_detections]
         return means, stds, all_number_of_cp_detections
 
+    # self.all_rewards[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
+    # all_rewards[envId][repetitions][horizon][nbArms]
+    def getHighestRewards(self, envId):
+        return \
+            np.array([[np.max(self.all_rewards[envId][repetition][t]) for t in range(self.horizon)] for repetition in
+                      range(self.repetitions)])
+
+    def getLowestRewards(self, envId):
+        return \
+            np.array([[np.min(self.all_rewards[envId][repetition][t]) for t in range(self.horizon)] for repetition in
+                      range(self.repetitions)])
+
+    # self.rewards = np.zeros((self.repetitions, self.nbPolicies, len(self.envs), self.horizon))
+    def getHighestRewardsPolicy(self, policyId, envId):
+        return np.array([np.max(self.rewards[:, policyId, envId, t]) for t in range(self.horizon)])
+
+    def getLowestRewardsPolicy(self, policyId, envId):
+        return np.array([np.min(self.rewards[:, policyId, envId, t]) for t in range(self.horizon)])
+
+    def getRegretAmplitude(self, policyId, envId):
+        highest_rewards = self.getHighestRewards(envId)
+        return np.array([highest_rewards[repetition] - self.rewards[repetition, policyId, envId, :]
+                         for repetition in range(self.repetitions)])
+
+    def getCumulatedRegrets(self, policyId, envId):
+        highest_rewards = self.getHighestRewards(envId)
+        return np.array([np.cumsum(highest_rewards[repetition] - self.rewards[repetition, policyId, envId, :])
+                         for repetition in range(self.repetitions)])
+
+    def getCumulatedRegretAverage(self, policyId, envId):
+        cumulated_regrets = self.getCumulatedRegrets(policyId, envId)
+        return np.array([np.mean(cumulated_regrets[:, t]) for t in range(self.horizon)])
+
+    def getCumulatedRegretSum(self, policyId, envId):
+        cumulated_regrets = self.getCumulatedRegrets(policyId, envId)
+        return np.array([np.mean(cumulated_regrets[:, t]) for t in range(self.horizon)])
+
+    def getCumulatedRewardAmplitude(self, policyId, envId):
+        highest = np.cumsum(self.getHighestRewardsPolicy(policyId, envId))
+        lowest = np.cumsum(self.getLowestRewardsPolicy(policyId, envId))
+        return highest - lowest
+
+    def getLastRegrets(self, policyId, envId):
+        return (self.getCumulatedRegrets(policyId, envId))[:, -1]
+
     # --- Plotting methods
 
-    def printFinalRanking(self, envId=0, moreAccurate=None):
+    def printFinalRanking(self, envId=0):
         """Print the final ranking of the different policies."""
         print("\nGiving the final ranks ...")
         assert 0 < self.averageOn < 1, "Error, the parameter averageOn of a EvaluatorMultiPlayers classs has to be in (0, 1) strictly, but is = {} here ...".format(
             self.averageOn)  # DEBUG
-        print("\nFinal ranking for this environment #{} : (using {} accurate estimate of the regret)".format(envId,
-                                                                                                             "more" if moreAccurate else "less"))
+
+        print("\nFinal ranking for this environment #{}".format(envId))
+
         nbPolicies = self.nbPolicies
-        lastRegret = np.zeros(nbPolicies)
         totalRegret = np.zeros(nbPolicies)
         totalRewards = np.zeros(nbPolicies)
-        totalWeightedSelections = np.zeros(nbPolicies)
+        lastRegret = np.zeros(nbPolicies)
         for i, policy in enumerate(self.policies):
-            Y = self.getCumulatedRegret(i, envId, moreAccurate=moreAccurate)
-            if self.finalRanksOnAverage:
-                lastRegret[i] = np.mean(
-                    Y[-int(self.averageOn * self.horizon):])  # get average value during the last 0.5% of the iterations
-            else:
-                lastRegret[i] = Y[-1]  # get the last value
+            Y = self.getCumulatedRegretAverage(i, envId)
             totalRegret[i] = Y[-1]
-            totalRewards[i] = np.sum(self.getRewards(i, envId))
-            totalWeightedSelections[i] = np.sum(self.getAverageWeightedSelections(i, envId))
+            lastRegret[i] = Y[-1] - Y[-2]
+            totalRewards[i] = np.sum(self.rewards[:, i, envId, :]) / self.repetitions
         # Sort lastRegret and give ranking
-        index_of_sorting = np.argsort(lastRegret)
+        index_of_sorting = np.argsort(totalRegret)
         for i, k in enumerate(index_of_sorting):
             policy = self.policies[k]
             print(
-                "- Policy '{}'\twas ranked\t{} / {} for this simulation\n\t(last regret = {:.5g},\ttotal regret = {:.5g},\ttotal reward = {:.5g},\ttotal weighted selection = {:.5g}).".format(
-                    policy.__cachedstr__, i + 1, nbPolicies, lastRegret[k], totalRegret[k], totalRewards[k],
-                    totalWeightedSelections[k]))
-        return lastRegret, index_of_sorting
-        return fig
+                "- Policy '{}'\twas ranked\t{} / {} for this simulation\n\t(last regret = {:.5g},\ttotal regret = {:.5g},\ttotal reward = {:.5g}.".format(
+                    policy.__cachedstr__, i + 1, nbPolicies, lastRegret[k], totalRegret[k], totalRewards[k]))
+        return totalRegret, index_of_sorting
 
     def _xlabel(self, envId, *args, **kwargs):
         """Add xlabel to the plot, and if the environment has change-point, draw vertical lines to clearly identify the locations of the change points."""
@@ -655,11 +333,9 @@ class EvaluatorContextual(object):
                     savefig=None, meanReward=False,
                     plotSTD=False, plotMaxMin=False,
                     semilogx=False, semilogy=False, loglog=False,
-                    normalizedRegret=False, drawUpperBound=False,
-                    moreAccurate=None
+                    normalizedRegret=False, drawUpperBound=False
                     ):
         """Plot the centralized cumulated regret, support more than one environments (use evaluators to give a list of other environments). """
-        moreAccurate = moreAccurate if moreAccurate is not None else self.moreAccurate
         fig = plt.figure()
         ymin = 0
         colors = palette(self.nbPolicies)
@@ -668,55 +344,47 @@ class EvaluatorContextual(object):
         plot_method = plt.loglog if loglog else plt.plot
         plot_method = plt.semilogy if semilogy else plot_method
         plot_method = plt.semilogx if semilogx else plot_method
-        for i, policy in enumerate(self.policies):
-            if meanReward:
-                Y = self.getAverageRewards(i, envId)
-            else:
-                Y = self.getCumulatedRegret(i, envId, moreAccurate=moreAccurate)
-                if normalizedRegret:
-                    Y /= np.log(X + 2)  # XXX prevent /0
+        for policyId, policy in enumerate(self.policies):
+            Y = np.array(self.getCumulatedRegretAverage(policyId, envId))
+            if normalizedRegret:
+                Y /= self._times
             ymin = min(ymin, np.min(Y))
-            lw = 10 if (
-                    '$N=' in policy.__cachedstr__ or 'Aggr' in policy.__cachedstr__ or 'CORRAL' in policy.__cachedstr__ or 'LearnExp' in policy.__cachedstr__ or 'Exp4' in policy.__cachedstr__) else 8
+            lw = 8
             if len(self.policies) > 8: lw -= 1
             if semilogx or loglog:
                 # FIXED for semilogx plots, truncate to only show t >= 100
                 X_to_plot_here = X[X >= 100]
                 Y_to_plot_here = Y[X >= 100]
                 plot_method(X_to_plot_here[::self.delta_t_plot], Y_to_plot_here[::self.delta_t_plot],
-                            label=policy.__cachedstr__, color=colors[i], marker=markers[i], markevery=(i / 50., 0.1),
+                            label=policy.__cachedstr__, color=colors[policyId], marker=markers[policyId],
+                            markevery=(policyId / 50., 0.1),
                             lw=lw, ms=int(1.5 * lw))
             else:
-                plot_method(X[::self.delta_t_plot], Y[::self.delta_t_plot], label=policy.__cachedstr__, color=colors[i],
-                            marker=markers[i], markevery=(i / 50., 0.1), lw=lw, ms=int(1.5 * lw))
+                plot_method(X[::self.delta_t_plot], Y[::self.delta_t_plot], label=policy.__cachedstr__,
+                            color=colors[policyId],
+                            marker=markers[policyId], markevery=(policyId / 50., 0.1), lw=lw, ms=int(1.5 * lw))
             if semilogx or loglog:  # Manual fix for issue https://github.com/SMPyBandits/SMPyBandits/issues/38
                 plt.xscale('log')
             if semilogy or loglog:  # Manual fix for issue https://github.com/SMPyBandits/SMPyBandits/issues/38
                 plt.yscale('log')
             # Print standard deviation of regret
-            if plotSTD and self.repetitions > 1:
-                stdY = self.getSTDRegret(i, envId, meanReward=meanReward)
-                if normalizedRegret:
-                    stdY /= np.log(2 + X)
-                plt.fill_between(X[::self.delta_t_plot], Y[::self.delta_t_plot] - stdY[::self.delta_t_plot],
-                                 Y[::self.delta_t_plot] + stdY[::self.delta_t_plot], facecolor=colors[i], alpha=0.2)
+            # TODO
+            # if plotSTD and self.repetitions > 1:
+            #     stdY = self.getSTDRegret(policyId, envId, meanReward=meanReward)
+            #     if normalizedRegret:
+            #         stdY /= np.log(2 + X)
+            #     plt.fill_between(X[::self.delta_t_plot], Y[::self.delta_t_plot] - stdY[::self.delta_t_plot],
+            #                      Y[::self.delta_t_plot] + stdY[::self.delta_t_plot], facecolor=colors[policyId], alpha=0.2)
+
             # Print amplitude of regret
             if plotMaxMin and self.repetitions > 1:
-                MaxMinY = self.getMaxMinReward(i, envId) / 2.
+                MaxMinY = self.getCumulatedRewardAmplitude(policyId, envId)
                 if normalizedRegret:
-                    MaxMinY /= np.log(2 + X)
+                    MaxMinY /= self.horizon
                 plt.fill_between(X[::self.delta_t_plot], Y[::self.delta_t_plot] - MaxMinY[::self.delta_t_plot],
-                                 Y[::self.delta_t_plot] + MaxMinY[::self.delta_t_plot], facecolor=colors[i], alpha=0.2)
-        self._xlabel(envId, r"Time steps $t = 1...T$, horizon $T = {}${}".format(self.horizon, self.signature))
-        lowerbound = self.envs[envId].lowerbound()
-        lowerbound_sparse = self.envs[envId].lowerbound_sparse()
-        if not (semilogx or semilogy or loglog):
-            print(
-                "\nThis MAB problem has: \n - a [Lai & Robbins] complexity constant C(mu) = {:.3g} for 1-player problem... \n - a Optimal Arm Identification factor H_OI(mu) = {:.2%} ...".format(
-                    lowerbound, self.envs[envId].hoifactor()))  # DEBUG
-            if self.envs[envId]._sparsity is not None and not np.isnan(lowerbound_sparse):
-                print("\n- a [Kwon et al] sparse lower-bound with s = {} non-negative arm, C'(mu) = {:.3g}...".format(
-                    self.envs[envId]._sparsity, lowerbound_sparse))  # DEBUG
+                                 Y[::self.delta_t_plot] + MaxMinY[::self.delta_t_plot], facecolor=colors[policyId],
+                                 alpha=0.2)
+        self._xlabel(envId, r"Time steps $t = 1...T$, horizon $T = {}".format(self.horizon))
         if not meanReward:
             if semilogy or loglog:
                 ymin = max(0, ymin)
@@ -724,125 +392,30 @@ class EvaluatorContextual(object):
         # Get a small string to add to ylabel
         ylabel2 = r"%s%s" % (r", $\pm 1$ standard deviation" if (plotSTD and not plotMaxMin) else "",
                              r", $\pm 1$ amplitude" if (plotMaxMin and not plotSTD) else "")
-        if meanReward:
-            if hasattr(self.envs[envId], 'get_allMeans'):
-                # DONE this is now fixed for non-stationary bandits
-                means = self.envs[envId].get_allMeans(horizon=self.horizon)
-                minArm, maxArm = np.min(means), np.max(means)
-            else:
-                minArm, maxArm = self.envs[envId].minArm, self.envs[envId].maxArm
-            # We plot a horizontal line ----- at the best arm mean
-            plt.plot(X[::self.delta_t_plot], self.envs[envId].maxArm * np.ones_like(X)[::self.delta_t_plot], 'k--',
-                     label="Largest mean = ${:.3g}$".format(maxArm))
+
+        if normalizedRegret:
             legend()
-            plt.ylabel(r"Mean reward, average on time $\tilde{r}_t = \frac{1}{t} \sum_{s=1}^{t}$ %s%s" % (
-                r"$\sum_{k=1}^{%d} \mu_k\mathbb{E}_{%d}[T_k(t)]$" % (
-                    self.envs[envId].nbArms, self.repetitions) if moreAccurate else r"$\mathbb{E}_{%d}[r_s]$" % (
-                    self.repetitions), ylabel2))
-            if not self.envs[envId].isChangingAtEachRepetition and not self.nb_break_points > 0:
-                plt.ylim(0.80 * minArm, 1.40 * maxArm)
-            # if self.nb_break_points > 0:
-            #     plt.ylim(0, 1)  # FIXME do better!
-            plt.title("Mean rewards for different bandit algorithms, averaged ${}$ times\n${}$ arms{}: {}".format(
-                self.repetitions, self.envs[envId].nbArms, self.envs[envId].str_sparsity(),
-                self.envs[envId].reprarms(1, latex=True)))
-        elif normalizedRegret:
-            if self.plot_lowerbound:
-                # We also plot the Lai & Robbins lower bound
-                plt.plot(X[::self.delta_t_plot], lowerbound * np.ones_like(X)[::self.delta_t_plot], 'k-',
-                         label="[Lai & Robbins] lower bound = ${:.3g}$".format(lowerbound), lw=3)
-                # We also plot the Kwon et al lower bound
-                if self.envs[envId]._sparsity is not None and not np.isnan(lowerbound_sparse):
-                    plt.plot(X[::self.delta_t_plot], lowerbound_sparse * np.ones_like(X)[::self.delta_t_plot], 'k--',
-                             label="[Kwon et al.] lower bound, $s = {}$, $= {:.3g}$".format(self.envs[envId]._sparsity,
-                                                                                            lowerbound_sparse), lw=3)
-            legend()
-            if self.nb_break_points > 0:
-                # DONE fix math formula in case of non stationary bandits
-                plt.ylabel(
-                    "Normalized non-stationary regret\n" + r"$\frac{R_t}{\log(t)} = \frac{1}{\log(t)}\sum_{s=1}^{t} \max_k \mu_k(t) - \frac{1}{\log(t)}$ %s%s" % (
-                        r"$\sum_{s=1}^{t} \sum_{k=1}^{%d} \mu_k(t) \mathbb{E}_{%d}[1(I(t)=k)]$" % (
-                            self.envs[envId].nbArms,
-                            self.repetitions) if moreAccurate else r"$\sum_{s=1}^{t} $\mathbb{E}_{%d}[r_s]$" % (
-                            self.repetitions), ylabel2))
-            else:
-                plt.ylabel(
-                    r"Normalized regret%s$\frac{R_t}{\log(t)} = \frac{t}{\log(t)} \mu^* - \frac{1}{\log(t)}\sum_{s=1}^{t}$ %s%s" % (
-                        "\n", r"$\sum_{k=1}^{%d} \mu_k\mathbb{E}_{%d}[T_k(t)]$" % (
-                            self.envs[envId].nbArms,
-                            self.repetitions) if moreAccurate else r"$\mathbb{E}_{%d}[r_s]$" % (
-                            self.repetitions), ylabel2))
+            plt.ylabel(
+                r"Normalized regret%s$\frac{R_t}{\log(t)} = \frac{t}{\log(t)} \mu^* - \frac{1}{\log(t)}\sum_{s=1}^{t}$ %s%s" % (
+                    "\n", r"$\mathbb{E}_{%d}[r_s]$" % self.repetitions, ylabel2)
+            )
             plt.title(
                 "Normalized cumulated regrets for different bandit algorithms, averaged ${}$ times\n${}$ arms{}: {}".format(
                     self.repetitions, self.envs[envId].nbArms, self.envs[envId].str_sparsity(),
                     self.envs[envId].reprarms(1, latex=True)))
         else:
-            if drawUpperBound and not (semilogx or loglog):
-                # Experiment to print also an upper bound: it is CRAZILY huge!!
-                lower_amplitudes = np.asarray([arm.lower_amplitude for arm in self.envs[envId].arms])
-                amplitude = np.max(lower_amplitudes[:, 1])
-                maxVariance = max([p * (1 - p) for p in self.envs[envId].means])
-                K = self.envs[envId].nbArms
-                upperbound = 76 * np.sqrt(maxVariance * K * X) + amplitude * K
-                plt.plot(X[::self.delta_t_plot], upperbound[::self.delta_t_plot], 'r-',
-                         label=r"Minimax upper-bound for kl-UCB++", lw=3)
             # FIXED for semilogx plots, truncate to only show t >= 100
             if semilogx or loglog:
                 X = X[X >= 100]
             else:
                 X = X[X >= 1]
-            if self.plot_lowerbound:
-                # We also plot the Lai & Robbins lower bound
-                plt.plot(X[::self.delta_t_plot], lowerbound * np.log(X)[::self.delta_t_plot], 'k-',
-                         label=r"[Lai & Robbins] lower bound = ${:.3g}\; \log(t)$".format(lowerbound), lw=3)
-                # We also plot the Kwon et al lower bound
-                if self.envs[envId]._sparsity is not None and not np.isnan(lowerbound_sparse):
-                    plt.plot(X[::self.delta_t_plot], lowerbound_sparse * np.ones_like(X)[::self.delta_t_plot], 'k--',
-                             label=r"[Kwon et al.] lower bound, $s = {}$, $= {:.3g} \; \log(t)$".format(
-                                 self.envs[envId]._sparsity, lowerbound_sparse), lw=3)
             legend()
-            if self.nb_break_points > 0:
-                # DONE fix math formula in case of non stationary bandits
-                plt.ylabel(
-                    "Non-stationary regret\n" + r"$R_t = \sum_{s=1}^{t} \max_k \mu_k(s) - \sum_{s=1}^{t}$%s%s" % (
-                        r"$\sum_{k=1}^{%d} \mu_k\mathbb{P}_{%d}[A(t)=k]$" % (
-                            self.envs[envId].nbArms,
-                            self.repetitions) if moreAccurate else r"$\mathbb{E}_{%d}[r_s]$" % (
-                            self.repetitions), ylabel2))
-            else:
-                plt.ylabel(r"Regret $R_t = t \mu^* - \sum_{s=1}^{t}$ %s%s" % (
-                    r"$\sum_{k=1}^{%d} \mu_k\mathbb{E}_{%d}[T_k(t)]$" % (self.envs[envId].nbArms,
-                                                                         self.repetitions) if moreAccurate else r"$\mathbb{E}_{%d}[r_s]$ (from actual rewards)" % (
-                        self.repetitions), ylabel2))
-            plt.title("Cumulated regrets for different bandit algorithms, averaged ${}$ times\n${}$ arms{}: {}".format(
-                self.repetitions, self.envs[envId].nbArms, self.envs[envId].str_sparsity(),
-                self.envs[envId].reprarms(1, latex=True)))
-        show_and_save(self.showplot, savefig, fig=fig, pickleit=USE_PICKLE)
-        return fig
-
-    def plotBestArmPulls(self, envId, savefig=None):
-        """Plot the frequency of pulls of the best channel.
-
-        - Warning: does not adapt to dynamic settings!
-        """
-        fig = plt.figure()
-        colors = palette(self.nbPolicies)
-        markers = makemarkers(self.nbPolicies)
-        X = self._times[2:]
-        for i, policy in enumerate(self.policies):
-            Y = self.getBestArmPulls(i, envId)[2:]
-            lw = 10 if (
-                    '$N=' in policy.__cachedstr__ or 'Aggr' in policy.__cachedstr__ or 'CORRAL' in policy.__cachedstr__ or 'LearnExp' in policy.__cachedstr__ or 'Exp4' in policy.__cachedstr__) else 8
-            if len(self.policies) > 8: lw -= 1
-            plt.plot(X[::self.delta_t_plot], Y[::self.delta_t_plot], label=policy.__cachedstr__, color=colors[i],
-                     marker=markers[i], markevery=(i / 50., 0.1), lw=lw, ms=int(1.5 * lw))
-        legend()
-        self._xlabel(envId, r"Time steps $t = 1...T$, horizon $T = {}${}".format(self.horizon, self.signature))
-        add_percent_formatter("yaxis", 1.0)
-        plt.ylabel("Frequency of pulls of the optimal arm")
-        plt.title(
-            "Best arm pulls frequency for different bandit algorithms, averaged ${}$ times\n${}$ arms{}: {}".format(
-                self.repetitions, self.envs[envId].nbArms, self.envs[envId].str_sparsity(),
+            plt.ylabel(r"Regret $R_t = t \mu^* - \sum_{s=1}^{t}$ %s%s" % (
+                r"$\mathbb{E}_{%d}[r_s]$ (from actual rewards)" % self.repetitions,
+                ylabel2
+            ))
+            plt.title("Cumulated regrets for different bandit algorithms, averaged ${}$ times\n${}$ arms: {}".format(
+                self.repetitions, self.envs[envId].nbArms,
                 self.envs[envId].reprarms(1, latex=True)))
         show_and_save(self.showplot, savefig, fig=fig, pickleit=USE_PICKLE)
         return fig
@@ -882,7 +455,7 @@ class EvaluatorContextual(object):
         all_times = [np.asarray(all_times[i]) / float(base) for i in index_of_sorting]
         fig = plt.figure()
         violin_or_box_plot(data=all_times, labels=labels, boxplot=self.use_box_plot)
-        plt.xlabel("Bandit algorithms{}".format(self.signature))
+        plt.xlabel("Bandit algorithms")
         ylabel = "Running times (in {}), for {} repetitions".format(unit, self.repetitions)
         plt.ylabel(ylabel)
         adjust_xticks_subplots(ylabel=ylabel, labels=labels)
@@ -924,7 +497,7 @@ class EvaluatorContextual(object):
         all_memories = [np.asarray(all_memories[i]) / float(base) for i in index_of_sorting]
         fig = plt.figure()
         violin_or_box_plot(data=all_memories, labels=labels, boxplot=self.use_box_plot)
-        plt.xlabel("Bandit algorithms{}".format(self.signature))
+        plt.xlabel("Bandit algorithms")
         ylabel = "Memory consumption (in {}), for {} repetitions".format(unit, self.repetitions)
         plt.ylabel(ylabel)
         adjust_xticks_subplots(ylabel=ylabel, labels=labels)
@@ -962,7 +535,7 @@ class EvaluatorContextual(object):
         all_number_of_cp_detections = [np.asarray(all_number_of_cp_detections[i]) for i in index_of_sorting]
         fig = plt.figure()
         violin_or_box_plot(data=all_number_of_cp_detections, labels=labels, boxplot=self.use_box_plot)
-        plt.xlabel("Bandit algorithms{}".format(self.signature))
+        plt.xlabel("Bandit algorithms")
         ylabel = "Number of detected change-points, for {} repetitions".format(self.repetitions)
         plt.ylabel(ylabel)
         adjust_xticks_subplots(ylabel=ylabel, labels=labels)
@@ -978,7 +551,7 @@ class EvaluatorContextual(object):
         print("\nGiving the vector of final regrets ...")
         for policyId, policy in enumerate(self.policies):
             print("\n  For policy #{} called '{}' ...".format(policyId, policy.__cachedstr__))
-            last_regrets = self.getLastRegrets(policyId, envId=envId, moreAccurate=moreAccurate)
+            last_regrets = self.getLastRegrets(policyId, envId=envId)
             print("  Last regrets (for all repetitions) have:")
             print("Min of    last regrets R_T = {:.3g}".format(np.min(last_regrets)))
             print("Mean of   last regrets R_T = {:.3g}".format(np.mean(last_regrets)))
@@ -987,12 +560,12 @@ class EvaluatorContextual(object):
             print("Standard deviation     R_T = {:.3g}".format(np.std(last_regrets)))
         for policyId, policy in enumerate(self.policies):
             print("For policy #{} called '{}' ...".format(policyId, policy.__cachedstr__))
-            last_regrets = self.getLastRegrets(policyId, envId=envId, moreAccurate=moreAccurate)
+            last_regrets = self.getLastRegrets(policyId, envId=envId)
             print(r"R^{%i}_{T=%i,K=%i} = " % (policyId + 1, self.horizon, self.envs[envId].nbArms) + r"{} pm {}".format(
                 int(round(np.mean(last_regrets))), int(round(np.std(last_regrets)))))
-        means = [np.mean(self.getLastRegrets(policyId, envId=envId, moreAccurate=moreAccurate)) for policyId in
+        means = [np.mean(self.getLastRegrets(policyId, envId=envId)) for policyId in
                  range(self.nbPolicies)]
-        stds = [np.std(self.getLastRegrets(policyId, envId=envId, moreAccurate=moreAccurate)) for policyId in
+        stds = [np.std(self.getLastRegrets(policyId, envId=envId)) for policyId in
                 range(self.nbPolicies)]
         # table_to_latex(mean_data=means, std_data=stds, labels=[policy.__cachedstr__ for policy in self.policies])
 
@@ -1012,7 +585,7 @@ class EvaluatorContextual(object):
         if boxplot:
             all_last_regrets = []
             for policyId, policy in enumerate(self.policies):
-                last_regret = self.getLastRegrets(policyId, envId=envId, moreAccurate=moreAccurate)
+                last_regret = self.getLastRegrets(policyId, envId=envId)
                 if normalized_boxplot:
                     last_regret /= np.log(self.horizon)
                 all_last_regrets.append(last_regret)
@@ -1023,7 +596,7 @@ class EvaluatorContextual(object):
             labels = [labels[i] for i in index_of_sorting]
             all_last_regrets = [np.asarray(all_last_regrets[i]) for i in index_of_sorting]
             fig = plt.figure()
-            plt.xlabel("Bandit algorithms{}".format(self.signature))
+            plt.xlabel("Bandit algorithms")
             ylabel = "{}egret value $R_T{}$,\nfor $T = {}$, for {} repetitions".format(
                 "Normalized r" if normalized_boxplot else "R", r"/\log(T)" if normalized_boxplot else "", self.horizon,
                 self.repetitions)
@@ -1042,9 +615,9 @@ class EvaluatorContextual(object):
                     "Histogram of regrets for {}\n${}$ arms{}: {}".format(policy.__cachedstr__, self.envs[envId].nbArms,
                                                                           self.envs[envId].str_sparsity(),
                                                                           self.envs[envId].reprarms(1, latex=True)))
-                plt.xlabel("Regret value $R_T$, horizon $T = {}${}".format(self.horizon, self.signature))
+                plt.xlabel("Regret value $R_T$, horizon $T = {}".format(self.horizon))
                 plt.ylabel("Density of observations, ${}$ repetitions".format(self.repetitions))
-                last_regrets = self.getLastRegrets(policyId, envId=envId, moreAccurate=moreAccurate)
+                last_regrets = self.getLastRegrets(policyId, envId=envId)
                 try:
                     sns.distplot(last_regrets, hist=True, bins=nbbins, color=colors[policyId],
                                  kde_kws={'cut': 0, 'marker': markers[policyId], 'markevery': (policyId / 50., 0.1)})
@@ -1076,11 +649,11 @@ class EvaluatorContextual(object):
             ax0.set_ylabel(
                 "{} of observations, ${}$ repetitions".format("Frequency" if normed else "Histogram and density",
                                                               self.repetitions))
-            ax0.set_xlabel("Regret value $R_T$, horizon $T = {}${}".format(self.horizon, self.signature))
+            ax0.set_xlabel("Regret value $R_T$, horizon $T = {}$".format(self.horizon))
             for policyId, policy in enumerate(self.policies):
                 i, j = policyId % nrows, policyId // nrows
                 ax = axes[i, j] if ncols > 1 else axes[i]
-                last_regrets = self.getLastRegrets(policyId, envId=envId, moreAccurate=moreAccurate)
+                last_regrets = self.getLastRegrets(policyId, envId=envId)
                 try:
                     sns.distplot(last_regrets, ax=ax, hist=True, bins=nbbins, color=colors[policyId],
                                  kde_kws={'cut': 0, 'marker': markers[policyId],
@@ -1100,13 +673,13 @@ class EvaluatorContextual(object):
                                                                                                self.envs[
                                                                                                    envId].reprarms(1,
                                                                                                                    latex=True)))
-            plt.xlabel("Regret value $R_T$, horizon $T = {}${}".format(self.horizon, self.signature))
+            plt.xlabel("Regret value $R_T$, horizon $T = {}$".format(self.horizon))
             plt.ylabel(
                 "{} of observations, ${}$ repetitions".format("Frequency" if normed else "Number", self.repetitions))
             all_last_regrets = []
             labels = []
             for policyId, policy in enumerate(self.policies):
-                all_last_regrets.append(self.getLastRegrets(policyId, envId=envId, moreAccurate=moreAccurate))
+                all_last_regrets.append(self.getLastRegrets(policyId, envId=envId))
                 labels.append(policy.__cachedstr__)
             if self.nbPolicies > 6: nbbins = int(nbbins * self.nbPolicies / 6)
             for policyId in range(self.nbPolicies):
@@ -1122,30 +695,15 @@ class EvaluatorContextual(object):
         show_and_save(self.showplot, savefig, fig=fig, pickleit=USE_PICKLE)
         return fig
 
-    def plotHistoryOfMeans(self, envId=0, horizon=None, savefig=None):
-        """ Plot the history of means, as a plot with x axis being the time, y axis the mean rewards, and K curves one for each arm."""
-        if horizon is None:
-            horizon = self.horizon
-        env = self.envs[envId]
-        if hasattr(env, 'plotHistoryOfMeans'):
-            fig = env.plotHistoryOfMeans(horizon=horizon, savefig=savefig, showplot=self.showplot)
-            # FIXME https://github.com/SMPyBandits/SMPyBandits/issues/175#issuecomment-455637453
-            #  For one trajectory, we can ask Evaluator.Evaluator to store not only the number of detections, but more! We can store the times of detections, for each arms (as a list of list).
-            # If we have these data (for each repetitions), we can plot the detection times (for each arm) on a plot like the following
-            return fig
-        else:
-            print("Warning: environment {} did not have a method plotHistoryOfMeans...".format(env))  # DEBUG
-
 
 # Helper function for the parallelization
 
-def delayed_play(env, policy, horizon, all_rewards, all_contexts,
-                 random_shuffle=random_shuffle, random_invert=random_invert, nb_break_points=nb_break_points,
-                 seed=None, repeatId=0,
-                 useJoblib=False):
+def delayed_play(env, policy, horizon,
+                 all_contexts, all_rewards,
+                 seed=None, repeatId=0):
     """Helper function for the parallelization."""
     start_time = time.time()
-    start_memory = getCurrentMemory(thread=useJoblib)
+    start_memory = getCurrentMemory(thread=False)
     # Give a unique seed to random & numpy.random for each call of this function
     if seed is not None:
         random.seed(seed)
@@ -1153,58 +711,35 @@ def delayed_play(env, policy, horizon, all_rewards, all_contexts,
     # We have to deepcopy because this function is Parallel-ized
     env = deepcopy(env)
     policy = deepcopy(policy)
-    means = env.means
-    if env.isChangingAtEachRepetition:
-        means = env.newRandomArms()
-    indexes_bestarm = np.nonzero(np.isclose(means, max(means)))[0]
 
     # Start game
     policy.startGame()
-    result = Result(env.nbArms, horizon, indexes_bestarm=indexes_bestarm,
-                    means=means)  # One Result object, for every policy
+    result = Result(env.nbArms, horizon)  # One Result object, for every policy
 
-    # FIXME Monkey patching policy.detect_change() to store number of detections, see https://stackoverflow.com/a/42657312/
-    if hasattr(policy, 'detect_change'):
-        from types import MethodType
-        old_detect_change = policy.detect_change
+    # self.all_contexts[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
+    # self.all_rewards[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
 
-        def new_detect_change(self, *args, **kwargs):
-            response_of_detect_change = old_detect_change(*args, **kwargs)
-            if (isinstance(response_of_detect_change, bool) and response_of_detect_change) or (
-                    isinstance(response_of_detect_change, tuple) and response_of_detect_change[0]):
-                result.number_of_cp_detections += 1
-            return response_of_detect_change
-
-        policy.detect_change = MethodType(new_detect_change, policy)
-
-    # XXX Experimental support for random events: shuffling or inverting the list of arms, at these time steps
-    if nb_break_points is None or nb_break_points <= 0:
-        random_shuffle = False
-        random_invert = False
-    if nb_break_points > 0:
-        t_events = [i * int(horizon / float(nb_break_points)) for i in range(nb_break_points)]
-
-    prettyRange = tqdm(range(horizon), desc="Time t") if repeatId == 0 else range(horizon)
-    for t in prettyRange:
+    pretty_range = tqdm(range(horizon), desc="Time t") if repeatId == 0 else range(horizon)
+    for t in pretty_range:
         # 1. A context is drawn
-        context = all_contexts[repeatId, t]
+        contexts = all_contexts[repeatId, t]
 
         if isinstance(policy, ContextualBasePolicy):
             # 2. The player's policy choose an arm
-            choice = policy.choice(context)
+            choice = policy.choice(contexts)
 
             # 3. A random reward is drawn, from this arm at this time
-            reward = all_rewards[choice, repeatId, t]
+            reward = all_rewards[repeatId, t, choice]
 
             # 4. The policy sees the reward
 
-            policy.getReward(choice, reward, context)
+            policy.getReward(choice, reward, contexts)
         else:
             # 2. The player's policy choose an arm
             choice = policy.choice()
 
             # 3. A random reward is drawn, from this arm at this time
-            reward = all_rewards[choice, repeatId, t]
+            reward = all_rewards[repeatId, t, choice]
 
             # 4. The policy sees the reward
 
@@ -1213,32 +748,9 @@ def delayed_play(env, policy, horizon, all_rewards, all_contexts,
         # 5. Finally we store the results
         result.store(t, choice, reward)
 
-        if env.isDynamic:
-            if t in env.changePoints:
-                means = env.newRandomArms(t)
-                indexes_bestarm = np.nonzero(np.isclose(means, np.max(means)))[0]
-                result.change_in_arms(t, indexes_bestarm)
-                if repeatId == 0:
-                    print(
-                        "\nNew means vector = {}, best arm(s) = {}, at time t = {} ..."
-                        .format(means, indexes_bestarm, t)
-                    )  # DEBUG
-
-    # Print the quality of estimation of arm ranking for this policy, just for 1st repetition
-    if repeatId == 0 and hasattr(policy, 'estimatedOrder') and isinstance(policy, BasePolicy):
-        order = policy.estimatedOrder()
-        print("\nEstimated order by the policy {} after {} steps: {} ...".format(policy, horizon, order))
-        print("  ==> Optimal arm identification: {:.2%} (relative success)...".format(
-            weightedDistance(order, env.means, n=1)))
-        # print("  ==> Manhattan   distance from optimal ordering: {:.2%} (relative success)...".format(manhattan(order)))
-        # # print("  ==> Kendell Tau distance from optimal ordering: {:.2%} (relative success)...".format(kendalltau(order)))
-        # # print("  ==> Spearman    distance from optimal ordering: {:.2%} (relative success)...".format(spearmanr(order)))
-        # print("  ==> Gestalt     distance from optimal ordering: {:.2%} (relative success)...".format(gestalt(order)))
-        print("  ==> Mean distance from optimal ordering: {:.2%} (relative success)...".format(meanDistance(order)))
-
     # Finally, store running time and consumed memory
     result.running_time = time.time() - start_time
-    memory_consumption = getCurrentMemory(thread=useJoblib) - start_memory
+    memory_consumption = getCurrentMemory(thread=False) - start_memory
     if memory_consumption == 0:
         # XXX https://stackoverflow.com/a/565382/
         memory_consumption = sys.getsizeof(pickle.dumps(policy))
@@ -1249,13 +761,13 @@ def delayed_play(env, policy, horizon, all_rewards, all_contexts,
 
 # --- Helper for loading a previous Evaluator object
 
-def EvaluatorFromDisk(filepath='/tmp/saveondiskEvaluator.hdf5'):
-    """ Create a new Evaluator object from the HDF5 file given in argument."""
-    with open(filepath, 'r') as hdf:
-        configuration = hdf.configuration
-        evaluator = EvaluatorContextual(configuration)
-        evaluator.loadfromdisk(hdf)
-    return evaluator
+# def EvaluatorFromDisk(filepath='/tmp/saveondiskEvaluator.hdf5'):
+#     """ Create a new Evaluator object from the HDF5 file given in argument."""
+#     with open(filepath, 'r') as hdf:
+#         configuration = hdf.configuration
+#         evaluator = EvaluatorContextual(configuration)
+#         evaluator.loadfromdisk(hdf)
+#     return evaluator
 
 
 # --- Utility function

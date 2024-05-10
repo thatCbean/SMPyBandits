@@ -39,22 +39,5 @@ class ContextualBernoulliArm(ContextualArm):
         assert isinstance(theta, np.ndarray), "theta must be an np.ndarray"
         self.theta = theta
 
-    # def draw_nparray(self, contexts, shape=(1,)):
-    #     assert isinstance(contexts, np.ndarray), "contexts must be an np.ndarray"
-
-    def calculate_mean(self, context):
-        assert isinstance(context, np.ndarray), "context must be an np.ndarray"
-        assert context.shape == self.theta.shape, "context must be of the same dimension as arm"
-        self.mean = np.inner(context, self.theta)
-        return self.mean
-
-    # TODO: Just copy pasted these for the code to run, need to validate use and function
-    @staticmethod
-    def kl(x, y):
-        """ The kl(x, y) to use for this arm."""
-        return klBern(x, y)
-
-    @staticmethod
-    def oneLR(mumax, mu):
-        """ One term of the Lai & Robbins lower bound for Bernoulli arms: (mumax - mu) / KL(mu, mumax). """
-        return (mumax - mu) / klBern(mu, mumax)
+    def is_nonzero(self):
+        return np.linalg.norm(self.theta) != 0
