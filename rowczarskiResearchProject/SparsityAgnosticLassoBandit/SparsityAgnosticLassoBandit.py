@@ -27,7 +27,7 @@ class SparsityAgnosticLassoBandit(ContextualBasePolicy):
         self.lassoModel = Lasso(alpha=self.lambda_zero)
 
     def __str__(self):
-        return r"SparsityAgnosticLassoBandit($\lambda_zero: {:.3g}$)".format(self.lambda_zero)
+        return r"SparsityAgnosticLassoBandit($\lambda_0: {:.3g}$)".format(self.lambda_zero)
 
     def choice(self, context):
         all_value = [self.betaHat * np.transpose(context[arm]) for arm in range(0, self.nbArms - 1)]

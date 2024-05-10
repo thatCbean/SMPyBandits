@@ -1,4 +1,6 @@
 import os
+import time
+from datetime import datetime
 
 PLOT_DIR = 'plots'
 SEMILOG_X = False
@@ -27,9 +29,10 @@ class Plotting:
         create_folder_plot_if_needed()
 
     def create_subfolder(self, N, environment, environmentId, hashValue):
-        subfolder = "SP__K{}_T{}_N{}__{}_algos".format(environment.nbArms, self.configuration['horizon'],
+        subfolder = "SP__K{}_T{}_N{}__{}_algos_{}".format(environment.nbArms, self.configuration['horizon'],
                                                        self.configuration['repetitions'],
-                                                       len(self.configuration['policies']))
+                                                       len(self.configuration['policies']),
+                                                          datetime.now().strftime("%Y%m%d%H%M"))
         self.plot_dir = os.path.join(PLOT_DIR, subfolder)
         # Get the name of the output file
         self.imageName = "main____env{}-{}_{}".format(environmentId + 1, N, hashValue)

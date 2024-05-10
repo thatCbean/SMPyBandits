@@ -30,7 +30,7 @@ class NormalContext(BaseContext):
         res = multivariate_normal(self.means, self.covariance_matrix)
         # ress = np.maximum(res, 0)
         ress = np.abs(res)
-        print("Context: res: {}, ress: {}".format(res, ress))
+        # print("Context: res: {}, ress: {}".format(res, ress))
         return ress / np.linalg.norm(ress) if np.linalg.norm(ress) > 1 else ress
 
     def get_means(self):
