@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
-""" The linUCB policy.
+"""
+The linUCB policy.
 
-Reference: [Contextual Bandits with Linear Payoff Functions, W. Chu, L. Li, L. Reyzin, R.E. Schapire, Algorithm 1 (linUC)]
+Reference:
+    [Contextual Bandits with Linear Payoff Functions, W. Chu, L. Li, L. Reyzin, R.E. Schapire, Algorithm 1 (linUCB)]
 """
 from __future__ import division, print_function  # Python 2 compatibility
 
 import math
 
 import numpy as np
-import numpy.random as rn
 
-from SMPyBandits.ContextualPolicies.ContextualBasePolicy import ContextualBasePolicy
+from SMPyBandits.ContextualBandits.ContextualPolicies.ContextualBasePolicy import ContextualBasePolicy
 
 #: Default :math:`\alpha` parameter.
 ALPHA = 0.01
@@ -41,7 +42,7 @@ class LinUCB(ContextualBasePolicy):
     def __str__(self):
         return r"linUCB($\alpha: {:.3g}$)".format(self.alpha)
 
-    def getReward(self, arm, reward, context):
+    def getReward(self, arm, reward, contexts):
         r"""Give a reward: accumulate rewards on that arm k, then update the weight :math:`w_k(t)` and renormalize the weights.
 
         - With unbiased estimators, divide by the trust on that arm k, i.e., the probability of observing arm k: :math:`\tilde{r}_k(t) = \frac{r_k(t)}{\mathrm{trusts}_k(t)}`.
@@ -52,21 +53,21 @@ class LinUCB(ContextualBasePolicy):
            w'_k(t+1) &= w_k(t) \times \exp\left( \frac{\tilde{r}_k(t)}{\gamma_t N_k(t)} \right) \\
            w(t+1) &= w'(t+1) / \sum_{k=1}^{K} w'_k(t+1).
         """
-        super(LinUCB, self).getReward(arm, reward, context[arm])  # XXX Call to BasePolicy
-        self.A = self.A + np.matmul(context[arm], np.transpose(context[arm]))
-        self.b = self.b + np.multiply(context[arm], reward)
+        super(LinUCB, self).getReward(arm, reward, contexts)  # XXX Call to BasePolicy
+        self.A = self.A + np.matmul(contexts[arm], np.transpose(contexts))
+        self.b = self.b + np.multiply(contexts[arm], reward)
 
-    def choice(self, context):
+    def choice(self, contexts):
         theta_t = np.matmul(np.linalg.inv(self.A), self.b)
         max_val = -1
         index = -1
-        for i in range(self.k):
-            p_ta = (np.matmul(np.transpose(theta_t), context[i]) +
+        for a in range(self.k):
+            p_ta = (np.matmul(np.transpose(theta_t), contexts[a]) +
                     self.alpha * math.sqrt(
-                        np.matmul(np.transpose(context[i]), np.matmul(np.linalg.inv(self.A), context[i]))))
+                        np.matmul(np.transpose(contexts[a]), np.matmul(np.linalg.inv(self.A), contexts[a]))))
             if p_ta > max_val:
                 max_val = p_ta
-                index = i
+                index = a
 
         return index
 

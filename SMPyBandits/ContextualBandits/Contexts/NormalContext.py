@@ -4,7 +4,7 @@ __version__ = "0.1"
 import numpy as np
 from numpy.random import multivariate_normal
 
-from SMPyBandits.Contexts.BaseContext import BaseContext
+from SMPyBandits.ContextualBandits.Contexts.BaseContext import BaseContext
 
 
 class NormalContext(BaseContext):
@@ -19,6 +19,8 @@ class NormalContext(BaseContext):
             means = np.full(shape=dimension, fill_value=(1./dimension))
         if covariance_matrix is None:
             covariance_matrix = np.identity(dimension) * 0.5
+        if not isinstance(means, np.ndarray):
+            means = np.array(means)
         assert len(means) == dimension, "means needs to have <dimension> entries"
         assert covariance_matrix.shape == (dimension, dimension), "covariance_matrix needs to be a <dimension>x<dimension> matrix"
 
@@ -28,10 +30,8 @@ class NormalContext(BaseContext):
 
     def draw_context(self):
         res = multivariate_normal(self.means, self.covariance_matrix)
-        # ress = np.maximum(res, 0)
-        ress = np.abs(res)
-        # print("Context: res: {}, ress: {}".format(res, ress))
-        return ress / np.linalg.norm(ress) if np.linalg.norm(ress) > 1 else ress
+        res = np.abs(res)
+        return res / np.linalg.norm(res) if np.linalg.norm(res) > 1 else res
 
     def get_means(self):
         return self.means / self.means.sum()
