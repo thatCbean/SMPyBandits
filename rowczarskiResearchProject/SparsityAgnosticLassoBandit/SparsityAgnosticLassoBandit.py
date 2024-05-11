@@ -1,7 +1,8 @@
 import numpy as np
 
 from sklearn.linear_model import Lasso
-from SMPyBandits.ContextualPolicies.ContextualBasePolicy import ContextualBasePolicy
+
+from SMPyBandits.ContextualBandits.ContextualPolicies.ContextualBasePolicy import ContextualBasePolicy
 
 """Reference : Sparsity-Agnostic Lasso Bandit Min-Hwan Oh, Garud Iyengar, Assaf Zeevi Proceedings of the 38th 
 International Conference on Machine Learning, PMLR 139:8271-8280, 2021.

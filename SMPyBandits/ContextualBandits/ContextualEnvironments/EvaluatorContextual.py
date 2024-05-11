@@ -79,6 +79,7 @@ class EvaluatorContextual(object):
                  finalRanksOnAverage=FINAL_RANKS_ON_AVERAGE, averageOn=5e-3,
                  useJoblibForPolicies=USE_JOBLIB_FOR_POLICIES,
                  moreAccurate=MORE_ACCURATE):
+        self.use_box_plot = True
         self.cfg = configuration  #: Configuration dictionary
         # Attributes
         self.nbPolicies = len(self.cfg['policies'])  #: Number of policies

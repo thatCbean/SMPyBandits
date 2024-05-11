@@ -21,6 +21,7 @@ class NormalContext(BaseContext):
             covariance_matrix = np.identity(dimension) * 0.5
         if not isinstance(means, np.ndarray):
             means = np.array(means)
+        print(dimension)
         assert len(means) == dimension, "means needs to have <dimension> entries"
         assert covariance_matrix.shape == (dimension, dimension), "covariance_matrix needs to be a <dimension>x<dimension> matrix"
 

@@ -2,6 +2,8 @@ import os
 import time
 from datetime import datetime
 
+from SMPyBandits.ContextualBandits.ContextualEnvironments.EvaluatorContextual import EvaluatorContextual
+
 PLOT_DIR = 'plots'
 SEMILOG_X = False
 SEMILOG_Y = False
@@ -100,9 +102,9 @@ class Plotting:
         if self.saveAllFigures:
             savefig = self.mainFigure
             print(" - Plotting the cumulative rewards, and saving the plot to {} ...".format(savefig))
-            self.evaluator.plotRegrets(envId, savefig=savefig, moreAccurate=True)
+            self.evaluator.plotRegrets(envId, savefig=savefig)
             savefig = self.mainFigure.replace('main', 'main_LessAccurate')
-            self.evaluator.plotRegrets(envId, savefig=savefig, moreAccurate=False)
+            self.evaluator.plotRegrets(envId, savefig=savefig)
             savefig = self.mainFigure.replace('main', 'main_BestArmPulls')
             print(" - Plotting the probability of picking the best arm, and saving the plot to {} ...".format(savefig))
             self.evaluator.plotBestArmPulls(envId, savefig=savefig)
@@ -122,8 +124,8 @@ class Plotting:
                                            plotMaxMin=True)
 
         else:
-            self.evaluator.plotRegrets(envId, moreAccurate=True)
-            self.evaluator.plotRegrets(envId, moreAccurate=False)
+            self.evaluator.plotRegrets(envId)
+            self.evaluator.plotRegrets(envId)
             self.evaluator.plotBestArmPulls(envId)
             self.evaluator.plotRegrets(envId, semilogy=True)
             if self.configuration['horizon'] >= 1000:
@@ -179,7 +181,8 @@ class Plotting:
                 self.evaluator.plotLastRegrets(envId, sharex=sharex, sharey=sharey)
 
     def plot_all(self, envId):
-        self.plot_history_of_means(envId)
+        if not isinstance(self.evaluator, EvaluatorContextual):
+            self.plot_history_of_means(envId)
         self.plot_boxplot_regret(envId)
         self.plot_running_times(envId)
         self.plot_memory_consumption(envId)

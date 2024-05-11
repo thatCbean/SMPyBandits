@@ -1,4 +1,4 @@
-from SMPyBandits.ContextualPolicies.LinUCB import LinUCB
+from SMPyBandits.ContextualBandits.ContextualPolicies.LinUCB import LinUCB
 from SMPyBandits.Policies import UCB, Exp3
 
 policies = [

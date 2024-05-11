@@ -1,5 +1,5 @@
-from SMPyBandits.ContextualPolicies.LinUCB import LinUCB
-from SMPyBandits.Policies import UCB, Exp3, SparseUCB
+from SMPyBandits.ContextualBandits.ContextualPolicies.LinUCB import LinUCB
+from SMPyBandits.Policies import UCB, Exp3
 from rowczarskiResearchProject.SparsityAgnosticLassoBandit.SparsityAgnosticLassoBandit import \
     SparsityAgnosticLassoBandit
 

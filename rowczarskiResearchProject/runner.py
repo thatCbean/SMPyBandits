@@ -1,5 +1,5 @@
+from SMPyBandits.ContextualBandits.ContextualEnvironments.EvaluatorContextual import EvaluatorContextual
 from SMPyBandits.Environment import Evaluator
-from SMPyBandits.Environment.EvaluatorContextual import EvaluatorContextual
 from rowczarskiResearchProject.configuration.Configuration import Configuration
 from rowczarskiResearchProject.environment.EnvironmentBernoulliContextual import environments as environments_bernoulli_contextual
 from rowczarskiResearchProject.environment.EnvironmentSparse import environments as environments_sparse
@@ -36,7 +36,7 @@ for environmentId, environment in enumerate(evaluator.envs):
 
     # Display the final regrets and rankings for that env
     evaluator.printLastRegrets(environmentId)
-    evaluator.printFinalRanking(environmentId, moreAccurate=True)
+    # evaluator.printFinalRanking(environmentId, moreAccurate=True)
     # evaluator.printRunningTimes(environmentId) TODO: Fix this
     evaluator.printMemoryConsumption(environmentId)
     evaluator.printNumberOfCPDetections(environmentId)
@@ -44,5 +44,3 @@ for environmentId, environment in enumerate(evaluator.envs):
     # Plotting
     plotter.create_subfolder(N, environment, environmentId, hashValue)
     plotter.plot_all(environmentId)
-
-    # TODO: Save the configuration for reproducibility
