@@ -60,6 +60,8 @@ class ContextualMAB(object):
             if isinstance(context, BaseContext):
                 self.contexts.append(context)
 
+
+        print(len(self.contexts), len(self.arms))
         assert len(self.contexts) == len(self.arms), \
             "Error: The number of contexts should be equal to the number of arms"
 

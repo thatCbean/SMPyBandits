@@ -15,6 +15,8 @@ from SMPyBandits.Policies import BasePolicy
 
 from SMPyBandits.ContextualBandits.ContextualPolicies.ContextualBasePolicy import ContextualBasePolicy
 from SMPyBandits.ContextualBandits.ContextualEnvironments.ContextualMAB import ContextualMAB
+from rowczarskiResearchProject.SparsityAgnosticLassoBandit.SparsityAgnosticLassoBandit import \
+    SparsityAgnosticLassoBandit
 
 USE_PICKLE = False  #: Should we save the figure objects to a .pickle file at the end of the simulation?
 import random
@@ -742,6 +744,11 @@ def delayed_play(env, policy, horizon,
             # 4. The policy sees the reward
 
             policy.getReward(choice, reward, contexts)
+
+            if isinstance(policy, SparsityAgnosticLassoBandit):
+
+                # 5. The policy needs to update its model based on observed reward
+                policy.update(choice, reward, contexts)
         else:
             # 2. The player's policy choose an arm
             choice = policy.choice()
