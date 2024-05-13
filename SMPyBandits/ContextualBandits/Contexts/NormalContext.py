@@ -17,11 +17,12 @@ class NormalContext(BaseContext):
         )
         if means is None:
             means = np.full(shape=dimension, fill_value=(1./dimension))
+        else:
+            assert dimension == len(means), f"Dimension mismatch: {dimension} != {len(means)}"
         if covariance_matrix is None:
             covariance_matrix = np.identity(dimension) * 0.5
         if not isinstance(means, np.ndarray):
             means = np.array(means)
-        print(dimension)
         assert len(means) == dimension, "means needs to have <dimension> entries"
         assert covariance_matrix.shape == (dimension, dimension), "covariance_matrix needs to be a <dimension>x<dimension> matrix"
 
@@ -31,7 +32,7 @@ class NormalContext(BaseContext):
 
     def draw_context(self):
         res = multivariate_normal(self.means, self.covariance_matrix)
-        res = np.abs(res)
+        # res = np.abs(res)
         return res / np.linalg.norm(res) if np.linalg.norm(res) > 1 else res
 
     def get_means(self):

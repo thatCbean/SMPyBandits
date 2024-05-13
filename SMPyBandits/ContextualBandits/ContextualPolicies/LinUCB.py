@@ -54,7 +54,7 @@ class LinUCB(ContextualBasePolicy):
            w(t+1) &= w'(t+1) / \sum_{k=1}^{K} w'_k(t+1).
         """
         super(LinUCB, self).getReward(arm, reward, contexts)  # XXX Call to BasePolicy
-        self.A = self.A + np.matmul(contexts[arm], np.transpose(contexts))
+        self.A = self.A + np.matmul(contexts[arm], np.transpose(contexts[arm]))
         self.b = self.b + np.multiply(contexts[arm], reward)
 
     def choice(self, contexts):
@@ -64,7 +64,8 @@ class LinUCB(ContextualBasePolicy):
         for a in range(self.k):
             p_ta = (np.matmul(np.transpose(theta_t), contexts[a]) +
                     self.alpha * math.sqrt(
-                        np.matmul(np.transpose(contexts[a]), np.matmul(np.linalg.inv(self.A), contexts[a]))))
+                        # TODO: Currently taking absolute value to prevent domain errors, but may need to change this
+                        np.abs(np.matmul(np.transpose(contexts[a]), np.matmul(np.linalg.inv(self.A), contexts[a])))))
             if p_ta > max_val:
                 max_val = p_ta
                 index = a

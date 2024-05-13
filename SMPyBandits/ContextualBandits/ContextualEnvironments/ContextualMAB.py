@@ -4,6 +4,7 @@ __version__ = "0.1"
 import numpy as np
 from matplotlib import pyplot as plt
 
+from SMPyBandits.ContextualBandits.Contexts.BaseContext import BaseContext
 from SMPyBandits.ContextualBandits.ContextualArms.ContextualArm import ContextualArm
 
 from SMPyBandits.Environment.plotsettings import wraplatex, wraptext, legend, signature, show_and_save, palette
@@ -35,56 +36,44 @@ class ContextualMAB(object):
         self.isChangingAtEachRepetition = False  #: Flag to know if the problem is changing at each repetition or not.
         self.isDynamic = False  #: Flag to know if the problem is static or not.
         self.arms = []  #: List of arms
-        self.context = None
+        self.contexts = []  #: List of contexts
         self._sparsity = None
         self.non_zero_means = 0
 
         print("  Reading arms of this Contextual MAB problem from a dictionary 'configuration' = {} ...".format(
             configuration))  # DEBUG
-        arm_type = configuration["arm_type"]
-        print(" - with 'arm_type' =", arm_type)  # DEBUG
-        arm_params = configuration["arm_params"]
-        print(" - with 'arm_params' =", arm_params)  # DEBUG
+        arms = configuration["arms"]
+        print(" - with arms =", arms)  # DEBUG
         # Each 'param' could be one value (eg. 'mean' = probability for a Bernoulli) or a tuple (eg. '(mu, sigma)' for a Gaussian) or a dictionnary
-        for param in arm_params:
-            self.arms.append(arm_type(*param) if isinstance(param, (dict, tuple)) else arm_type(param))
-            if self.arms[-1].is_nonzero():
-                self.non_zero_means += 1
+        for arm in arms:
+            if isinstance(arm, ContextualArm):
+                self.arms.append(arm)
+                if self.arms[-1].is_nonzero():
+                    self.non_zero_means += 1
         # XXX try to read sparsity
         self._sparsity = configuration["sparsity"] if "sparsity" in configuration else None
 
-        print("  and contexts...")
-        context_type = configuration["context_type"]
-        print(" - with 'context_type' =", context_type)  # DEBUG
-        context_params = configuration["context_params"]
-        print(" - with 'context_params' =", arm_params)  # DEBUG
+        contexts = configuration["contexts"]
+        print(" - and contexts =", contexts)
 
-        assert isinstance(context_params, (dict, tuple, list)), "Error: Context params must be iterable"
-        self.context = context_type(*context_params)
+        for context in contexts:
+            if isinstance(context, BaseContext):
+                self.contexts.append(context)
+
+        assert len(self.contexts) == len(self.arms), \
+            "Error: The number of contexts should be equal to the number of arms"
 
         # Compute the means and stats
         print(" - with 'arms' =", self.arms)  # DEBUG
         self.nbArms = len(self.arms)  #: Number of arms
         print(" - with 'nbArms' =", self.nbArms)  # DEBUG
+        print(" - with 'contexts' =", self.contexts)
         if self._sparsity is not None:
             print(" - with 'sparsity' =", self._sparsity)  # DEBUG
         print(" - with 'arms' represented as:", self.reprarms(1, latex=True))  # DEBUG
 
-    def new_order_of_arm(self, arms):
-        """ Feed a new order of the arms to the environment.
-
-        - Updates :attr:`means` correctly.
-        - Return the new position(s) of the best arm (to count and plot ``BestArmPulls`` correctly).
-
-        warning:: This only changes the order of the arms, leaving the context the same
-        """
-        assert set(self.arms) == set(
-            arms), "Error: the new list of arms = {} does not have the same arms as the previous one."  # DEBUG
-        self.arms = arms
-
-
     def __repr__(self):
-        return "{}(nbArms: {}, arms: {})".format(self.__class__.__name__, self.nbArms, self.arms)
+        return "{}(nbArms: {}, arms: {}, contexts: {})".format(self.__class__.__name__, self.nbArms, self.arms, self.contexts)
 
     def reprarms(self, nbPlayers=None, openTag='', endTag='^*', latex=True):
         """ Return a str representation of the list of the arms (like `repr(self.arms)` but better)
@@ -113,18 +102,18 @@ class ContextualMAB(object):
 
     def draw(self, armId, t=1):
         """ Return a random sample from the armId-th arm, at time t. """
-        context_draw = self.draw_context()
+        context_draw = self.draw_context(armId)
         return context_draw, self.arms[armId].draw(context_draw, t)
 
     def draw_nparray(self, armId, shape=(1,)):
         """
             Return a numpy array of contexts and samples from the armId-th arm, of a certain shape.
         """
-        contexts = self.context.draw_nparray(shape)
+        contexts = self.contexts[armId].draw_nparray(shape)
         return contexts, self.arms[armId].draw_nparray(shape, contexts)
 
-    def draw_context(self):
-        return self.context.draw_context()
+    def draw_context(self, contextId):
+        return self.contexts[contextId].draw_context()
 
     @property
     def sparsity(self):

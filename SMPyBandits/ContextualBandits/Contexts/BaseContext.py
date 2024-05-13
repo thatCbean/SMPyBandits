@@ -7,7 +7,7 @@ import numpy as np
 class BaseContext(object):
     """ Base class for any context generator """
 
-    def __init__(self, dimension=1, lower=0., amplitude=1.):
+    def __init__(self, dimension, lower=0., amplitude=1.):
         assert dimension > 0, "Dimension needs to be greater than zero"
         self.dimension = dimension
         self.lower = lower
