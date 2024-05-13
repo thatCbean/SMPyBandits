@@ -3,6 +3,7 @@ import numpy as np
 from SMPyBandits.Contexts.NormalContext import NormalContext
 from SMPyBandits.ContextualArms.ContextualBernoulli import ContextualBernoulli
 from SMPyBandits.ContextualPolicies.LinUCB import LinUCB
+from SMPyBandits.ContextualPolicies.LinEXP3 import LinEXP3
 from SMPyBandits.Environment.EvaluatorContextual import EvaluatorContextual
 from SMPyBandits.Policies import UCB, Exp3
 
@@ -21,7 +22,8 @@ environments = [
 policies = [
     {"archtype": UCB, "params": {}},
     {"archtype": Exp3, "params": {"gamma": 0.01}},
-    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.01}}
+    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.01}},
+    {"archtype": LinEXP3, "params": {"dimension": 3, "eta" : 0.1, "gamma": 0.1}}
 ]
 
 configuration = {
