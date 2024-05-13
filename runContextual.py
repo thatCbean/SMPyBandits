@@ -22,8 +22,8 @@ environments = [
 policies = [
     {"archtype": UCB, "params": {}},
     {"archtype": Exp3, "params": {"gamma": 0.01}},
-    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.01}},
-    {"archtype": LinEXP3, "params": {"dimension": 3, "eta" : 0.1, "gamma": 0.1}}
+    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.05}},
+    {"archtype": LinEXP3, "params": {"dimension": 3, "eta" : 0.2, "gamma": 0.05}}
 ]
 
 configuration = {

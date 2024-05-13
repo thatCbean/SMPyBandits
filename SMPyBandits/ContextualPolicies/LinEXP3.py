@@ -13,14 +13,14 @@ class LinEXP3(ContextualBasePolicy):
     The linEXP3 contextual bandit policy.
     """
 
-    def __init__(self, nbArms, dimension, eta, gamma, lower=0., amplitude=1.):
+    def __init__(self, nbArms, dimension, eta=ETA, gamma=GAMMA, lower=0., amplitude=1.):
         super(LinEXP3, self).__init__(nbArms, lower=lower, amplitude=amplitude)
         assert eta > 0, "Error: the 'eta' parameter for the LinEXP3 class must be greater than 0"
         assert 0 < gamma < 1, "Error: the 'gamma' parameter must be in the range (0, 1)"
         assert dimension > 0, "Error: the 'dimension' parameter for the LinEXP3 class must be greater than 0"
 
-        self.eta = ETA
-        self.gamma = GAMMA
+        self.eta = eta
+        self.gamma = gamma
         self.dimension = dimension
         self.k = nbArms
         self.weights = np.ones(nbArms)
