@@ -39,7 +39,7 @@ class ContextualBasePolicy(object):
         self.pulls.fill(0)
         self.rewards.fill(0)
 
-    def getReward(self, arm, reward, context):
+    def getReward(self, arm, reward, contexts):
         """ Give a reward: increase t, pulls, and update cumulated sum of rewards for that arm (normalized in [0, 1])."""
         self.t += 1
         self.pulls[arm] += 1

@@ -171,7 +171,7 @@ class Evaluator(object):
                 and "arm_type" in configuration_arms \
                 and "params" in configuration_arms:
                 # PieceWiseStationaryMAB or NonStationaryMAB or ChangingAtEachRepMAB
-                if "listOfMeans"  in configuration_arms["params"] \
+                if "listOfMeans" in configuration_arms["params"] \
                     and "changePoints" in configuration_arms["params"]:
                         new_mab_problem = PieceWiseStationaryMAB(configuration_arms)
                 elif "newMeans" in configuration_arms["params"] \
@@ -659,7 +659,9 @@ class Evaluator(object):
                 # DONE fix math formula in case of non stationary bandits
                 plt.ylabel("Normalized non-stationary regret\n" + r"$\frac{R_t}{\log(t)} = \frac{1}{\log(t)}\sum_{s=1}^{t} \max_k \mu_k(t) - \frac{1}{\log(t)}$ %s%s" % (r"$\sum_{s=1}^{t} \sum_{k=1}^{%d} \mu_k(t) \mathbb{E}_{%d}[1(I(t)=k)]$" % (self.envs[envId].nbArms, self.repetitions) if moreAccurate else r"$\sum_{s=1}^{t} $\mathbb{E}_{%d}[r_s]$" % (self.repetitions), ylabel2))
             else:
-                plt.ylabel(r"Normalized regret%s$\frac{R_t}{\log(t)} = \frac{t}{\log(t)} \mu^* - \frac{1}{\log(t)}\sum_{s=1}^{t}$ %s%s" % ("\n", r"$\sum_{k=1}^{%d} \mu_k\mathbb{E}_{%d}[T_k(t)]$" % (self.envs[envId].nbArms, self.repetitions) if moreAccurate else r"$\mathbb{E}_{%d}[r_s]$" % (self.repetitions), ylabel2))
+                plt.ylabel(
+                    r"Normalized regret%s$\frac{R_t}{\log(t)} = \frac{t}{\log(t)} \mu^* - \frac{1}{\log(t)}\sum_{s=1}^{t}$ %s%s" % ("\n", r"$\sum_{k=1}^{%d} \mu_k\mathbb{E}_{%d}[T_k(t)]$" % (self.envs[envId].nbArms, self.repetitions) if moreAccurate else r"$\mathbb{E}_{%d}[r_s]$" % (self.repetitions), ylabel2)
+                )
             plt.title("Normalized cumulated regrets for different bandit algorithms, averaged ${}$ times\n${}$ arms{}: {}".format(self.repetitions, self.envs[envId].nbArms, self.envs[envId].str_sparsity(), self.envs[envId].reprarms(1, latex=True)))
         else:
             if drawUpperBound and not (semilogx or loglog):
