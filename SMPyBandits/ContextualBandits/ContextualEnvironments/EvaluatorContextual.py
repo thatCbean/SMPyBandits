@@ -69,7 +69,7 @@ def _nbOfArgs(function):
 
 
 def get_dimension(config):
-    return len(config["context_params"][0])
+    return config["contexts"][0].dimension
 
 
 class EvaluatorContextual(object):
@@ -101,6 +101,8 @@ class EvaluatorContextual(object):
         self.useBoxBlot = USE_BOX_PLOT
         self.showplot = True
 
+        self.verbosity = self.cfg['verbosity'] if "verbosity" in self.cfg else 3
+
         # Internal object memory
         self.envs = []  #: List of environments
         self.policies = []  #: List of policies
@@ -108,8 +110,7 @@ class EvaluatorContextual(object):
         self.__initEnvironments__()
 
         # Internal vectorial memory
-        self.rewards = np.zeros((self.repetitions, self.nbPolicies, len(self.envs),
-                                 self.horizon))  #: For each env, history of rewards, ie accumulated rewards
+        self.rewards = np.zeros((self.repetitions, self.nbPolicies, len(self.envs), self.horizon))  #: For each env, history of rewards, ie accumulated rewards
         self.sumRewards = np.zeros((self.nbPolicies, len(self.envs),
                                     self.repetitions))  #: For each env, last accumulated rewards, to compute variance and histogram of whole regret R_T
         self.minCumRewards = np.full((self.nbPolicies, len(self.envs), self.horizon),
@@ -140,10 +141,8 @@ class EvaluatorContextual(object):
         for configuration_envs in self.cfg['environment']:
             print("Using this dictionary to create a new environment:\n", configuration_envs)  # DEBUG
             if isinstance(configuration_envs, dict) \
-                    and "arm_type" in configuration_envs \
-                    and "arm_params" in configuration_envs \
-                    and "context_type" in configuration_envs \
-                    and "context_params" in configuration_envs:
+                    and "arms" in configuration_envs \
+                    and "contexts" in configuration_envs:
                 dim = get_dimension(configuration_envs)
                 assert self.dimension == -1 or self.dimension == dim, "Error: All contexts must have the same dimension"
                 self.dimension = dim
@@ -173,10 +172,16 @@ class EvaluatorContextual(object):
         print(
             "\n===> Pre-computing the rewards ... Of shape {} ...\n    In order for all simulated algorithms to face the same random rewards (robust comparison of A1,..,An vs Aggr(A1,..,An)) ...\n".format(
                 np.shape(rewards)))  # DEBUG
-        for repetitionId in tqdm(range(self.repetitions), desc="Repetitions"):
-            for t in tqdm(range(self.horizon), desc="Time steps"):
-                for arm_id in tqdm(range(len(env.arms)), desc="Arms"):
-                    contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id] = env.draw(arm_id, t)
+        if self.verbosity > 2:
+            for repetitionId in tqdm(range(self.repetitions), desc="Repetitions"):
+                for t in tqdm(range(self.horizon), desc="Time steps"):
+                    for arm_id in tqdm(range(len(env.arms)), desc="Arms"):
+                        contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id] = env.draw(arm_id, t)
+        else:
+            for repetitionId in tqdm(range(self.repetitions)):
+                for t in range(self.horizon):
+                    for arm_id in range(len(env.arms)):
+                        contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id] = env.draw(arm_id, t)
         return contexts, rewards
 
     def startAllEnv(self):
@@ -213,7 +218,7 @@ class EvaluatorContextual(object):
         for policyId, policy in enumerate(self.policies):
             print("\n\n\n- Evaluating policy #{}/{}: {} ...".format(policyId + 1, self.nbPolicies, policy))
             for repeatId in tqdm(range(self.repetitions), desc="Repeat"):
-                r = delayed_play(env, policy, self.horizon, all_contexts, all_rewards, repeatId=repeatId)
+                r = delayed_play(env, policy, self.horizon, self.all_contexts, self.all_rewards, envId, repeatId=repeatId)
                 store(r, policyId, repeatId)
 
     def getRunningTimes(self, envId=0):
@@ -259,6 +264,7 @@ class EvaluatorContextual(object):
     def getLowestRewardsPolicy(self, policyId, envId):
         return np.array([np.min(self.rewards[:, policyId, envId, t]) for t in range(self.horizon)])
 
+    # self.rewards = np.zeros((self.repetitions, self.nbPolicies, len(self.envs), self.horizon))
     def getRegretAmplitude(self, policyId, envId):
         highest_rewards = self.getHighestRewards(envId)
         return np.array([highest_rewards[repetition] - self.rewards[repetition, policyId, envId, :]
@@ -700,7 +706,8 @@ class EvaluatorContextual(object):
 
 def delayed_play(env, policy, horizon,
                  all_contexts, all_rewards,
-                 seed=None, repeatId=0):
+                 env_id, seed=None,
+                 repeatId=0):
     """Helper function for the parallelization."""
     start_time = time.time()
     start_memory = getCurrentMemory(thread=False)
@@ -722,14 +729,14 @@ def delayed_play(env, policy, horizon,
     pretty_range = tqdm(range(horizon), desc="Time t") if repeatId == 0 else range(horizon)
     for t in pretty_range:
         # 1. A context is drawn
-        contexts = all_contexts[repeatId, t]
+        contexts = all_contexts[env_id][repeatId, t]
 
         if isinstance(policy, ContextualBasePolicy):
             # 2. The player's policy choose an arm
             choice = policy.choice(contexts)
 
             # 3. A random reward is drawn, from this arm at this time
-            reward = all_rewards[repeatId, t, choice]
+            reward = all_rewards[env_id][repeatId, t, choice]
 
             # 4. The policy sees the reward
 
@@ -738,8 +745,9 @@ def delayed_play(env, policy, horizon,
             # 2. The player's policy choose an arm
             choice = policy.choice()
 
+            # self.all_rewards[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
             # 3. A random reward is drawn, from this arm at this time
-            reward = all_rewards[repeatId, t, choice]
+            reward = all_rewards[env_id][repeatId, t, choice]
 
             # 4. The policy sees the reward
 

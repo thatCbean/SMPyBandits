@@ -11,7 +11,7 @@ import numpy as np
 from SMPyBandits.ContextualBandits.ContextualArms.ContextualArm import ContextualArm
 
 
-class SlowChangingArm(ContextualArm):
+class ChangingArm(ContextualArm):
     """ An arm that generates a reward using some contextual reward function, with theta based on time """
 
     def __init__(self, thetas, reward_function, horizon, interpolate=False):
@@ -54,23 +54,8 @@ class SlowChangingArm(ContextualArm):
         assert isinstance(thetas, np.ndarray), "thetas must be an np.ndarray"
         self.thetas = thetas
 
-    # def draw_nparray(self, contexts, shape=(1,)):
-    #     assert isinstance(contexts, np.ndarray), "contexts must be an np.ndarray"
-
-    def calculate_mean(self, context):
-        su = np.zeros(self.theta_shape)
+    def is_nonzero(self):
         for theta in self.thetas:
-            su = su + theta
-        su = su / self.length
-        return np.inner(su, context)
-
-    # TODO: Just copy pasted below for the code to run, need to validate use and function
-    @staticmethod
-    def kl(x, y):
-        """ The kl(x, y) to use for this arm."""
-        return klBern(x, y)
-
-    @staticmethod
-    def oneLR(mumax, mu):
-        """ One term of the Lai & Robbins lower bound for Bernoulli arms: (mumax - mu) / KL(mu, mumax). """
-        return (mumax - mu) / klBern(mu, mumax)
+            if np.linalg.norm(theta) != 0:
+                return False
+        return True

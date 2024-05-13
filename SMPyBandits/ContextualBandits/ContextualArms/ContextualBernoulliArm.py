@@ -17,6 +17,8 @@ class ContextualBernoulliArm(ContextualArm):
         if not isinstance(theta, np.ndarray):
             theta = np.array(theta)
         super(__class__, self).__init__()
+        if np.linalg.norm(theta) > 1:
+            theta = theta / np.linalg.norm(theta)
         self.lower = 0
         self.amplitude = 1
         self.min = 0
