@@ -128,7 +128,7 @@ class EvaluatorContextual(object):
             self.runningTimes[envId] = np.zeros((self.nbPolicies, self.repetitions))
             self.memoryConsumption[envId] = np.zeros((self.nbPolicies, self.repetitions))
             self.numberOfCPDetections[envId] = np.zeros((self.nbPolicies, self.repetitions), dtype=np.int32)
-            self.all_contexts[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
+            self.all_contexts[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms, self.dimension))
             self.all_rewards[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
         print("Number of environments to try:", len(self.envs))
         # To speed up plotting
@@ -282,9 +282,23 @@ class EvaluatorContextual(object):
         cumulated_regrets = self.getCumulatedRegrets(policyId, envId)
         return np.array([np.mean(cumulated_regrets[:, t]) for t in range(self.horizon)])
 
-    def getCumulatedRewardAvarage(self, policyId, envId):
+    def getCumulatedRewardAverage(self, policyId, envId):
         cumulative_rewards = np.array([np.cumsum(self.rewards[repetition, policyId, envId, :]) for repetition in range(self.repetitions)])
         return np.array([np.mean(cumulative_rewards[:, t]) for t in range(self.horizon)])
+
+    def getHighestRewardsAverage(self, envId):
+        highest_rewards = self.getHighestRewards(envId)
+        return np.array([np.mean(highest_rewards[:, t]) for t in range(self.horizon)])
+
+    def getAltRegret(self, policyId, envId):
+        cumulative_rewards_avg = self.getCumulatedRewardAverage(policyId, envId)
+        cumulative_highest_rewards_avg = np.cumsum(self.getHighestRewardsAverage(envId))
+        return cumulative_highest_rewards_avg - cumulative_rewards_avg
+
+    def getCumulativeRegretAvgOverCumulativeMaxReward(self, policyId, envId):
+        cumulative_regrets = self.getCumulatedRegretAverage(policyId, envId)
+        cumulative_highest_rewards = np.cumsum(self.getHighestRewardsAverage(envId))
+        return cumulative_regrets / cumulative_highest_rewards
 
     def getCumulatedRewardAmplitude(self, policyId, envId):
         highest = np.cumsum(self.getHighestRewardsPolicy(policyId, envId))
@@ -342,7 +356,8 @@ class EvaluatorContextual(object):
                     savefig=None, meanReward=False,
                     plotSTD=False, plotMaxMin=False,
                     semilogx=False, semilogy=False, loglog=False,
-                    normalizedRegret=False, drawUpperBound=False
+                    normalizedRegret=False, relativeRegret=False,
+                    regretOverMaxReturn=False, altRegret=False
                     ):
         """Plot the centralized cumulated regret, support more than one environments (use evaluators to give a list of other environments). """
         fig = plt.figure()
@@ -353,10 +368,27 @@ class EvaluatorContextual(object):
         plot_method = plt.loglog if loglog else plt.plot
         plot_method = plt.semilogy if semilogy else plot_method
         plot_method = plt.semilogx if semilogx else plot_method
+
+        if relativeRegret:
+            if meanReward:
+                highest = np.max(
+                    np.array([self.getCumulatedRewardAverage(policyId, envId) for policyId in range(self.nbPolicies)])[:, -1])
+            else:
+                highest = np.max(
+                    np.array([self.getCumulatedRegretAverage(policyId, envId) for policyId in range(self.nbPolicies)])[:, -1])
         for policyId, policy in enumerate(self.policies):
-            Y = np.array(self.getCumulatedRegretAverage(policyId, envId))
-            if normalizedRegret:
+            if meanReward:
+                Y = np.array(self.getCumulatedRewardAverage(policyId, envId))
+            elif regretOverMaxReturn:
+                Y = np.array(self.getCumulativeRegretAvgOverCumulativeMaxReward(policyId, envId))
+            elif altRegret:
+                Y = np.array(self.getAltRegret(policyId, envId))
+            else:
+                Y = np.array(self.getCumulatedRegretAverage(policyId, envId))
+            if normalizedRegret and not regretOverMaxReturn:
                 Y /= self._times
+            elif relativeRegret and not regretOverMaxReturn:
+                Y /= highest
             ymin = min(ymin, np.min(Y))
             lw = 8
             if len(self.policies) > 8: lw -= 1
@@ -401,8 +433,16 @@ class EvaluatorContextual(object):
         # Get a small string to add to ylabel
         ylabel2 = r"%s%s" % (r", $\pm 1$ standard deviation" if (plotSTD and not plotMaxMin) else "",
                              r", $\pm 1$ amplitude" if (plotMaxMin and not plotSTD) else "")
+        if meanReward:
+            legend()
+            plt.ylabel(r"Mean reward, average on time $\tilde{r}_t = \frac{1}{t} \sum_{s=1}^{t}$ %s%s" % (
+                        (r"$\mathbb{E}_{%d}[r_s]$" % self.repetitions, ylabel2)
+                ))
+            plt.title("Mean rewards for different bandit algorithms, averaged ${}$ times\n${}$ arms{}: {}".format(
+                self.repetitions, self.envs[envId].nbArms, self.envs[envId].str_sparsity(),
+                self.envs[envId].reprarms(1, latex=True)))
 
-        if normalizedRegret:
+        elif normalizedRegret:
             legend()
             plt.ylabel(
                 r"Normalized regret%s$\frac{R_t}{\log(t)} = \frac{t}{\log(t)} \mu^* - \frac{1}{\log(t)}\sum_{s=1}^{t}$ %s%s" % (
@@ -427,29 +467,6 @@ class EvaluatorContextual(object):
                 self.repetitions, self.envs[envId].nbArms,
                 self.envs[envId].reprarms(1, latex=True)))
         show_and_save(self.showplot, savefig, fig=fig, pickleit=USE_PICKLE)
-        return fig
-
-    def plotAvgRewards(self, envId=0):
-        """Plot the rewards over time of the different policies, as a box plot for each."""
-        rewards = [self.getCumulatedRewardAvarage(policyId, envId) for policyId in range(self.nbPolicies)]
-        # order by increasing mean time
-        last_rewards = [rewards[policyId][-1] for policyId in range(self.nbPolicies)]
-        index_of_sorting = np.argsort(last_rewards, 0)
-        labels = [policy.__cachedstr__ for policy in self.policies]
-        labels = [labels[i] for i in index_of_sorting]
-        rewards = [np.asarray(rewards[i]) for i in index_of_sorting]
-        fig = plt.figure()
-
-        # plt.plot(data=rewards, labels=labels)
-        plt.xlabel("Bandit algorithms")
-        ylabel = "Rewards, averaged over {} repetitions".format(self.repetitions)
-        plt.ylabel(ylabel)
-        # adjust_xticks_subplots(ylabel=ylabel, labels=labels)
-        plt.title(
-            "Rewards for different bandit algorithms, horizon $T={}$, averaged ${}$ times\n${}$ arms{}: {}".format(
-                self.horizon, self.repetitions, self.envs[envId].nbArms, self.envs[envId].str_sparsity(),
-                self.envs[envId].reprarms(1, latex=True)))
-        show_and_save(self.showplot, True, fig=fig, pickleit=USE_PICKLE)
         return fig
 
     def printRunningTimes(self, envId=0, precision=3):

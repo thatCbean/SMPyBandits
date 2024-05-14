@@ -641,7 +641,11 @@ class Evaluator(object):
             # We plot a horizontal line ----- at the best arm mean
             plt.plot(X[::self.delta_t_plot], self.envs[envId].maxArm * np.ones_like(X)[::self.delta_t_plot], 'k--', label="Largest mean = ${:.3g}$".format(maxArm))
             legend()
-            plt.ylabel(r"Mean reward, average on time $\tilde{r}_t = \frac{1}{t} \sum_{s=1}^{t}$ %s%s" % (r"$\sum_{k=1}^{%d} \mu_k\mathbb{E}_{%d}[T_k(t)]$" % (self.envs[envId].nbArms, self.repetitions) if moreAccurate else r"$\mathbb{E}_{%d}[r_s]$" % (self.repetitions), ylabel2))
+            plt.ylabel(
+                r"Mean reward, average on time $\tilde{r}_t = \frac{1}{t} \sum_{s=1}^{t}$ %s%s" % (
+                    r"$\sum_{k=1}^{%d} \mu_k\mathbb{E}_{%d}[T_k(t)]$" % (self.envs[envId].nbArms, self.repetitions) if moreAccurate else r"$\mathbb{E}_{%d}[r_s]$" % (self.repetitions),
+                    ylabel2
+                ))
             if not self.envs[envId].isChangingAtEachRepetition and not self.nb_break_points > 0:
                 plt.ylim(0.80 * minArm, 1.10 * maxArm)
             # if self.nb_break_points > 0:
