@@ -27,6 +27,7 @@ class LinUCB(ContextualBasePolicy):
         super(LinUCB, self).__init__(nbArms, lower=lower, amplitude=amplitude)
         assert alpha > 0, "Error: the 'alpha' parameter for the LinUCB class must be greater than 0"
         assert dimension > 0, "Error: the 'dimension' parameter for the LinUCB class must be greater than 0"
+        print("Initiating policy LinUCB with {} arms, dimension: {}, alpha: {}".format(nbArms, dimension, alpha))
         self.alpha = alpha
         self.k = nbArms
         self.dimension = dimension
@@ -54,18 +55,18 @@ class LinUCB(ContextualBasePolicy):
            w(t+1) &= w'(t+1) / \sum_{k=1}^{K} w'_k(t+1).
         """
         super(LinUCB, self).getReward(arm, reward, contexts)  # XXX Call to BasePolicy
-        self.A = self.A + np.matmul(contexts[arm], np.transpose(contexts[arm]))
-        self.b = self.b + np.multiply(contexts[arm], reward)
+        self.A = self.A + (contexts[arm] @ np.transpose(contexts[arm]))
+        self.b = self.b + (contexts[arm] * reward)
 
     def choice(self, contexts):
         theta_t = np.matmul(np.linalg.inv(self.A), self.b)
-        max_val = -1
+        max_val = -np.inf
         index = -1
         for a in range(self.k):
-            p_ta = (np.matmul(np.transpose(theta_t), contexts[a]) +
+            p_ta = (np.transpose(theta_t) @ contexts[a]) + (
                     self.alpha * math.sqrt(
                         # TODO: Currently taking absolute value to prevent domain errors, but may need to change this
-                        np.abs(np.matmul(np.transpose(contexts[a]), np.matmul(np.linalg.inv(self.A), contexts[a])))))
+                        np.abs(np.transpose(contexts[a]) @ np.linalg.inv(self.A) @ contexts[a])))
             if p_ta > max_val:
                 max_val = p_ta
                 index = a

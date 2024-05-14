@@ -98,7 +98,7 @@ class EvaluatorContextual(object):
         self.useJoblibForPolicies = useJoblibForPolicies  #: Use joblib to parallelize for loop on policies (useless)
         self.useJoblib = USE_JOBLIB and self.cfg[
             'n_jobs'] != 1  #: Use joblib to parallelize for loop on repetitions (useful)
-        self.useBoxBlot = USE_BOX_PLOT
+        self.use_box_plot = USE_BOX_PLOT
         self.showplot = True
 
         self.verbosity = self.cfg['verbosity'] if "verbosity" in self.cfg else 3
@@ -196,7 +196,6 @@ class EvaluatorContextual(object):
         self.policies = []
         self.__initPolicies__(env)
         # Precompute rewards
-        # if self.cache_rewards:
         all_contexts, all_rewards = self.compute_cache_rewards(env)
         self.all_contexts[envId], self.all_rewards[envId] = all_contexts, all_rewards
 
@@ -267,12 +266,12 @@ class EvaluatorContextual(object):
     # self.rewards = np.zeros((self.repetitions, self.nbPolicies, len(self.envs), self.horizon))
     def getRegretAmplitude(self, policyId, envId):
         highest_rewards = self.getHighestRewards(envId)
-        return np.array([highest_rewards[repetition] - self.rewards[repetition, policyId, envId, :]
+        return np.array([highest_rewards[repetition] - self.rewards[repetition, policyId, envId]
                          for repetition in range(self.repetitions)])
 
     def getCumulatedRegrets(self, policyId, envId):
         highest_rewards = self.getHighestRewards(envId)
-        return np.array([np.cumsum(highest_rewards[repetition] - self.rewards[repetition, policyId, envId, :])
+        return np.array([np.cumsum(highest_rewards[repetition] - self.rewards[repetition, policyId, envId])
                          for repetition in range(self.repetitions)])
 
     def getCumulatedRegretAverage(self, policyId, envId):
@@ -282,6 +281,10 @@ class EvaluatorContextual(object):
     def getCumulatedRegretSum(self, policyId, envId):
         cumulated_regrets = self.getCumulatedRegrets(policyId, envId)
         return np.array([np.mean(cumulated_regrets[:, t]) for t in range(self.horizon)])
+
+    def getCumulatedRewardAvarage(self, policyId, envId):
+        cumulative_rewards = np.array([np.cumsum(self.rewards[repetition, policyId, envId, :]) for repetition in range(self.repetitions)])
+        return np.array([np.mean(cumulative_rewards[:, t]) for t in range(self.horizon)])
 
     def getCumulatedRewardAmplitude(self, policyId, envId):
         highest = np.cumsum(self.getHighestRewardsPolicy(policyId, envId))
@@ -424,6 +427,29 @@ class EvaluatorContextual(object):
                 self.repetitions, self.envs[envId].nbArms,
                 self.envs[envId].reprarms(1, latex=True)))
         show_and_save(self.showplot, savefig, fig=fig, pickleit=USE_PICKLE)
+        return fig
+
+    def plotAvgRewards(self, envId=0):
+        """Plot the rewards over time of the different policies, as a box plot for each."""
+        rewards = [self.getCumulatedRewardAvarage(policyId, envId) for policyId in range(self.nbPolicies)]
+        # order by increasing mean time
+        last_rewards = [rewards[policyId][-1] for policyId in range(self.nbPolicies)]
+        index_of_sorting = np.argsort(last_rewards, 0)
+        labels = [policy.__cachedstr__ for policy in self.policies]
+        labels = [labels[i] for i in index_of_sorting]
+        rewards = [np.asarray(rewards[i]) for i in index_of_sorting]
+        fig = plt.figure()
+
+        # plt.plot(data=rewards, labels=labels)
+        plt.xlabel("Bandit algorithms")
+        ylabel = "Rewards, averaged over {} repetitions".format(self.repetitions)
+        plt.ylabel(ylabel)
+        # adjust_xticks_subplots(ylabel=ylabel, labels=labels)
+        plt.title(
+            "Rewards for different bandit algorithms, horizon $T={}$, averaged ${}$ times\n${}$ arms{}: {}".format(
+                self.horizon, self.repetitions, self.envs[envId].nbArms, self.envs[envId].str_sparsity(),
+                self.envs[envId].reprarms(1, latex=True)))
+        show_and_save(self.showplot, True, fig=fig, pickleit=USE_PICKLE)
         return fig
 
     def printRunningTimes(self, envId=0, precision=3):
