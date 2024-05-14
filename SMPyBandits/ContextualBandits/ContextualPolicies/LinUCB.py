@@ -59,14 +59,15 @@ class LinUCB(ContextualBasePolicy):
         self.b = self.b + (contexts[arm] * reward)
 
     def choice(self, contexts):
-        theta_t = np.matmul(np.linalg.inv(self.A), self.b)
+        theta_t = np.linalg.inv(self.A) @ self.b
         max_val = -np.inf
         index = -1
         for a in range(self.k):
             p_ta = (np.transpose(theta_t) @ contexts[a]) + (
                     self.alpha * math.sqrt(
                         # TODO: Currently taking absolute value to prevent domain errors, but may need to change this
-                        np.abs(np.transpose(contexts[a]) @ np.linalg.inv(self.A) @ contexts[a])))
+                        # np.abs(np.transpose(contexts[a]) @ np.linalg.inv(self.A) @ contexts[a])))
+                        max(0, np.transpose(contexts[a]) @ (np.linalg.inv(self.A) @ contexts[a]))))
             if p_ta > max_val:
                 max_val = p_ta
                 index = a
