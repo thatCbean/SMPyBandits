@@ -1,10 +1,10 @@
 import numpy as np
 
-from SMPyBandits.Contexts.NormalContext import NormalContext
-from SMPyBandits.ContextualArms.ContextualBernoulli import ContextualBernoulli
-from SMPyBandits.ContextualPolicies.LinUCB import LinUCB
-from SMPyBandits.ContextualPolicies.LinEXP3 import LinEXP3
-from SMPyBandits.Environment.EvaluatorContextual import EvaluatorContextual
+from SMPyBandits.ContextualBandits.Contexts.NormalContext import NormalContext
+from SMPyBandits.ContextualBandits.ContextualArms.ContextualBernoulliArm import ContextualBernoulliArm
+from SMPyBandits.ContextualBandits.ContextualPolicies.LinUCB import LinUCB
+from SMPyBandits.ContextualBandits.ContextualPolicies.LinEXP3 import LinEXP3
+from SMPyBandits.ContextualBandits.ContextualEnvironments.EvaluatorContextual import EvaluatorContextual
 from SMPyBandits.Policies import UCB, Exp3
 
 # Sinusoidal reward function
@@ -25,16 +25,21 @@ list_of_means = [
 
 environments = [
     {
-        "arm_type": ContextualBernoulli,
-        "arm_params": [[0.1, 0.2, 0.15], [0.1, 0.12, 0.11], [0.3, 0.04, 0.1]],
+        "arms": [
+            ContextualBernoulliArm([0.1, 0.0, 0.15]), ContextualBernoulliArm([0.1, 0.12, 0.11]), ContextualBernoulliArm([0.2, 0.04, 0.1])
+        ],
+        "contexts": [
+            NormalContext([0.2, 0.1, 0.3], np.identity(3) * [0.2, 0.3, 0.1], 3),
+            NormalContext([0.2, 0.2, 0.1], np.identity(3) * [0.1, 0.4, 0.1], 3),
+            NormalContext([0.1, 0.1, 0.7], np.identity(3) * [0.1, 0.2, 0.3], 3)
+        ],
         "params": {
                 "listOfMeans": list_of_means,
                 "changePoints": change_points,
             },
-        "context_type": NormalContext,
-        "context_params": [[0.2, 0.1, 0.3], np.identity(3) * [0.1, 0.2, 0.3], 3]
     }
 ]
+
 
 policies = [
     {"archtype": UCB, "params": {}},

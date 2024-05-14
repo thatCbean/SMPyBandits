@@ -3,7 +3,7 @@ from __future__ import division, print_function  # Python 2 compatibility
 import numpy as np
 import numpy.random as rn
 
-from SMPyBandits.ContextualPolicies.ContextualBasePolicy import ContextualBasePolicy
+from SMPyBandits.ContextualBandits.ContextualPolicies.ContextualBasePolicy import ContextualBasePolicy
 
 ETA = 0.1
 GAMMA = 0.1
@@ -38,13 +38,13 @@ class LinEXP3(ContextualBasePolicy):
     def getReward(self, arm, reward, context):
         """Update the parameter estimates for the chosen arm."""
         super(LinEXP3, self).getReward(arm, reward, context)  # Call to BasePolicy
-        self.theta_hats[arm] += self.eta * reward * context
+        self.theta_hats[arm] += self.eta * reward * context[arm]
 
     def choice(self, context):
         """Choose an arm based on the LINEXP3 policy."""
         # Update weights
         for a in range(self.k):
-            exponent = -self.eta * np.dot(context, self.theta_hats[a])
+            exponent = -self.eta * np.dot(context[a], self.theta_hats[a])
             self.weights[a] = np.exp(exponent)
 
         # Compute probabilities
