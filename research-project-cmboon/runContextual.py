@@ -9,8 +9,8 @@ from SMPyBandits.Policies import UCB, Exp3
 # Code based on:
 # https://github.com/SMPyBandits/SMPyBandits/blob/master/notebooks/Example_of_a_small_Single-Player_Simulation.ipynb
 
-horizon = 10000
-repetitions = 10
+horizon = 5000
+repetitions = 1
 n_jobs = 8
 verbosity = 2
 
@@ -29,8 +29,8 @@ environments = [
 
 policies = [
     {"archtype": UCB, "params": {}},
-    {"archtype": Exp3, "params": {"gamma": 0.01}},
-    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.15}}
+    {"archtype": Exp3, "params": {"gamma": 0.02}},
+    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.01}}
 ]
 
 configuration = {
@@ -51,7 +51,6 @@ def plot_env(evaluation, environment_id):
     evaluation.printFinalRanking(environment_id)
     evaluation.plotRegrets(environment_id)
     evaluation.plotRegrets(environment_id, semilogx=True)
-    evaluation.plotRegrets(environment_id, meanReward=True)
 
 
 for env_id in range(len(environments)):
