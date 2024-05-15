@@ -2,7 +2,9 @@
 """ Evaluator class to wrap and run the simulations.
 Lots of plotting methods, to have various visualizations.
 """
-from __future__ import division, print_function  # Python 2 compatibility
+from __future__ import division, print_function
+
+ # Python 2 compatibility
 
 __author__ = "Lilian Besson"
 __version__ = "0.9"
@@ -17,6 +19,7 @@ from SMPyBandits.Contexts.BaseContext import BaseContext
 from SMPyBandits.ContextualArms.ContextualArm import ContextualArm
 from SMPyBandits.ContextualPolicies.ContextualBasePolicy import ContextualBasePolicy
 from SMPyBandits.Environment.ContextualMAB import ContextualMAB
+from SMPyBandits.Environment.DelayedContextualMAB import DelayedContextualMAB
 
 USE_PICKLE = False  #: Should we save the figure objects to a .pickle file at the end of the simulation?
 import random
@@ -205,7 +208,10 @@ class EvaluatorContextual(object):
                 dim = get_dimension(configuration_envs)
                 assert self.dimension == -1 or self.dimension == dim, "Error: All contexts must have the same dimension"
                 self.dimension = dim
-                self.envs.append(ContextualMAB(configuration_envs))
+                if "max_delay" in configuration_envs and "average_delay" in configuration_envs:
+                    self.envs.append(DelayedContextualMAB(configuration_envs))
+                else:
+                    self.envs.append(ContextualMAB(configuration_envs))
 
     def __initPolicies__(self, env):
         """ Create or initialize policies."""
@@ -245,9 +251,9 @@ class EvaluatorContextual(object):
         #                 rewards[armId, repeatId, t] = env.draw(armId, t)
         for repetitionId in tqdm(range(self.repetitions), desc="Repetitions"):
             for t in tqdm(range(self.horizon), desc="Time steps"):
-                context = env.draw_context()
-                contexts[repetitionId, t] = context
                 for arm_id in tqdm(range(len(env.arms)), desc="Arms"):
+                    context = env.draw_context()
+                    contexts[repetitionId, t] = context
                     rewards[arm_id, repetitionId, t] = env.draw_with_context(arm_id, context, t)
 
         return contexts, rewards

@@ -1,5 +1,6 @@
 import numpy as np
-
+import sys
+sys.path.insert(0, 'C:\\Users\\Dragos\\Desktop\\SMPyBandits')
 from SMPyBandits.Contexts.NormalContext import NormalContext
 from SMPyBandits.ContextualArms.ContextualBernoulli import ContextualBernoulli
 from SMPyBandits.ContextualPolicies.LinUCB import LinUCB
@@ -14,7 +15,9 @@ environments = [
         "arm_type": ContextualBernoulli,
         "arm_params": [[0.1, 0.2, 0.15], [0.1, 0.12, 0.11], [0.3, 0.04, 0.1]],
         "context_type": NormalContext,
-        "context_params": [[0.2, 0.1, 0.3], np.identity(3) * [0.1, 0.2, 0.3], 3]
+        "context_params": [[0.2, 0.1, 0.3], np.identity(3) * [0.1, 0.2, 0.3], 3],
+        "max_delay" : 10,
+        "average_delay" : 5
     }
 ]
 
@@ -27,8 +30,8 @@ policies = [
 configuration = {
     "horizon": 1000,
     "repetitions": 10,
-    "n_jobs": 4,
-    "verbosity": 6,
+    "n_jobs": -1,
+    "verbosity": 0,
     "environment": environments,
     "policies": policies
 }
