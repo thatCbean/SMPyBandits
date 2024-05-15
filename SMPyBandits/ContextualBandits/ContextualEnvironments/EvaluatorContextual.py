@@ -251,6 +251,9 @@ class EvaluatorContextual(object):
             np.array([[np.max(self.all_rewards[envId][repetition][t]) for t in range(self.horizon)] for repetition in
                       range(self.repetitions)])
 
+    def getExpectedHighestReward(self, envId):
+        return np.mean(self.getHighestRewards(envId))
+
     def getLowestRewards(self, envId):
         return \
             np.array([[np.min(self.all_rewards[envId][repetition][t]) for t in range(self.horizon)] for repetition in
@@ -292,7 +295,7 @@ class EvaluatorContextual(object):
 
     def getAltRegret(self, policyId, envId):
         cumulative_rewards_avg = self.getCumulatedRewardAverage(policyId, envId)
-        cumulative_highest_rewards_avg = np.cumsum(self.getHighestRewardsAverage(envId))
+        cumulative_highest_rewards_avg = np.cumsum(np.zeros(self.horizon) + self.getHighestRewardsAverage(envId))
         return cumulative_highest_rewards_avg - cumulative_rewards_avg
 
     def getCumulativeRegretAvgOverCumulativeMaxReward(self, policyId, envId):

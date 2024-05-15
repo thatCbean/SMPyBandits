@@ -14,8 +14,13 @@ from SMPyBandits.Policies import UCB, Exp3
 # horizon = 20000
 # horizon = 5000
 # horizon = 200
-horizon = 100
-repetitions = 30
+horizon = 1000000
+repetitions = 8
+
+# Has nice looking graphs
+# horizon = 100
+# repetitions = 30
+
 n_jobs = 1
 verbosity = 2
 
@@ -116,13 +121,13 @@ policies = [
     {"archtype": Exp3, "params": {"gamma": 0.25}},
     {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 100.0}},
     {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 50.0}},
-    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 20.0}},
+    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 20.0}},
     {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 10.0}},
     {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 5.0}},
-    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 2.0}},
+    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 2.0}},
     {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 1.0}},
     {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.5}},
-    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.2}},
+    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.2}},
     {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.1}},
     {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.05}},
     {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.01}}
@@ -135,13 +140,13 @@ policies_5d = [
     {"archtype": Exp3, "params": {"gamma": 0.25}},
     {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 100.0}},
     {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 50.0}},
-    {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 20.0}},
+    # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 20.0}},
     {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 10.0}},
     {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 5.0}},
-    {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 2.0}},
+    # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 2.0}},
     {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 1.0}},
     {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.5}},
-    {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.2}},
+    # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.2}},
     {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.1}},
     {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.05}},
     {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.01}}
@@ -176,7 +181,7 @@ def plot_env(evaluation, environment_id):
     evaluation.printFinalRanking(environment_id)
     # evaluation.plotRegrets(environment_id)
     evaluation.plotRegrets(environment_id, relativeRegret=True)
-    evaluation.plotRegrets(environment_id, altRegret=True, relativeRegret=True)
+    # evaluation.plotRegrets(environment_id, altRegret=True, relativeRegret=True)
     evaluation.plotRegrets(environment_id, regretOverMaxReturn=True)
     # evaluation.plotRegrets(environment_id, meanReward=True)
     # evaluation.plotRegrets(environment_id, meanReward=True, relativeRegret=True)
