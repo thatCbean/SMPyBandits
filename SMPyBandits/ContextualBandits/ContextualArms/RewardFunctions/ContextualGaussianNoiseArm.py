@@ -39,7 +39,8 @@ class ContextualGaussianNoiseArm(ContextualArm):
     def draw(self, context, t=None):
         assert isinstance(context, np.ndarray), "context must be an np.ndarray"
         assert self.theta.shape == context.shape, "theta shape must be equal to context"
-        return min(1, max(0, np.inner(context, self.theta) + normal(self.noise_mean, self.noise_var)))
+        # return min(1, max(0, np.inner(context, self.theta) + normal(self.noise_mean, self.noise_var)))
+        return min(1, abs(np.inner(context, self.theta) + normal(self.noise_mean, self.noise_var)))
 
     def set(self, theta):
         assert isinstance(theta, np.ndarray), "theta must be an np.ndarray"
