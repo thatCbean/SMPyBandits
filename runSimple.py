@@ -38,10 +38,8 @@ evaluator.startAllEnv()
 
 def plot_env(evaluation, environment_id):
     evaluation.printFinalRanking(environment_id)
-    evaluation.plotRegrets(environment_id)
-    evaluation.plotRegrets(environment_id, semilogx=True)
-    evaluation.plotRegrets(environment_id, meanReward=True)
-    # evaluation.plotBestArmPulls(environment_id)
+    evaluation.plotRegrets(environment_id, normalizedRegret=True, subtitle="Environment #" + str(environment_id))
+    # evaluation.plotRegrets(environment_id, regretOverMaxReturn=True, subtitle="Environment #" + str(environment_id))
 
 
 for env_id in range(len(environments)):
