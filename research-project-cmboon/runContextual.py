@@ -11,18 +11,31 @@ from SMPyBandits.Policies import UCB, Exp3
 # Code based on:
 # https://github.com/SMPyBandits/SMPyBandits/blob/master/notebooks/Example_of_a_small_Single-Player_Simulation.ipynb
 
-# horizon = 20000
+# horizon = 30000
 # horizon = 5000
 # horizon = 200
-horizon = 1000000
-repetitions = 8
+horizon = 100000
+# repetitions = 10
+repetitions = 4
+# repetitions = 2
 
 # Has nice looking graphs
 # horizon = 100
 # repetitions = 30
 
+# For quick testing
+# horizon = 20
+# repetitions = 1
+
 n_jobs = 1
 verbosity = 2
+
+plot_rewards = False
+plot_regret_normalized = True
+plot_expectation_based_regret_normalized = False
+plot_regret_absolute = True
+plot_expectation_based_regret_absolute = False
+plot_regret_over_max_return = True
 
 environments = [
     {
@@ -119,17 +132,17 @@ policies = [
     {"archtype": Exp3, "params": {"gamma": 0.05}},
     {"archtype": Exp3, "params": {"gamma": 0.1}},
     {"archtype": Exp3, "params": {"gamma": 0.25}},
-    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 100.0}},
-    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 50.0}},
+    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 100.0}},
+    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 50.0}},
     # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 20.0}},
     {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 10.0}},
-    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 5.0}},
+    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 5.0}},
     # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 2.0}},
     {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 1.0}},
-    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.5}},
+    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.5}},
     # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.2}},
     {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.1}},
-    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.05}},
+    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.05}},
     {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.01}}
 ]
 
@@ -137,18 +150,18 @@ policies_5d = [
     {"archtype": UCB, "params": {}},
     {"archtype": Exp3, "params": {"gamma": 0.05}},
     {"archtype": Exp3, "params": {"gamma": 0.1}},
-    {"archtype": Exp3, "params": {"gamma": 0.25}},
+    {"archtype": Exp3, "params": {"gamma": 0.2}},
     {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 100.0}},
-    {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 50.0}},
+    # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 50.0}},
     # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 20.0}},
     {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 10.0}},
-    {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 5.0}},
+    # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 5.0}},
     # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 2.0}},
     {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 1.0}},
-    {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.5}},
+    # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.5}},
     # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.2}},
     {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.1}},
-    {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.05}},
+    # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.05}},
     {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.01}}
 ]
 
@@ -171,25 +184,33 @@ configuration_5d = {
 }
 
 evaluator = EvaluatorContextual(configuration)
-evaluator_5d = EvaluatorContextual(configuration_5d)
+# evaluator_5d = EvaluatorContextual(configuration_5d)
 
-evaluator.startAllEnv()
-evaluator_5d.startAllEnv()
-
+# evaluator.startAllEnv()
+# evaluator_5d.startAllEnv()
+evaluator.startOneEnv(4, evaluator.envs[4])
 
 def plot_env(evaluation, environment_id):
     evaluation.printFinalRanking(environment_id)
     # evaluation.plotRegrets(environment_id)
-    evaluation.plotRegrets(environment_id, relativeRegret=True)
-    # evaluation.plotRegrets(environment_id, altRegret=True, relativeRegret=True)
-    evaluation.plotRegrets(environment_id, regretOverMaxReturn=True)
+    if plot_regret_normalized:
+        evaluation.plotRegrets(environment_id, normalizedRegret=True, subtitle="Environment #" + str(environment_id))
+    if plot_regret_absolute:
+        evaluation.plotRegrets(environment_id, subtitle="Environment #" + str(environment_id))
+    if plot_expectation_based_regret_normalized:
+        evaluation.plotRegrets(environment_id, altRegret=True, normalizedRegret=True, subtitle="Alt Regret Calculation\nEnvironment #" + str(environment_id))
+    if plot_expectation_based_regret_absolute:
+        evaluation.plotRegrets(environment_id, altRegret=True, subtitle="Alt Regret Calculation\nEnvironment #" + str(environment_id))
+    if plot_regret_over_max_return:
+        evaluation.plotRegrets(environment_id, regretOverMaxReturn=True, subtitle="Environment #" + str(environment_id))
     # evaluation.plotRegrets(environment_id, meanReward=True)
     # evaluation.plotRegrets(environment_id, meanReward=True, relativeRegret=True)
-    # evaluation.plotRegrets(environment_id, semilogy=True)
+    evaluation.plotRegrets(environment_id, semilogy=True, subtitle="Environment #" + str(environment_id))
 
+plot_env(evaluator, 4)
 
-for env_id in range(len(environments)):
-    plot_env(evaluator, env_id)
+# for env_id in range(len(environments)):
+#     plot_env(evaluator, env_id)
 
-for env_id in range(len(environments_5d)):
-    plot_env(evaluator_5d, env_id)
+# for env_id in range(len(environments_5d)):
+#     plot_env(evaluator_5d, env_id)
