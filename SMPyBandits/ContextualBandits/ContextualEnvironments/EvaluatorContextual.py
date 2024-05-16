@@ -193,7 +193,7 @@ class EvaluatorContextual(object):
                     for arm_id in tqdm(range(len(env.arms)), desc="Arms"):
                         contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id] = env.draw(arm_id, t)
         else:
-            for repetitionId in tqdm(range(self.repetitions)):
+            for repetitionId in tqdm(range(self.repetitions), desc="Repetitions"):
                 for t in range(self.horizon):
                     for arm_id in range(len(env.arms)):
                         contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id] = env.draw(arm_id, t)
@@ -235,10 +235,11 @@ class EvaluatorContextual(object):
 
         # Start for all policies
         for policyId, policy in enumerate(self.policies):
-            print("\n\n\n- Evaluating environment {}/{}, policy #{}/{}: {} ...".format(envId, len(self.envs), policyId + 1, self.nbPolicies, policy))
-            for repeatId in tqdm(range(self.repetitions), desc="Repeat"):
+            total = 100 * (((envId * self.nbPolicies) + policyId) / (len(self.envs) * self.nbPolicies))
+            print("\n\n\n- Evaluating environment {}/{}\n    policy {}/{}\n    total {}%\n    {}".format(envId + 1, len(self.envs), policyId + 1, self.nbPolicies, str(total)[:5], policy))
+            for repeatId in (tqdm(range(self.repetitions), desc="Repeat") if self.verbosity > 3 else range(self.repetitions)):
                 r = delayed_play(env, policy, self.horizon, self.all_contexts, self.all_rewards, envId,
-                                 repeatId=repeatId)
+                                 repeatId=repeatId, verbose=(self.verbosity > 4))
                 store(r, policyId, repeatId)
 
     def getRunningTimes(self, envId=0):
@@ -302,6 +303,12 @@ class EvaluatorContextual(object):
         cumulated_regrets = self.getCumulatedRegrets(policyId, envId)
         return np.array([np.mean(cumulated_regrets[:, t]) for t in range(self.horizon)])
 
+    def getEnvCumulatedRegrets(self, envId):
+        return np.array([
+            self.getCumulatedRegrets(policyId, envId)
+            for policyId in range(self.nbPolicies)
+        ])
+
     def getCumulatedRegretSum(self, policyId, envId):
         cumulated_regrets = self.getCumulatedRegrets(policyId, envId)
         return np.array([np.mean(cumulated_regrets[:, t]) for t in range(self.horizon)])
@@ -356,13 +363,17 @@ class EvaluatorContextual(object):
     #    TODO: WIP
     # --- Plotting methods
 
+    def printAndReturn(self, strii):
+        print(strii)
+        return strii
+
     def printFinalRanking(self, envId=0):
         """Print the final ranking of the different policies."""
-        print("\nGiving the final ranks ...")
+        stri = self.printAndReturn("\nGiving the final ranks ...")
         assert 0 < self.averageOn < 1, "Error, the parameter averageOn of a EvaluatorMultiPlayers classs has to be in (0, 1) strictly, but is = {} here ...".format(
             self.averageOn)  # DEBUG
 
-        print("\nFinal ranking for this environment #{}".format(envId))
+        stri += self.printAndReturn("\nFinal ranking for this environment #{}".format(envId))
 
         nbPolicies = self.nbPolicies
         totalRegret = np.zeros(nbPolicies)
@@ -382,11 +393,11 @@ class EvaluatorContextual(object):
         index_of_sorting = np.argsort(totalRegret)
         for i, k in enumerate(index_of_sorting):
             policy = self.policies[k]
-            print(
+            stri += self.printAndReturn(
                 "- Policy '{}'\twas ranked\t{} / {} for this simulation\n\t(last regret = {:.5g},\ttotal regret = {:.5g},\ttotal reward = {:.5g}.".format(
                     policy.__cachedstr__, i + 1, nbPolicies, lastRegret[k], totalRegret[k], totalRewards[k]))
-            print("    Alternative regret calculation results in regret of [{}] and last regret of [{}]".format(altRegret[k], lastAltRegret[k]))
-        return totalRegret, index_of_sorting
+            stri += self.printAndReturn("    Alternative regret calculation results in regret of [{}] and last regret of [{}]".format(altRegret[k], lastAltRegret[k]))
+        return totalRegret, index_of_sorting, stri
 
     def _xlabel(self, envId, *args, **kwargs):
         """Add xlabel to the plot, and if the environment has change-point, draw vertical lines to clearly identify the locations of the change points."""
@@ -405,7 +416,7 @@ class EvaluatorContextual(object):
         return plt.xlabel(*args, **kwargs)
 
     def plotRegrets(
-            self, envId=0,
+            self, envId=0, show=True,
             savefig=None, meanReward=False,
             plotSTD=False, plotMaxMin=False,
             semilogx=False, semilogy=False, loglog=False,
@@ -537,7 +548,10 @@ class EvaluatorContextual(object):
             plt.title("Cumulative regrets, averaged over ${}$ repetitions{}".format(
                 self.repetitions, subtitle)
             )
-        show_and_save(self.showplot, savefig, fig=fig, pickleit=USE_PICKLE)
+
+        if show:
+            show_and_save(self.showplot, savefig, fig=fig, pickleit=USE_PICKLE)
+
         return fig
 
     def printRunningTimes(self, envId=0, precision=3):
@@ -820,7 +834,7 @@ class EvaluatorContextual(object):
 
 def delayed_play(env, policy, horizon,
                  all_contexts, all_rewards,
-                 env_id, repeatId=0):
+                 env_id, repeatId=0, verbose=False):
     """Helper function for the parallelization."""
     start_time = time.time()
     start_memory = getCurrentMemory(thread=False)
@@ -836,7 +850,7 @@ def delayed_play(env, policy, horizon,
     # self.all_contexts[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
     # self.all_rewards[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
 
-    pretty_range = tqdm(range(horizon), desc="Time t") if repeatId == 0 else range(horizon)
+    pretty_range = tqdm(range(horizon), desc="Time t") if repeatId == 0 and verbose == True else range(horizon)
     for t in pretty_range:
         # 1. A context is drawn
         contexts = all_contexts[env_id][repeatId, t]
