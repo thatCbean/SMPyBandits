@@ -2,7 +2,7 @@ __author__ = "Cody Boon"
 __version__ = "0.1"
 
 import numpy as np
-from numpy.random import multivariate_normal
+from numpy.random import multivariate_normal, normal
 
 from SMPyBandits.ContextualBandits.Contexts.BaseContext import BaseContext
 
@@ -31,8 +31,12 @@ class NormalContext(BaseContext):
         self.covariance_matrix = covariance_matrix
 
     def draw_context(self):
-        res = multivariate_normal(self.means, self.covariance_matrix)
-        # res = np.abs(res)
+        # res = multivariate_normal(self.means, self.covariance_matrix)
+        res = normal(self.means, self.covariance_matrix.diagonal())
+        res = np.abs(res)
+        # res = np.zeros(shape=self.dimension)
+        # for i in range(self.dimension):
+        #     res[i] = normal(self.means[i], self.covariance_matrix[i][i])
         return res / np.linalg.norm(res) if np.linalg.norm(res) > 1 else res
 
     def get_means(self):
