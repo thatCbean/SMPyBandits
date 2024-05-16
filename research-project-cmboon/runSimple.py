@@ -18,8 +18,8 @@ policies = [
 ]
 
 configuration = {
-    "horizon": 1000,
-    "repetitions": 10,
+    "horizon": 5000,
+    "repetitions": 5,
     "n_jobs": 4,
     "verbosity": 6,
     "environment": environments,
@@ -33,10 +33,8 @@ evaluator.startAllEnv()
 
 def plot_env(evaluation, environment_id):
     evaluation.printFinalRanking(environment_id)
-    evaluation.plotRegrets(environment_id)
-    evaluation.plotRegrets(environment_id, semilogx=True)
-    evaluation.plotRegrets(environment_id, meanReward=True)
-    # evaluation.plotBestArmPulls(environment_id)
+    evaluation.plotRegrets(environment_id, normalizedRegret=True, subtitle="Environment #" + str(environment_id))
+    # evaluation.plotRegrets(environment_id, regretOverMaxReturn=True, subtitle="Environment #" + str(environment_id))
 
 
 for env_id in range(len(environments)):
