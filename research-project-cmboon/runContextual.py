@@ -18,8 +18,8 @@ from SMPyBandits.Policies import UCB, Exp3
 # horizon = 30000
 # horizon = 5000
 # horizon = 200
-# horizon = 100000
-# repetitions = 10
+horizon = 10000
+repetitions = 10
 # repetitions = 5
 # repetitions = 2
 
@@ -28,8 +28,8 @@ from SMPyBandits.Policies import UCB, Exp3
 # repetitions = 30
 
 # For quick testing
-horizon = 100
-repetitions = 4
+# horizon = 100
+# repetitions = 4
 
 n_jobs = 1
 verbosity = 2
