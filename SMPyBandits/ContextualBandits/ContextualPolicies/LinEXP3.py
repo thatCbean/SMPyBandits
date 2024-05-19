@@ -38,7 +38,11 @@ class LinEXP3(ContextualBasePolicy):
     def getReward(self, arm, reward, context):
         """Update the parameter estimates for the chosen arm."""
         super(LinEXP3, self).getReward(arm, reward, context)  # Call to BasePolicy
-        self.theta_hats[arm] += self.eta * reward * context[arm]
+        
+        loss = np.dot(context[arm], self.theta_hats[arm])
+        
+        for a in range(self.k):
+            self.theta_hats[a] += self.eta * loss * context[a]
 
     def choice(self, context):
         """Choose an arm based on the LINEXP3 policy."""

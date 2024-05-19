@@ -12,9 +12,9 @@ def custom_reward(t, w, phi):
     return np.sin(w * t + phi)
 
 horizon = 1000
-d = 3 # number of arms
+d = 3 
 
-change_points = np.arange(0, horizon, 200).tolist()
+change_points = np.arange(0, horizon).tolist()
 w = np.random.uniform(0.1, 1.0, d)  # Random frequencies
 phi = np.random.uniform(0, 2 * np.pi, d)  # Random phase shifts
 
@@ -23,16 +23,22 @@ list_of_means = [
     for t in change_points
 ]
 
+arms = [
+    ContextualBernoulliArm([0.1, 0.0, 0.15]),
+    ContextualBernoulliArm([0.1, 0.12, 0.11]),
+    ContextualBernoulliArm([0.2, 0.04, 0.1])
+]
+
+contexts = [
+    NormalContext([0.2, 0.1, 0.3], np.identity(3) * [0.2, 0.3, 0.1], 3),
+    NormalContext([0.2, 0.2, 0.1], np.identity(3) * [0.1, 0.4, 0.1], 3),
+    NormalContext([0.1, 0.1, 0.7], np.identity(3) * [0.1, 0.2, 0.3], 3)
+]
+
 environments = [
     {
-        "arms": [
-            ContextualBernoulliArm([0.1, 0.0, 0.15]), ContextualBernoulliArm([0.1, 0.12, 0.11]), ContextualBernoulliArm([0.2, 0.04, 0.1])
-        ],
-        "contexts": [
-            NormalContext([0.2, 0.1, 0.3], np.identity(3) * [0.2, 0.3, 0.1], 3),
-            NormalContext([0.2, 0.2, 0.1], np.identity(3) * [0.1, 0.4, 0.1], 3),
-            NormalContext([0.1, 0.1, 0.7], np.identity(3) * [0.1, 0.2, 0.3], 3)
-        ],
+        "arms": arms,
+        "contexts": contexts,
         "params": {
                 "listOfMeans": list_of_means,
                 "changePoints": change_points,
@@ -64,11 +70,12 @@ evaluator.startAllEnv()
 
 def plot_env(evaluation, environment_id):
     evaluation.printFinalRanking(environment_id)
-    evaluation.plotRegrets(environment_id)
-    evaluation.plotRegrets(environment_id, semilogx=True)
-    evaluation.plotRegrets(environment_id, meanReward=True)
+    # evaluation.plotRegrets(environment_id)
+    # evaluation.plotRegrets(environment_id, semilogx=True)
+    # evaluation.plotRegrets(environment_id, meanReward=True)
     # evaluation.plotBestArmPulls(environment_id)
 
 
 for env_id in range(len(environments)):
     plot_env(evaluator, env_id)
+    
