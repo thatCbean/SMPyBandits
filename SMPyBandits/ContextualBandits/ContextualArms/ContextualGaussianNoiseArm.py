@@ -16,35 +16,26 @@ NOISE_VAR = 0.01
 class ContextualGaussianNoiseArm(ContextualArm):
 
     """ An arm that generates a reward using a Bernoulli distribution with a probability based on context """
-    def __init__(self, theta, noise_mean=NOISE_MEAN, noise_var=NOISE_VAR):
-        if not isinstance(theta, np.ndarray):
-            theta = np.array(theta)
+    def __init__(self, noise_mean=NOISE_MEAN, noise_var=NOISE_VAR):
         super(__class__, self).__init__()
-        if np.linalg.norm(theta) > 1:
-            theta = theta / np.linalg.norm(theta)
         self.noise_mean = noise_mean
         self.noise_var = noise_var
         self.lower = 0
         self.amplitude = 1
         self.min = 0
         self.max = 1
-        self.theta = theta
 
     def __str__(self):
         return "ContextualGaussian"
 
     def __repr__(self):
-        return "ContextualGaussian(theta: {}, mu: {}, sigma^2: {})".format(self.theta, self.noise_mean, self.noise_var)
+        return "ContextualGaussianWithNoise(mu: {}, sigma^2: {})".format(self.noise_mean, self.noise_var)
 
-    def draw(self, context, t=None):
+    def draw(self, theta_star, context, t=None):
         assert isinstance(context, np.ndarray), "context must be an np.ndarray"
-        assert self.theta.shape == context.shape, "theta shape must be equal to context"
+        assert theta_star.shape == context.shape, "theta shape must be equal to context"
         # return min(1, max(0, np.inner(context, self.theta) + normal(self.noise_mean, self.noise_var)))
-        return min(1, abs(np.inner(context, self.theta) + normal(self.noise_mean, self.noise_var)))
-
-    def set(self, theta):
-        assert isinstance(theta, np.ndarray), "theta must be an np.ndarray"
-        self.theta = theta
+        return min(1, abs(np.inner(context, theta_star) + normal(self.noise_mean, self.noise_var)))
 
     def is_nonzero(self):
-        return np.linalg.norm(self.theta) != 0
+        return True
