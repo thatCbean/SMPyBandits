@@ -56,7 +56,7 @@ class LinUCB(ContextualBasePolicy):
         """
         super(LinUCB, self).getReward(arm, reward, contexts)  # XXX Call to BasePolicy
         self.A = self.A + (np.outer(contexts[arm], contexts[arm]))
-        self.b = self.b + (contexts[arm] * reward)
+        self.b = self.b + (contexts[arm] * np.full(self.dimension, reward))
 
     def choice(self, contexts):
         theta_t = np.linalg.inv(self.A) @ self.b
