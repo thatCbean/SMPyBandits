@@ -42,6 +42,10 @@ class ContextualMAB(object):
 
         print("  Reading arms of this Contextual MAB problem from a dictionary 'configuration' = {} ...".format(
             configuration))  # DEBUG
+
+        self.theta_star = np.array(configuration['theta_star'])
+        print(" - with theta_star ={}".format(self.theta_star))
+
         arms = configuration["arms"]
         print(" - with arms =", arms)  # DEBUG
         # Each 'param' could be one value (eg. 'mean' = probability for a Bernoulli) or a tuple (eg. '(mu, sigma)' for a Gaussian) or a dictionnary
@@ -75,7 +79,7 @@ class ContextualMAB(object):
         print(" - with 'arms' represented as:", self.reprarms(1, latex=True))  # DEBUG
 
     def __repr__(self):
-        return "{}(nbArms: {}, arms: {}, contexts: {})".format(self.__class__.__name__, self.nbArms, self.arms, self.contexts)
+        return "{}(nbArms: {}, theta_star: {}, arms: {}, contexts: {})".format(self.__class__.__name__, self.nbArms, self.theta_star, self.arms, self.contexts)
 
     def reprarms(self, nbPlayers=None, openTag='', endTag='^*', latex=True):
         """ Return a str representation of the list of the arms (like `repr(self.arms)` but better)
@@ -105,14 +109,14 @@ class ContextualMAB(object):
     def draw(self, armId, t=1):
         """ Return a random sample from the armId-th arm, at time t. """
         context_draw = self.draw_context(armId)
-        return context_draw, self.arms[armId].draw(context_draw, t)
+        return context_draw, self.arms[armId].draw(self.theta_star, context_draw, t)
 
     def draw_nparray(self, armId, shape=(1,)):
         """
             Return a numpy array of contexts and samples from the armId-th arm, of a certain shape.
         """
         contexts = self.contexts[armId].draw_nparray(shape)
-        return contexts, self.arms[armId].draw_nparray(shape, contexts)
+        return contexts, self.arms[armId].draw_nparray(self.theta_star, contexts, shape)
 
     def draw_context(self, contextId):
         return self.contexts[contextId].draw_context()

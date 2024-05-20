@@ -163,4 +163,6 @@ cython_debug/
 #.idea/
 
 /research-project-cmboon/notes.txt
+/research-project-cmboon/plots/
+/research-project-cmboon/plots
 /rowczarskiResearchProject/plots/
