@@ -69,10 +69,6 @@ def _nbOfArgs(function):
         return len(inspect.getargspec(function).args)
 
 
-def get_dimension(config):
-    return config["contexts"][0].dimension
-
-
 class EvaluatorContextual(object):
     """ Evaluator class to run contextual simulations."""
 
@@ -152,9 +148,10 @@ class EvaluatorContextual(object):
         for configuration_envs in self.cfg['environment']:
             print("Using this dictionary to create a new environment:\n", configuration_envs)  # DEBUG
             if isinstance(configuration_envs, dict) \
+                    and "theta_star" in configuration_envs \
                     and "arms" in configuration_envs \
                     and "contexts" in configuration_envs:
-                dim = get_dimension(configuration_envs)
+                dim = len(configuration_envs["theta_star"])
                 assert self.dimension == -1 or self.dimension == dim, "Error: All contexts must have the same dimension"
                 self.dimension = dim
                 self.envs.append(ContextualMAB(configuration_envs))
@@ -338,11 +335,11 @@ class EvaluatorContextual(object):
     def getBestMeanReward(self, envId):
         arms = self.envs[envId].arms
         contexts = self.envs[envId].contexts
-        thetas = np.array([arm.theta for arm in arms])
+        theta_star = self.envs[envId].theta_star
         context_means = np.array([context.means for context in contexts])
         mean_rewards = np.array(np.abs(
             [
-                np.inner(context_means, thetas[arm])
+                np.inner(context_means, theta_star)
                 for arm in range(len(arms))
             ]
         ))

@@ -31,9 +31,9 @@ class NormalContext(BaseContext):
         self.covariance_matrix = covariance_matrix
 
     def draw_context(self):
-        # res = multivariate_normal(self.means, self.covariance_matrix)
-        res = normal(self.means, self.covariance_matrix.diagonal())
-        res = np.abs(res)
+        res = multivariate_normal(self.means, self.covariance_matrix)
+        # res = normal(self.means, self.covariance_matrix.diagonal())
+        # res = np.abs(res)
         # res = np.zeros(shape=self.dimension)
         # for i in range(self.dimension):
         #     res[i] = normal(self.means[i], self.covariance_matrix[i][i])
