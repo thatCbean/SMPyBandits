@@ -852,13 +852,7 @@ def delayed_play(env, policy, horizon,
             reward = all_rewards[env_id][repeatId, t, choice]
 
             # 4. The policy sees the reward
-
             policy.getReward(choice, reward, contexts)
-
-            if isinstance(policy, SparsityAgnosticLassoBandit):
-
-                # 5. The policy needs to update its model based on observed reward
-                policy.update(choice, reward, contexts)
         else:
             # 2. The player's policy choose an arm
             choice = policy.choice()

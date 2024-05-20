@@ -33,17 +33,20 @@ class SparsityAgnosticLassoBandit(ContextualBasePolicy):
         return r"SparsityAgnosticLassoBandit($\lambda_0: {:.3g}$)".format(self.lambda_zero)
 
     def choice(self, context):
-
         estimated_rewards = context.dot(self.betaHat)
         chosen_arm = np.argmax(estimated_rewards)
 
         return chosen_arm
 
+    def getReward(self, arm, reward, contexts):
+        super(SparsityAgnosticLassoBandit, self).getReward(arm, reward, contexts)
+        self.update(arm, reward, contexts)
+
     def update(self, arm, reward, context):
         self.context_up_to_t.append(context[arm])
         self.observed_rewards.append(reward)
 
-        if self.t > 1:
+        if self.t > 5:
             self.update_lamda_t()
             self.lassoModel.alpha = self.lambda_t
             all_context = np.array(self.context_up_to_t)
