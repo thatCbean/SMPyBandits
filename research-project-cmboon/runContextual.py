@@ -17,8 +17,8 @@ from SMPyBandits.Policies import UCB, Exp3
 # horizon = 30000
 # horizon = 5000
 # horizon = 200
-horizon = 1000
-repetitions = 10
+horizon = 10
+repetitions = 2
 # repetitions = 5
 # repetitions = 2
 
@@ -46,42 +46,229 @@ plot_min_max = True
 start_time = datetime.datetime.now()
 print("Starting run at {}")
 
+dimension = 3
 environments = [
     {
-        "theta_star": [0.5, 0.5, 0.5],
+        "theta_star": [0.4, 0.4, 0.4],
         "arms": [
             ContextualGaussianNoiseArm(0, 0.01),
             ContextualGaussianNoiseArm(0, 0.01),
             ContextualGaussianNoiseArm(0, 0.01)
         ],
         "contexts": [
-            NormalContext([0.4, 0.4, 0.4], np.identity(3) * 0.5, 3),
-            NormalContext([0.4, 0.4, 0.4], np.identity(3) * 0.5, 3),
-            NormalContext([0.4, 0.4, 0.4], np.identity(3) * 0.5, 3)
+            NormalContext([0.4 for _ in range(dimension)], np.identity(dimension) * 0.5, dimension),
+            NormalContext([0.4 for _ in range(dimension)], np.identity(dimension) * 0.5, dimension),
+            NormalContext([0.4 for _ in range(dimension)], np.identity(dimension) * 0.5, dimension)
+        ]
+    },
+{
+        "theta_star": [0.4, 0.4, 0.4],
+        "arms": [
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01)
+        ],
+        "contexts": [
+            NormalContext([0.15 for _ in range(dimension)], np.identity(dimension) * 0.5, dimension),
+            NormalContext([0.15 for _ in range(dimension)], np.identity(dimension) * 0.5, dimension),
+            NormalContext([0.15 for _ in range(dimension)], np.identity(dimension) * 0.5, dimension)
+        ]
+    },
+    {
+        "theta_star": [0.4, 0.4, 0.4],
+        "arms": [
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01)
+        ],
+        "contexts": [
+            NormalContext([0.1 for _ in range(dimension)], np.identity(dimension) * 0.5, dimension),
+            NormalContext([0.2 for _ in range(dimension)], np.identity(dimension) * 0.5, dimension),
+            # 0.3^2 * 20 > 1 so any mean higher than 0.3 will not change the distribution in iid context
+            NormalContext([0.3 for _ in range(dimension)], np.identity(dimension) * 0.5, dimension)
+        ]
+    },
+    {
+        "theta_star": [0.4, 0.4, 0.4],
+        "arms": [
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01)
+        ],
+        "contexts": [
+            NormalContext([0.4 for _ in range(dimension)], np.identity(dimension) * 0.15, dimension),
+            NormalContext([0.4 for _ in range(dimension)], np.identity(dimension) * 0.15, dimension),
+            NormalContext([0.4 for _ in range(dimension)], np.identity(dimension) * 0.15, dimension)
+        ]
+    },
+    {
+        "theta_star": [0.4, 0.4, 0.4],
+        "arms": [
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01)
+        ],
+        "contexts": [
+            NormalContext([0.4 for _ in range(dimension)], np.identity(dimension) * 0.2, dimension),
+            NormalContext([0.4 for _ in range(dimension)], np.identity(dimension) * 0.4, dimension),
+            NormalContext([0.4 for _ in range(dimension)], np.identity(dimension) * 0.6, dimension)
+        ]
+    },
+    {
+        "theta_star": [0.15, 0.15, 0.15],
+        "arms": [
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01)
+        ],
+        "contexts": [
+            NormalContext([0.4 for _ in range(dimension)], np.identity(dimension) * 0.4, dimension),
+            NormalContext([0.4 for _ in range(dimension)], np.identity(dimension) * 0.4, dimension),
+            NormalContext([0.4 for _ in range(dimension)], np.identity(dimension) * 0.4, dimension)
+        ]
+    },
+    {
+        "theta_star": [0.1, 0.2, 0.3],
+        "arms": [
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01)
+        ],
+        "contexts": [
+            NormalContext([0.4 for _ in range(dimension)], np.identity(dimension) * 0.4, dimension),
+            NormalContext([0.4 for _ in range(dimension)], np.identity(dimension) * 0.4, dimension),
+            NormalContext([0.4 for _ in range(dimension)], np.identity(dimension) * 0.4, dimension)
         ]
     }
 ]
 
+dimension_2 = 20
 environments_2 = [
     {
-        "theta_star": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+        "theta_star": [0.4 for _ in range(dimension_2)],
         "arms": [
             ContextualGaussianNoiseArm(0, 0.01),
             ContextualGaussianNoiseArm(0, 0.01),
-            ContextualGaussianNoiseArm(0, 0.01)
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
         ],
         "contexts": [
-            NormalContext([0.3, 0.5, 0.2, 0.4, 0.6, 0.3, 0.5, 0.2, 0.4, 0.6, 0.3, 0.5, 0.2, 0.4, 0.6, 0.3, 0.5, 0.2, 0.4, 0.6], np.identity(20) * 0.5, 20),
-            NormalContext([0.7, 0.3, 0.3, 0.2, 0.6, 0.7, 0.3, 0.3, 0.2, 0.6, 0.7, 0.3, 0.3, 0.2, 0.6, 0.7, 0.3, 0.3, 0.2, 0.6], np.identity(20) * 0.5, 20),
-            NormalContext([0.4, 0.6, 0.1, 0.2, 0.7, 0.4, 0.6, 0.1, 0.2, 0.7, 0.4, 0.6, 0.1, 0.2, 0.7, 0.4, 0.6, 0.1, 0.2, 0.7], np.identity(20) * 0.5, 20)
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2)
+        ]
+    },
+    {
+        "theta_star": [0.4 for _ in range(dimension_2)],
+        "arms": [
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+        ],
+        "contexts": [
+            NormalContext([0.15 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.15 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.15 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.15 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.15 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+        ]
+    },
+    {
+        "theta_star": [0.4 for _ in range(dimension_2)],
+        "arms": [
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+        ],
+        "contexts": [
+            NormalContext([0.05 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.1 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.15 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.2 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.25 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+        ]
+    },
+    {
+        "theta_star": [0.4 for _ in range(dimension_2)],
+        "arms": [
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+        ],
+        "contexts": [
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.15, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.15, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.15, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.15, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.15, dimension_2),
+        ]
+    },
+    {
+        "theta_star": [0.4 for _ in range(dimension_2)],
+        "arms": [
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+        ],
+        "contexts": [
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.1, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.3, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.7, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.9, dimension_2),
+        ]
+    },
+    {
+        "theta_star": [0.15 for _ in range(dimension_2)],
+        "arms": [
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+        ],
+        "contexts": [
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+        ]
+    },
+    {
+        "theta_star": [0.05 * i for i in range(dimension_2)],
+        "arms": [
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+        ],
+        "contexts": [
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
+            NormalContext([0.4 for _ in range(dimension_2)], np.identity(dimension_2) * 0.5, dimension_2),
         ]
     }
 ]
 
 policies = [
     {"archtype": UCB, "params": {}},
-    {"archtype": Exp3, "params": {"gamma": 0.05}},
-    # {"archtype": Exp3, "params": {"gamma": 0.1}},
+    # {"archtype": Exp3, "params": {"gamma": 0.05}},
+    {"archtype": Exp3, "params": {"gamma": 0.1}},
     # {"archtype": Exp3, "params": {"gamma": 0.25}},
     # {"archtype": Exp3, "params": {"gamma": 0.5}},
     # {"archtype": Exp3, "params": {"gamma": 0.75}},
@@ -89,34 +276,36 @@ policies = [
     # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 100.0}},
     # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 50.0}},
     # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 20.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 10.0}},
+    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 10.0}},
     # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 5.0}},
     # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 2.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 1.0}},
+    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 1.0}},
     # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.5}},
     # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.2}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.1}},
+    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.1}},
     # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.05}},
-    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.01}}
+    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.01}},
+    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.001}},
 ]
 
 policies_2 = [
     {"archtype": UCB, "params": {}},
-    {"archtype": Exp3, "params": {"gamma": 0.05}},
-    # {"archtype": Exp3, "params": {"gamma": 0.1}},
-    # {"archtype": Exp3, "params": {"gamma": 0.2}},
+    # {"archtype": Exp3, "params": {"gamma": 0.05}},
+    {"archtype": Exp3, "params": {"gamma": 0.1}},
+    # {"archtype": Exp3, "params": {"gamma": 0.5}},
     # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 100.0}},
     # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 50.0}},
     # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 20.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 10.0}},
+    {"archtype": LinUCB, "params": {"dimension": dimension_2, "alpha": 10.0}},
     # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 5.0}},
     # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 2.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 1.0}},
+    {"archtype": LinUCB, "params": {"dimension": dimension_2, "alpha": 1.0}},
     # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.5}},
     # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.2}},
-    # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.1}},
+    {"archtype": LinUCB, "params": {"dimension": dimension_2, "alpha": 0.1}},
     # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.05}},
-    {"archtype": LinUCB, "params": {"dimension": 20, "alpha": 0.01}}
+    {"archtype": LinUCB, "params": {"dimension": dimension_2, "alpha": 0.01}},
+    {"archtype": LinUCB, "params": {"dimension": dimension_2, "alpha": 0.001}},
 ]
 
 configuration = {
