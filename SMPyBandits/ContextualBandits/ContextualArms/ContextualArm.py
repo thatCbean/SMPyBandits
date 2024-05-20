@@ -42,17 +42,14 @@ class ContextualArm(object):
 
     # --- Random samples
 
-    def draw(self, context, t=None):
+    def draw(self, theta_star, context, t=None):
         """ Draw one random sample."""
         raise NotImplementedError("This method draw(context, t) has to be implemented in the class inheriting from ContextualArm.")
 
-    def set_theta_param(self, theta):
-        raise NotImplementedError("This method set_theta_param(theta) has to be implemented in the class inheriting from ContextualArm.")
-
-    def draw_nparray(self, contexts, shape=(1,)):
+    def draw_nparray(self, theta_star, contexts, shape=(1,)):
         assert isinstance(contexts, np.ndarray)
         assert contexts.shape == shape or np.multiply(contexts.shape) == np.multiply(shape)
-        np.array([self.draw(context) for context in contexts.flat]).reshape(shape)
+        np.array([self.draw(theta_star, context) for context in contexts.flat]).reshape(shape)
 
     def is_nonzero(self):
         raise NotImplementedError("This method is_nonzero() has to be implemented in the class inheriting from ContextualArm.")
