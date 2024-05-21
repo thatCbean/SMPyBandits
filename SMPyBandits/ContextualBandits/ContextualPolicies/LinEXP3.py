@@ -25,12 +25,16 @@ class LinEXP3(ContextualBasePolicy):
         self.k = nbArms
         self.weights = np.ones(nbArms)
         self.theta_hats = np.zeros((nbArms, dimension))
+        self.history_contexts = []
+        self.history_theta_hats = []
 
     def startGame(self):
         """Initialize weights and parameter estimates."""
         super(LinEXP3, self).startGame()
         self.weights = np.ones(self.k)
         self.theta_hats = np.zeros((self.k, self.dimension))
+        self.history_contexts = []
+        self.history_theta_hats = []
 
     def __str__(self):
         return r"linEXP3($\eta: {:.3g}$, $\gamma: {:.3g}$)".format(self.eta, self.gamma)
@@ -44,7 +48,8 @@ class LinEXP3(ContextualBasePolicy):
         for a in range(self.k):
             if a == arm:
                 # Update only the chosen arm using the observed reward (loss)
-                self.theta_hats[a] += self.eta * loss * context[a]
+                # loss = -reward
+                self.theta_hats[a] -= self.eta * loss * context[a]
 
     def choice(self, context):
         """Choose an arm based on the LINEXP3 policy."""
