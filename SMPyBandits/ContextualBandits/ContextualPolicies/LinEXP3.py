@@ -42,7 +42,9 @@ class LinEXP3(ContextualBasePolicy):
         loss = np.dot(context[arm], self.theta_hats[arm])
         
         for a in range(self.k):
-            self.theta_hats[a] += self.eta * loss * context[a]
+            if a == arm:
+                # Update only the chosen arm using the observed reward (loss)
+                self.theta_hats[a] += self.eta * loss * context[a]
 
     def choice(self, context):
         """Choose an arm based on the LINEXP3 policy."""

@@ -24,16 +24,16 @@ class ACArm(ContextualArm):
         self.t = 0
 
     def __str__(self):
-        return "SlowChangingArm"
+        return "ArbitraryChangingArm"
 
     def __repr__(self):
-        return "SlowChangingArm(theta: {}, w: {}, phi: {})".format(self.theta, self.w, self.phi)
+        return "ArbitraryChangingArm(theta: {}, w: {}, phi: {})".format(self.theta, self.w, self.phi)
 
     def reward_function(self, context, t):
         # Compute reward based on the given formula: theta_{i, a} = sin(w_i t + phi_i)
         return np.sin(self.w * t + self.phi).sum()
 
-    def draw(self, context, t=None):
+    def draw(self, context, theta_star=None, t=None):
         assert isinstance(context, np.ndarray), "context must be an np.ndarray"
         assert self.theta_shape == context.shape, "theta shape must be equal to context"
 
