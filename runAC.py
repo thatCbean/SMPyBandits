@@ -16,6 +16,7 @@ HORIZON = 1000
 REPETITIONS = 20
 d = 3 
 
+# Environment 1: Draw nbArms of w_i and phi_i of d dimensions as the reward function setup
 w_1 = np.array([0.2, 0.1, 0.3])
 phi_1 = np.array([0.2, 0.3, 0.1])
 
@@ -25,23 +26,31 @@ phi_2 = np.array([0.1, 0.4, 0.1])
 w_3 = np.array([0.05, 0.1, 0.82])
 phi_3 = np.array([0.2, 0.1, 0.45])
 
+w_4 = np.array([0.44, 0.6, 0.2])
+phi_4 = np.array([0.4, 0.9, 0.6])
+
 environments = [{
-        "theta_star": [0.5, 0.5, 0.5],
+        "theta_star": [0.5, 0.5, 0.5], # could be ignored in this environment
         "arms": [ACArm(w_1, phi_1),
                  ACArm(w_2, phi_2),
-                 ACArm(w_3, phi_3)
-],
+                 ACArm(w_3, phi_3),
+                 ACArm(w_4, phi_4)
+        ],
+        # NormalContext(means, covariance matrices, dimensions)
         "contexts": [NormalContext([0.2, 0.1, 0.3], np.identity(3) * [0.2, 0.3, 0.1], d),
                      NormalContext([0.2, 0.2, 0.1], np.identity(3) * [0.1, 0.4, 0.1], d),
-                     NormalContext([0.1, 0.1, 0.7], np.identity(3) * [0.1, 0.2, 0.3], d)]
+                     NormalContext([0.1, 0.1, 0.7], np.identity(3) * [0.1, 0.2, 0.3], d),
+                     NormalContext([0.5, 0.5, 0.35], np.identity(3) * [0.6, 0.6, 0.4], d),
+        ]
 }]
 
 
 policies = [
-    {"archtype": UCB, "params": {}},
-    {"archtype": Exp3, "params": {"gamma": 0.8}},
+    {"archtype": LinEXP3, "params": {"dimension": 3, "eta" : 0.2, "gamma": 0.8}},
     {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.2}},
-    {"archtype": LinEXP3, "params": {"dimension": 3, "eta" : 0.2, "gamma": 0.8}}
+    {"archtype": Exp3, "params": {"gamma": 0.8}},
+    {"archtype": UCB, "params": {}},
+
 ]
 
 configuration = {
@@ -60,8 +69,8 @@ evaluator.startAllEnv()
 
 def plot_env(evaluation, environment_id):
     evaluation.printFinalRanking(environment_id)
-    # evaluation.plotRegrets(environment_id)
-    # evaluation.plotRegrets(environment_id, semilogx=True)
+    evaluation.plotRegrets(environment_id)
+    evaluation.plotRegrets(environment_id, semilogx=True)
     evaluation.plotRegrets(environment_id, meanReward=True)
     # evaluation.plotBestArmPulls(environment_id)
 
