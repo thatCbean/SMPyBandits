@@ -148,13 +148,23 @@ class EvaluatorContextual(object):
         for configuration_envs in self.cfg['environment']:
             print("Using this dictionary to create a new environment:\n", configuration_envs)  # DEBUG
             if isinstance(configuration_envs, dict) \
-                    and "theta_star" in configuration_envs \
+                    and ((
+                        "theta_star" in configuration_envs
+                    ) or (
+                        "perturbed" in configuration_envs
+                        and "change_points" in configuration_envs
+                        and "change_durations" in configuration_envs
+                        and "thetas" in configuration_envs
+                    ) or (
+                        "slow_changing" in configuration_envs
+                        and "thetas" in configuration_envs
+                    )) \
                     and "arms" in configuration_envs \
                     and "contexts" in configuration_envs:
                 dim = len(configuration_envs["theta_star"])
                 assert self.dimension == -1 or self.dimension == dim, "Error: All contexts must have the same dimension"
                 self.dimension = dim
-                self.envs.append(ContextualMAB(configuration_envs))
+                self.envs.append(ContextualMAB(configuration_envs, self.horizon))
 
     def __initPolicies__(self, env):
         """ Create or initialize policies."""

@@ -1,8 +1,6 @@
 import numpy as np
 
 from SMPyBandits.ContextualBandits.Contexts.NormalContext import NormalContext
-from SMPyBandits.ContextualBandits.ContextualArms.ChangingArm import ChangingArm
-from SMPyBandits.ContextualBandits.ContextualArms.RewardFunctions.BernoulliRewardFunction import bernoulliReward, debugBernoulliReward
 from SMPyBandits.ContextualBandits.ContextualPolicies.LinUCB import LinUCB
 from SMPyBandits.ContextualBandits.ContextualEnvironments.EvaluatorContextual import EvaluatorContextual
 from SMPyBandits.Policies import UCB, Exp3
@@ -18,9 +16,7 @@ verbosity = 4
 environments = [
     {
         "arms": [
-                       ChangingArm(np.array([[0.1, 0.2, 0.15], [0.3, 0.1, 0.05]]), bernoulliReward, horizon, True),
-                       ChangingArm(np.array([[0.3, 0.3, 0.3], [0.1, 0.5, 0.3]]), bernoulliReward, horizon, True),
-                       ChangingArm(np.array([[0.1, 0.2, 0.3], [0.4, 0.1, 0.1], [0.2, 0.2, 0.2]]), bernoulliReward, horizon, True)
+
                        ],
         "contexts": [
             NormalContext([0.2, 0.1, 0.3], np.identity(3) * [0.1, 0.2, 0.3], 3),

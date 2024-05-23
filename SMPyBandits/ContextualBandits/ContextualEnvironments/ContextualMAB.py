@@ -1,6 +1,8 @@
 __author__ = "Cody Boon"
 __version__ = "0.1"
 
+import math
+
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -16,18 +18,14 @@ class ContextualMAB(object):
     - configuration can be a dict with 'arm_type' and 'params' keys. 'arm_type' is a class from the Arms module, and 'params' is a dict, used as a list/tuple/iterable of named parameters given to 'arm_type'. Example::
 
         configuration = {
-                'arm_type': ContextualBernoulli,
-                'arm_params':   [0.1, 0.5, 0.9]
-                'context_type': NormalContext,
-                'context_params':  [
-                    [0.2, 0.1, 0.3],
-                    np.identity(3) * [0.1, 0.2, 0.3]
-                ]
+                'arms': [ContextualBernoulli(), ContextualBernoulli()]
+                'theta_star':   [0.1, 0.5, 0.9],
+                'contexts': [NormalContext([0.1,0.2,0.3],np.identity(3)*0.3), NormalContext([0.1,0.2,0.3],np.identity(3)*0.3)],
         }
 
     """
 
-    def __init__(self, configuration):
+    def __init__(self, configuration, horizon):
         """New Contextual MAB."""
 
         assert isinstance(configuration, dict), "Error: configuration should be a dict"
@@ -39,12 +37,35 @@ class ContextualMAB(object):
         self.contexts = []  #: List of contexts
         self._sparsity = None
         self.non_zero_means = 0
+        self.horizon = horizon
 
         print("  Reading arms of this Contextual MAB problem from a dictionary 'configuration' = {} ...".format(
             configuration))  # DEBUG
 
-        self.theta_star = np.array(configuration['theta_star'])
-        print(" - with theta_star ={}".format(self.theta_star))
+        self.slow_changing = configuration["slow_changing"] if "slow_changing" in configuration else False
+        self.perturbed = configuration["perturbed"] if "perturbed" in configuration else False
+        assert not (self.slow_changing and self.perturbed), "Error: Environment cannot be both slow changing and perturbed"
+
+        if not self.slow_changing and not self.perturbed:
+            self.theta_star = np.array(configuration['theta_star'])
+            print(" - with theta_star ={}".format(self.theta_star))
+
+        if self.perturbed or "change_points" in configuration:
+            self.change_points = np.array(configuration["change_points"])
+            print(" - with change_points ={}".format(self.change_points))
+
+        if self.perturbed:
+            self.change_durations = np.array(configuration["change_durations"])
+            print(" - with change_durations ={}".format(self.change_durations))
+            self.__init_perturbed_theta_index_array(self.change_points, self.change_durations, self.horizon)
+
+        if self.slow_changing or self.perturbed:
+            self.thetas = np.array(configuration["thetas"])
+            print(" - with thetas ={}".format(self.thetas))
+
+        if self.slow_changing and not hasattr(self, "change_points"):
+            self.interval = math.floor(horizon / (len(self.thetas) - 1))
+            print(" - with change interval ={}".format(self.interval))
 
         arms = configuration["arms"]
         print(" - with arms =", arms)  # DEBUG
@@ -76,6 +97,11 @@ class ContextualMAB(object):
             print(" - with 'sparsity' =", self._sparsity)  # DEBUG
         print(" - with 'arms' represented as:", self.reprarms(1, latex=True))  # DEBUG
 
+    def __init_perturbed_theta_index_array(self, change_points, change_durations, horizon):
+        self.index_array = np.zeros(horizon)
+        for i, val in enumerate(change_points):
+            np.put(self.index_array, range(val, val + change_durations[i]), i+1, 'clip')
+
     def __repr__(self):
         return "{}(nbArms: {}, theta_star: {}, arms: {}, contexts: {})".format(self.__class__.__name__, self.nbArms, self.theta_star, self.arms, self.contexts)
 
@@ -104,20 +130,36 @@ class ContextualMAB(object):
 
     # --- Draw samples
 
-    def draw(self, armId, t=1):
+    def draw(self, armId, t=0):
         """ Return a random sample from the armId-th arm, at time t. """
         context_draw = self.draw_context(armId)
-        return context_draw, self.arms[armId].draw(self.theta_star, context_draw, t)
+        return context_draw, self.arms[armId].draw(self.current_theta_star(t), context_draw, t)
 
-    def draw_nparray(self, armId, shape=(1,)):
+    def draw_nparray(self, armId, shape=(1,), t=0):
         """
             Return a numpy array of contexts and samples from the armId-th arm, of a certain shape.
         """
         contexts = self.contexts[armId].draw_nparray(shape)
-        return contexts, self.arms[armId].draw_nparray(self.theta_star, contexts, shape)
+        return contexts, self.arms[armId].draw_nparray(self.current_theta_star(t), contexts, shape)
 
     def draw_context(self, contextId):
         return self.contexts[contextId].draw_context()
+
+    def current_theta_star(self, t):
+        if self.slow_changing:
+            formula = t / self.interval
+            if formula >= len(self.thetas):
+                return self.thetas[-1]
+            theta1 = self.thetas[math.floor(formula)]
+            theta2 = self.thetas[math.ceil(formula)]
+            interp = (theta1 * (1 - (formula % 1))) + (theta2 * (formula % 1))
+            return interp
+
+        elif self.perturbed:
+            return self.thetas[self.index_array[t]]
+
+        else:
+            return self.theta_star
 
     @property
     def sparsity(self):
