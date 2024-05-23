@@ -380,20 +380,15 @@ class EvaluatorContextual(object):
         lastAltRegret = np.zeros(nbPolicies)
         for i, policy in enumerate(self.policies):
             Y = self.getCumulatedRegretAverage(i, envId)
-            Z = self.getAltRegret(i, envId)
             totalRegret[i] = Y[-1]
-            altRegret[i] = Z[-1]
-            lastRegret[i] = Y[-1] - Y[-2]
-            lastAltRegret[i] = Z[-1] - Z[-2]
             totalRewards[i] = np.sum(self.rewards[:, i, envId, :]) / self.repetitions
         # Sort lastRegret and give ranking
         index_of_sorting = np.argsort(totalRegret)
         for i, k in enumerate(index_of_sorting):
             policy = self.policies[k]
             stri += self.printAndReturn(
-                "- Policy '{}'\twas ranked\t{} / {} for this simulation\n\t(last regret = {:.5g},\ttotal regret = {:.5g},\ttotal reward = {:.5g}.".format(
-                    policy.__cachedstr__, i + 1, nbPolicies, lastRegret[k], totalRegret[k], totalRewards[k]))
-            stri += self.printAndReturn("    Alternative regret calculation results in regret of [{}] and last regret of [{}]".format(altRegret[k], lastAltRegret[k]))
+                "- Policy '{}'\twas ranked\t{} / {} for this simulation\n\t(total regret = {:.5g},\ttotal reward = {:.5g}.".format(
+                    policy.__cachedstr__, i + 1, nbPolicies, totalRegret[k], totalRewards[k]))
         return totalRegret, index_of_sorting, stri
 
     def _xlabel(self, envId, *args, **kwargs):
