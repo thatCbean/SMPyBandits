@@ -15,33 +15,35 @@ d = 3
 HORIZON = 1000
 
 # Environment 1: Draw nbArms of w_i and phi_i of d dimensions as the reward function setup
-w_1 = np.array([0.2, 0.1, 0.3])
-phi_1 = np.array([0.2, 0.3, 0.1])
+w_list = [
+    np.array([0.2, 0.1, 0.3]),
+    np.array([0.2, 0.2, 0.1]),
+    np.array([0.05, 0.1, 0.82]),
+    np.array([0.44, 0.6, 0.2])
+]
 
-w_2 = np.array([0.2, 0.2, 0.1])
-phi_2 = np.array([0.1, 0.4, 0.1])
+phi_list = [
+    np.array([0.2, 0.3, 0.1]),
+    np.array([0.1, 0.4, 0.1]),
+    np.array([0.2, 0.1, 0.45]),
+    np.array([0.4, 0.9, 0.6])
+]
 
-w_3 = np.array([0.05, 0.1, 0.82])
-phi_3 = np.array([0.2, 0.1, 0.45])
-
-w_4 = np.array([0.44, 0.6, 0.2])
-phi_4 = np.array([0.4, 0.9, 0.6])
+# Create a list of ACArm instances
+arms = [ACArm(w, phi) for w, phi in zip(w_list, phi_list)]
 
 multivariate_contexts = [NormalContext([0.2, 0.1, 0.3], np.identity(3) * [0.2, 0.3, 0.1], d),
                      NormalContext([0.2, 0.2, 0.1], np.identity(3) * [0.1, 0.4, 0.1], d),
                      NormalContext([0.1, 0.1, 0.7], np.identity(3) * [0.1, 0.2, 0.3], d),
                      NormalContext([0.5, 0.5, 0.35], np.identity(3) * [0.6, 0.6, 0.4], d)]
 
-single_context = [NormalContext([0.6, 0.4, 0.65], np.identity(3) * [0.4, 0.4, 0.7], d) for _ in range(len(multivariate_contexts))]
+N = NormalContext([0.6, 0.4, 0.65], np.identity(3) * [0.4, 0.4, 0.7], d)
+single_context = [N for _ in range(len(w_list))]
 
 environments = [{
         "theta_star": [0.5, 0.5, 0.5], # could be ignored in this environment
-        "arms": [ACArm(w_1, phi_1),
-                 ACArm(w_2, phi_2),
-                 ACArm(w_3, phi_3),
-                 ACArm(w_4, phi_4)
-        ],
-        # NormalContext(means, covariance matrices, dimensions)
+        "arms": arms,
+        # NormalContext(means, covariance_matrix, dimension)
         "contexts": single_context
 }]
 
@@ -58,7 +60,7 @@ policies = [
 configuration = {
     "horizon": HORIZON,    # Finite horizon of the simulation
     "repetitions": REPETITIONS,  # number of repetitions
-    "n_jobs": 1,        # Maximum number of cores for parallelization: use ALL your CPU
+    "n_jobs": 4,        # Maximum number of cores for parallelization: use ALL your CPU
     "verbosity": 5,      # Verbosity for the joblib calls
     "environment": environments,
     "policies": policies
@@ -68,11 +70,31 @@ evaluator = EvaluatorContextual(configuration)
 
 evaluator.startAllEnv()
 
+def find_highest_reward(w_list, phi_list, context, t):
+    highest_reward = 0
+
+    for t in range(HORIZON):
+        best = float('-inf')
+        for a in range(len(arms)):
+            reward = calculate_reward(w_list[a], phi_list[a], context, t)
+            if reward > best:
+                best = reward
+            
+        highest_reward += best
+
+
+    return highest_reward
+
+def calculate_reward(w, phi, context, t):
+    return np.dot(np.sin(w * t + phi), context.means)
+
 
 def plot_env(evaluation, environment_id):
+    highest_reward = find_highest_reward(w_list, phi_list, N, HORIZON)
+    print("The best possible reward is: {:.6f}".format(highest_reward))
     evaluation.printFinalRanking(environment_id)
-    evaluation.plotRegrets(environment_id)
-    evaluation.plotRegrets(environment_id, semilogx=True)
+    # evaluation.plotRegrets(environment_id)
+    # evaluation.plotRegrets(environment_id, semilogx=True)
     # evaluation.plotRegrets(environment_id, meanReward=True)
     # evaluation.plotBestArmPulls(environment_id)
 
