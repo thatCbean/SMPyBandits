@@ -32,10 +32,7 @@ multivariate_contexts = [NormalContext([0.2, 0.1, 0.3], np.identity(3) * [0.2, 0
                      NormalContext([0.1, 0.1, 0.7], np.identity(3) * [0.1, 0.2, 0.3], d),
                      NormalContext([0.5, 0.5, 0.35], np.identity(3) * [0.6, 0.6, 0.4], d)]
 
-single_context = [NormalContext([0.1, 0.1, 0.7], np.identity(3) * [0.1, 0.2, 0.3], d),
-                  NormalContext([0.1, 0.1, 0.7], np.identity(3) * [0.1, 0.2, 0.3], d),
-                  NormalContext([0.1, 0.1, 0.7], np.identity(3) * [0.1, 0.2, 0.3], d),
-                  NormalContext([0.1, 0.1, 0.7], np.identity(3) * [0.1, 0.2, 0.3], d),]
+single_context = [NormalContext([0.6, 0.4, 0.65], np.identity(3) * [0.4, 0.4, 0.7], d) for _ in range(len(multivariate_contexts))]
 
 environments = [{
         "theta_star": [0.5, 0.5, 0.5], # could be ignored in this environment
@@ -76,7 +73,7 @@ def plot_env(evaluation, environment_id):
     evaluation.printFinalRanking(environment_id)
     evaluation.plotRegrets(environment_id)
     evaluation.plotRegrets(environment_id, semilogx=True)
-    evaluation.plotRegrets(environment_id, meanReward=True)
+    # evaluation.plotRegrets(environment_id, meanReward=True)
     # evaluation.plotBestArmPulls(environment_id)
 
 
