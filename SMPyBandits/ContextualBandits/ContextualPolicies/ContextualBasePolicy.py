@@ -39,14 +39,14 @@ class ContextualBasePolicy(object):
         self.pulls.fill(0)
         self.rewards.fill(0)
 
-    def getReward(self, arm, reward, contexts):
+    def getReward(self, arm, reward, contexts, t=0):
         """ Give a reward: increase t, pulls, and update cumulated sum of rewards for that arm (normalized in [0, 1])."""
         self.t += 1
         self.pulls[arm] += 1
         # reward = (reward - self.lower) / self.amplitude
         self.rewards[arm] += reward
 
-    def choice(self, context):
+    def choice(self, context, t=0):
         """ Not defined."""
         raise NotImplementedError("This method choice() has to be implemented in the child class inheriting from BasePolicy.")
 

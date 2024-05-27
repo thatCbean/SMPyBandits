@@ -859,7 +859,7 @@ def delayed_play(env, policy, horizon,
 
         if isinstance(policy, ContextualBasePolicy):
             # 2. The player's policy choose an arm
-            choice = policy.choice(contexts)
+            choice = policy.choice(contexts, t)
 
             # 3. A random reward is drawn, from this arm at this time
             reward = all_rewards[env_id][repeatId, t, choice]

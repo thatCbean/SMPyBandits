@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-The linUCB policy.
+The SW-UCB policy.
 
 Reference:
-    [J. He, D. Zhou, T. Zhang, and Q. Gu, “Nearly optimal algorithms for linear contextual bandits with adversarial
-    corruptions,” Advances in neural information processing systems, vol. 35, pp. 34 614–34 625, 2022]
+    [W. C. Cheung, D. Simchi-Levi, and R. Zhu, “Learning to optimize under non-stationarity,” in The 22nd
+    International Conference on Artificial Intelligence and Statistics, PMLR, 2019, pp. 1079–1087.]
 """
 from __future__ import division, print_function  # Python 2 compatibility
 
@@ -16,6 +16,7 @@ from SMPyBandits.ContextualBandits.ContextualPolicies.ContextualBasePolicy impor
 
 #: Default :math:`\alpha, \beta, \lambda` parameters.
 LAMBDA = 0.01
+DELTA = 0.5
 WINDOW_SIZE = 10
 _R = 0.1
 _L = 1
@@ -24,14 +25,15 @@ _S = 1
 
 class SW_UCB(ContextualBasePolicy):
     """
-    The CW-OFUL contextual adversarial bandit policy.
+    The SW-UCB contextual changing-reward bandit policy.
     """
 
-    def __init__(self, nbArms, dimension, window_size=WINDOW_SIZE, R=_R, L=_L, S=_S, labda=LAMBDA, lower=0.,
+    def __init__(self, nbArms, dimension, window_size=WINDOW_SIZE, R=_R, L=_L, S=_S, labda=LAMBDA, delta=DELTA, lower=0.,
                  amplitude=1.):
         super(SW_UCB, self).__init__(nbArms, lower=lower, amplitude=amplitude)
 
         self.labda = labda
+        self.delta = delta
         self.dimension = dimension
         self.window_size = window_size
         self.R = R
@@ -55,7 +57,7 @@ class SW_UCB(ContextualBasePolicy):
     def __str__(self):
         return r"SW_UCB($$)".format()
 
-    def getReward(self, arm, reward, contexts):
+    def getReward(self, arm, reward, contexts, t=0):
         r"""Process the received reward
         """
         super(SW_UCB, self).getReward(arm, reward, contexts)  # XXX Call to BasePolicy
@@ -67,7 +69,7 @@ class SW_UCB(ContextualBasePolicy):
             sum_matrix += np.outer(context, context)
         self.V_t = np.identity(self.dimension) * self.labda + sum_matrix
 
-    def choice(self, contexts):
+    def choice(self, contexts, t=0):
         sum_vector = np.zeros(self.dimension)
         for i in range(self.window_size):
             sum_vector += self.window_contexts[i] * self.window_rewards[i]
@@ -75,7 +77,21 @@ class SW_UCB(ContextualBasePolicy):
         X_t = -1
         highest = -np.inf
         for i, context in enumerate(contexts):
-            res = np.inner(context, thetaHat_t) + ???
+            res = (
+                    np.inner(context, thetaHat_t) +
+                    (
+                            np.sqrt(np.inner(context, self.V_t @ context)) *
+                            (
+                                    self.R *
+                                    np.sqrt(
+                                        self.dimension * np.log(
+                                            (1 + ((self.window_size * (self.L ** 2)) / self.labda)) / self.delta,
+                                            np.e)
+                                    )
+                            ) +
+                            (np.sqrt(self.labda) * self.S)
+                    )
+            )
             if res > highest:
                 highest = res
                 X_t = i

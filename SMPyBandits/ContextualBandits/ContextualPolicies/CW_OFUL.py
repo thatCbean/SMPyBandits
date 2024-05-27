@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The linUCB policy.
+The CW_OFUL policy.
 
 Reference:
     [J. He, D. Zhou, T. Zhang, and Q. Gu, “Nearly optimal algorithms for linear contextual bandits with adversarial
@@ -53,7 +53,7 @@ class CW_OFUL(ContextualBasePolicy):
     def __str__(self):
         return r"CW_OFUL($\alpha: {:.3g}, \beta: {:.3g}, \lambda: {:.3g}$)".format(self.alpha, self.beta, self.labda)
 
-    def getReward(self, arm, reward, contexts):
+    def getReward(self, arm, reward, contexts, t=0):
         r"""Process the received reward
         """
         super(CW_OFUL, self).getReward(arm, reward, contexts)  # XXX Call to BasePolicy
@@ -61,7 +61,7 @@ class CW_OFUL(ContextualBasePolicy):
         self.b = self.b + (self.omega_k * contexts[arm] * reward)
         self.theta_k = np.linalg.inv(self.sigma) @ self.b
 
-    def choice(self, contexts):
+    def choice(self, contexts, t=0):
         maxx = -np.inf
         index = -1
         for k in range(self.k):

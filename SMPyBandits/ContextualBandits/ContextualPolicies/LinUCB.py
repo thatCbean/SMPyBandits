@@ -43,7 +43,7 @@ class LinUCB(ContextualBasePolicy):
     def __str__(self):
         return r"linUCB($\alpha: {:.3g}$)".format(self.alpha)
 
-    def getReward(self, arm, reward, contexts):
+    def getReward(self, arm, reward, contexts, t=0):
         r"""Give a reward: accumulate rewards on that arm k, then update the weight :math:`w_k(t)` and renormalize the weights.
 
         - With unbiased estimators, divide by the trust on that arm k, i.e., the probability of observing arm k: :math:`\tilde{r}_k(t) = \frac{r_k(t)}{\mathrm{trusts}_k(t)}`.
@@ -58,7 +58,7 @@ class LinUCB(ContextualBasePolicy):
         self.A = self.A + (np.outer(contexts[arm], contexts[arm]))
         self.b = self.b + (contexts[arm] * np.full(self.dimension, reward))
 
-    def choice(self, contexts):
+    def choice(self, contexts, t=0):
         theta_t = np.linalg.inv(self.A) @ self.b
         max_val = -np.inf
         index = -1
