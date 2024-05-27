@@ -13,8 +13,6 @@ REPETITIONS = 20
 d = 3 
 
 HORIZON = 1000
-REPETITIONS = 20
-d = 3 
 
 # Environment 1: Draw nbArms of w_i and phi_i of d dimensions as the reward function setup
 w_1 = np.array([0.2, 0.1, 0.3])
@@ -29,6 +27,16 @@ phi_3 = np.array([0.2, 0.1, 0.45])
 w_4 = np.array([0.44, 0.6, 0.2])
 phi_4 = np.array([0.4, 0.9, 0.6])
 
+multivariate_contexts = [NormalContext([0.2, 0.1, 0.3], np.identity(3) * [0.2, 0.3, 0.1], d),
+                     NormalContext([0.2, 0.2, 0.1], np.identity(3) * [0.1, 0.4, 0.1], d),
+                     NormalContext([0.1, 0.1, 0.7], np.identity(3) * [0.1, 0.2, 0.3], d),
+                     NormalContext([0.5, 0.5, 0.35], np.identity(3) * [0.6, 0.6, 0.4], d)]
+
+single_context = [NormalContext([0.1, 0.1, 0.7], np.identity(3) * [0.1, 0.2, 0.3], d),
+                  NormalContext([0.1, 0.1, 0.7], np.identity(3) * [0.1, 0.2, 0.3], d),
+                  NormalContext([0.1, 0.1, 0.7], np.identity(3) * [0.1, 0.2, 0.3], d),
+                  NormalContext([0.1, 0.1, 0.7], np.identity(3) * [0.1, 0.2, 0.3], d),]
+
 environments = [{
         "theta_star": [0.5, 0.5, 0.5], # could be ignored in this environment
         "arms": [ACArm(w_1, phi_1),
@@ -37,11 +45,7 @@ environments = [{
                  ACArm(w_4, phi_4)
         ],
         # NormalContext(means, covariance matrices, dimensions)
-        "contexts": [NormalContext([0.2, 0.1, 0.3], np.identity(3) * [0.2, 0.3, 0.1], d),
-                     NormalContext([0.2, 0.2, 0.1], np.identity(3) * [0.1, 0.4, 0.1], d),
-                     NormalContext([0.1, 0.1, 0.7], np.identity(3) * [0.1, 0.2, 0.3], d),
-                     NormalContext([0.5, 0.5, 0.35], np.identity(3) * [0.6, 0.6, 0.4], d),
-        ]
+        "contexts": single_context
 }]
 
 
@@ -50,6 +54,7 @@ policies = [
     {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.2}},
     {"archtype": Exp3, "params": {"gamma": 0.8}},
     {"archtype": UCB, "params": {}},
+    
 
 ]
 

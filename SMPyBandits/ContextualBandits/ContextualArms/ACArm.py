@@ -25,10 +25,13 @@ class ACArm(ContextualArm):
 
     def reward_function(self, context, t):
         # Compute reward based on the given formula: theta_{i, a} = sin(w_i t + phi_i)
-        return np.sin(self.w * t + self.phi).sum()
+        return np.dot(np.sin(self.w * t + self.phi), context)
 
     def draw(self, theta_star, context, t=None):
         return self.reward_function(context, t)
+    
+    def optimalLoss(self):
+        return None
 
     def is_nonzero(self):
         return np.linalg.norm(self.w) != 0 and np.linalg.norm(self.phi) != 0
