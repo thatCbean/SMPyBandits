@@ -57,7 +57,7 @@ class CW_OFUL(ContextualBasePolicy):
         r"""Process the received reward
         """
         super(CW_OFUL, self).getReward(arm, reward, contexts)  # XXX Call to BasePolicy
-        self.sigma = self.sigma + (self.omega_k * (contexts[arm] @ np.transpose(contexts[arm])))
+        self.sigma = self.sigma + (self.omega_k * np.outer(contexts[arm], contexts[arm]))
         self.b = self.b + (self.omega_k * contexts[arm] * reward)
         self.theta_k = np.linalg.inv(self.sigma) @ self.b
 
@@ -65,8 +65,9 @@ class CW_OFUL(ContextualBasePolicy):
         maxx = -np.inf
         index = -1
         for k in range(self.k):
-            x_k = (np.transpose(self.theta_k) @ contexts[k] + (self.beta * np.sqrt(np.transpose(contexts[k]) @ np.linalg.inv(self.sigma) @ contexts[k])))
+            x_k = (np.inner(self.theta_k, contexts[k]) + (self.beta * np.sqrt(np.inner(contexts[k], (np.linalg.inv(self.sigma) @ contexts[k])))))
             if x_k > maxx:
                 maxx = x_k
                 index = k
-        self.omega_k = min(1, self.alpha / np.sqrt(np.transpose(contexts[index]) @ np.linalg.inv(self.sigma)))
+        self.omega_k = min(1, self.alpha / np.sqrt(np.inner(contexts[index], (np.linalg.inv(self.sigma) @ contexts[index]))))
+        return index

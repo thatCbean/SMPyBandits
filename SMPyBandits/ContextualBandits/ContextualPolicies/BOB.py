@@ -39,23 +39,25 @@ class BOB(ContextualBasePolicy):
         self.dimension = dimension
         self.horizon = horizon
 
-        self.H = (dimension ** (2 / 3)) * (horizon ** (1 / 2))
-        self.DELTA = np.log(self.H, np.e)
+        self.H = math.floor((dimension ** (2 / 3)) * (horizon ** (1 / 2)))
+        self.DELTA = math.ceil(math.log(self.H))
         self.J = [1.0]
-        J_step = (1 - np.floor(self.H ** (1 / self.DELTA)))
+        J_step = math.floor(self.H ** (1 / self.DELTA)) - 1
         while self.J[-1] < self.H:
             if self.J[-1] + J_step < self.H:
                 self.J.append(self.J[-1] + J_step)
+            else:
+                break
         self.J.append(self.H)
 
         self.gamma = min(1, np.sqrt(
             (
-                    ((self.DELTA + 1) * np.log(self.DELTA + 1, np.e)) /
-                    ((np.e - 1) * np.ceil(self.horizon / self.H))
+                    ((self.DELTA + 1) * math.log(self.DELTA + 1)) /
+                    ((np.e - 1) * math.ceil(self.horizon / self.H))
             )
         ))
-        self.s_j1 = np.full(np.ceil(self.DELTA + 1), 1)
-        self.j = np.zeros(self.DELTA)
+        self.s_j1 = np.full(self.DELTA, 1)
+        self.j = np.zeros(self.DELTA + 1)
         self.w_i = 0
         self.V_i = np.identity(self.dimension) * self.labda
         self.contexts = np.zeros((self.horizon, self.dimension))
@@ -65,8 +67,8 @@ class BOB(ContextualBasePolicy):
     def startGame(self):
         """Start with uniform weights."""
         super(BOB, self).startGame()
-        self.s_j1 = np.full(np.ceil(self.DELTA + 1), 1)
-        self.j = np.zeros(self.DELTA)
+        self.s_j1 = np.full(self.DELTA + 1, 1)
+        self.j = np.zeros(self.DELTA + 1)
         self.w_i = 0
         self.V_i = np.identity(self.dimension) * self.labda
         self.contexts = np.zeros((self.horizon, self.dimension))
@@ -74,7 +76,7 @@ class BOB(ContextualBasePolicy):
         self.p_i = list()
 
     def __str__(self):
-        return r"BOB($$)".format()
+        return r"BOB()".format()
 
     def getReward(self, arm, reward, contexts, t=0):
         r"""Process the received reward
@@ -90,13 +92,13 @@ class BOB(ContextualBasePolicy):
         self.V_i = (np.identity(self.dimension) * self.labda) + sigma
 
         if t % self.H == self.H - 1:
-            j = np.floor(t / self.H)
+            j = math.floor(t / self.H)
             self.s_j1[j] *= (
                 np.e ** (
                     (self.gamma / ((self.DELTA + 1) * self.p_i[j])) * (
                         1/2 + (
                             np.sum(self.rewards[t-self.H+1:]) / (
-                                (2 * self.H) + (4 * self.R * np.sqrt(self.H * np.log(self.horizon / np.sqrt(self.H))))
+                                (2 * self.H) + (4 * self.R * np.sqrt(self.H * math.log(self.horizon / np.sqrt(self.H))))
                             )
                         )
                     )
@@ -112,7 +114,7 @@ class BOB(ContextualBasePolicy):
                     ((self.s_j1[j] / np.sum(self.s_j1)) + (self.gamma / (self.DELTA + 1)))
                 )
                 self.j[j] = binomial(1, self.p_i[j]) * self.j[j]
-            self.w_i = np.floor(self.H ** (self.j[t] / self.DELTA))
+            self.w_i = math.floor(self.H ** (self.j[math.floor(t / self.H)] / self.DELTA))
             self.V_i = np.identity(self.dimension) * self.labda
 
         theta_t = np.zeros(self.dimension)
@@ -128,9 +130,9 @@ class BOB(ContextualBasePolicy):
                 ) * (
                     (np.sqrt(self.labda) * self.S) + self.R * (
                         np.sqrt(
-                            self.dimension * np.log((
+                            self.dimension * math.log((
                                 self.horizon * (1 + (self.w_i * (self.L ** 2) / self.labda))
-                            ), np.e)
+                            ))
                         )
                     )
                 )

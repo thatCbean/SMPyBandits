@@ -161,7 +161,7 @@ class EvaluatorContextual(object):
                     )) \
                     and "arms" in configuration_envs \
                     and "contexts" in configuration_envs:
-                dim = len(configuration_envs["theta_star"])
+                dim = len(configuration_envs["theta_star"]) if "theta_star" in configuration_envs else len(configuration_envs["thetas"][0])
                 assert self.dimension == -1 or self.dimension == dim, "Error: All contexts must have the same dimension"
                 self.dimension = dim
                 self.envs.append(ContextualMAB(configuration_envs, self.horizon))

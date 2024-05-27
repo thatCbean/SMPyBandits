@@ -28,6 +28,7 @@ class EnvironmentConfigurations(object):
         cfg['thetas'] = thetas
         cfg['change_points'] = change_points
         cfg['change_durations'] = change_durations
+        cfg['perturbed'] = True
         cfg['arms'] = list()
         cfg['contexts'] = list()
 
@@ -42,6 +43,7 @@ class EnvironmentConfigurations(object):
         cfg = dict()
 
         cfg['thetas'] = thetas
+        cfg['slow_changing'] = True
         cfg['arms'] = list()
         cfg['contexts'] = list()
 
@@ -55,7 +57,7 @@ class EnvironmentConfigurations(object):
         dim1 = 3
         armCount1 = 3
         noiseVariance1 = 0.1
-        baseTheta1 = np.full(armCount1, 0.4)
+        baseTheta1 = np.full(dim1, 0.4)
         baseMeans1 = baseTheta1
         baseVariances1 = np.full(armCount1, 0.5)
         env1 = [
@@ -65,12 +67,11 @@ class EnvironmentConfigurations(object):
             self.generateContextualGaussianNoiseNormalContextEnvironment(armCount1, noiseVariance1, baseTheta1, np.linspace(0.1, 0.3, armCount1), baseVariances1, dim1),
             self.generateContextualGaussianNoiseNormalContextEnvironment(armCount1, noiseVariance1, baseTheta1, baseMeans1, np.full(armCount1, 0.15), dim1),
             self.generateContextualGaussianNoiseNormalContextEnvironment(armCount1, noiseVariance1, baseTheta1, baseMeans1, np.linspace(0.2, 0.6, armCount1), dim1),
-            self.generateContextualGaussianNoiseNormalContextEnvironment(armCount1, noiseVariance1, np.full(armCount1, 0.15), baseMeans1, baseVariances1, dim1),
-            self.generateContextualGaussianNoiseNormalContextEnvironment(armCount1, noiseVariance1, np.linspace(0.1, 0.3, armCount1), baseMeans1, baseVariances1, dim1),
+            self.generateContextualGaussianNoiseNormalContextEnvironment(armCount1, noiseVariance1, np.full(dim1, 0.15), baseMeans1, baseVariances1, dim1),
+            self.generateContextualGaussianNoiseNormalContextEnvironment(armCount1, noiseVariance1, np.linspace(0.1, 0.3, dim1), baseMeans1, baseVariances1, dim1),
         ]
 
         return env1
-
 
     def getEnv2(self, horizon=1000):
         dim2 = 20
@@ -78,19 +79,19 @@ class EnvironmentConfigurations(object):
         noiseVariance2 = 0.1
         env2 = [
             # gnrateContextualGaussianNoiseNormalContextEnvironment(armCount2, noiseVariance2, theta*,                                         context means,                                  context variances,                             dim2),
-            self.generateContextualGaussianNoiseNormalContextEnvironment(armCount2, noiseVariance2, np.full(armCount2, 0.4), np.full(armCount2, 0.4),
+            self.generateContextualGaussianNoiseNormalContextEnvironment(armCount2, noiseVariance2, np.full(dim2, 0.4), np.full(armCount2, 0.4),
                                                                     np.full(armCount2, 0.5), dim2),
-            self.generateContextualGaussianNoiseNormalContextEnvironment(armCount2, noiseVariance2, np.full(armCount2, 0.4), np.full(armCount2, 0.15),
+            self.generateContextualGaussianNoiseNormalContextEnvironment(armCount2, noiseVariance2, np.full(dim2, 0.4), np.full(armCount2, 0.15),
                                                                     np.full(armCount2, 0.5), dim2),
-            self.generateContextualGaussianNoiseNormalContextEnvironment(armCount2, noiseVariance2, np.full(armCount2, 0.4), np.linspace(0.05, 0.25, armCount2),
+            self.generateContextualGaussianNoiseNormalContextEnvironment(armCount2, noiseVariance2, np.full(dim2, 0.4), np.linspace(0.05, 0.25, armCount2),
                                                                     np.full(armCount2, 0.5), dim2),
-            self.generateContextualGaussianNoiseNormalContextEnvironment(armCount2, noiseVariance2, np.full(armCount2, 0.4), np.full(armCount2, 0.4),
+            self.generateContextualGaussianNoiseNormalContextEnvironment(armCount2, noiseVariance2, np.full(dim2, 0.4), np.full(armCount2, 0.4),
                                                                     np.full(armCount2, 0.15), dim2),
-            self.generateContextualGaussianNoiseNormalContextEnvironment(armCount2, noiseVariance2, np.full(armCount2, 0.4), np.full(armCount2, 0.4),
+            self.generateContextualGaussianNoiseNormalContextEnvironment(armCount2, noiseVariance2, np.full(dim2, 0.4), np.full(armCount2, 0.4),
                                                                     np.linspace(0.1, 0.9, armCount2), dim2),
-            self.generateContextualGaussianNoiseNormalContextEnvironment(armCount2, noiseVariance2, np.full(armCount2, 0.15), np.full(armCount2, 0.4),
+            self.generateContextualGaussianNoiseNormalContextEnvironment(armCount2, noiseVariance2, np.full(dim2, 0.15), np.full(armCount2, 0.4),
                                                                     np.full(armCount2, 0.5), dim2),
-            self.generateContextualGaussianNoiseNormalContextEnvironment(armCount2, noiseVariance2, np.linspace(0.05, 0.25, armCount2), np.full(armCount2, 0.4),
+            self.generateContextualGaussianNoiseNormalContextEnvironment(armCount2, noiseVariance2, np.linspace(0.05, 0.25, dim2), np.full(armCount2, 0.4),
                                                                     np.full(armCount2, 0.5), dim2),
         ]
 
@@ -98,10 +99,10 @@ class EnvironmentConfigurations(object):
 
     def getEnv3(self, horizon=1000):
 
-        dim3 = 3
-        armCount3 = 3
+        dim3 = 20
+        armCount3 = 5
         noiseVariance3 = 0.1
-        baseTheta3 = np.full(armCount3, 0.4)
+        baseTheta3 = np.full(dim3, 0.4)
         baseMeans3 = baseTheta3
         baseVariances3 = np.full(armCount3, 0.5)
         thetaLow3 = np.full(dim3, 0.1)
@@ -128,10 +129,10 @@ class EnvironmentConfigurations(object):
 
     def getEnv4(self, horizon=1000):
 
-        dim4 = 3
-        armCount4 = 3
+        dim4 = 20
+        armCount4 = 5
         noiseVariance4 = 0.1
-        baseTheta4 = np.full(armCount4, 0.4)
+        baseTheta4 = np.full(dim4, 0.4)
         baseMeans4 = baseTheta4
         baseVariances4 = np.full(armCount4, 0.5)
         thetaLow4 = np.full(dim4, 0.1)

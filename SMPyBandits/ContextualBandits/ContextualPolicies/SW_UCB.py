@@ -55,7 +55,7 @@ class SW_UCB(ContextualBasePolicy):
         self.window_index = 0
 
     def __str__(self):
-        return r"SW_UCB($$)".format()
+        return r"SW_UCB()".format()
 
     def getReward(self, arm, reward, contexts, t=0):
         r"""Process the received reward
@@ -73,20 +73,19 @@ class SW_UCB(ContextualBasePolicy):
         sum_vector = np.zeros(self.dimension)
         for i in range(self.window_size):
             sum_vector += self.window_contexts[i] * self.window_rewards[i]
-        thetaHat_t = self.V_t * sum_vector
+        thetaHat_t = np.linalg.inv(self.V_t) @ sum_vector
         X_t = -1
         highest = -np.inf
-        for i, context in enumerate(contexts):
+        for i in range(len(contexts)):
             res = (
-                    np.inner(context, thetaHat_t) +
+                    np.inner(contexts[i], thetaHat_t) +
                     (
-                            np.sqrt(np.inner(context, self.V_t @ context)) *
+                            np.sqrt(np.inner(contexts[i], self.V_t @ contexts[i])) *
                             (
                                     self.R *
-                                    np.sqrt(
-                                        self.dimension * np.log(
-                                            (1 + ((self.window_size * (self.L ** 2)) / self.labda)) / self.delta,
-                                            np.e)
+                                    math.sqrt(
+                                        self.dimension * math.log(
+                                            (1 + ((self.window_size * (self.L ** 2)) / self.labda)) / self.delta)
                                     )
                             ) +
                             (np.sqrt(self.labda) * self.S)

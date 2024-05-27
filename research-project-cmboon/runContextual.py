@@ -11,27 +11,20 @@ from SMPyBandits.ContextualBandits.ContextualPolicies.LinUCB import LinUCB
 from SMPyBandits.ContextualBandits.ContextualEnvironments.EvaluatorContextual import EvaluatorContextual
 from SMPyBandits.Policies import UCB, Exp3
 from EnvironmentConfigurations import EnvironmentConfigurations
+from PolicyConfigurations import PolicyConfigurations
 
 # Code based on:
 # https://github.com/SMPyBandits/SMPyBandits/blob/master/notebooks/Example_of_a_small_Single-Player_Simulation.ipynb
 
-environments = EnvironmentConfigurations()
+environments_gen = EnvironmentConfigurations()
 
-# horizon = 30000
-# horizon = 5000
-# horizon = 200
-horizon = 2000
-repetitions = 10
-# repetitions = 5
-# repetitions = 2
+policies_gen = PolicyConfigurations()
 
-# Has nice looking graphs
-# horizon = 100
-# repetitions = 30
 
-# For quick testing
-# horizon = 100
-# repetitions = 4
+horizon = 100
+repetitions = 2
+
+secondEnv = False
 
 n_jobs = 1
 verbosity = 2
@@ -45,84 +38,6 @@ plot_regret_over_max_return = True
 plot_regret_logy = True
 plot_regret_log = True
 plot_min_max = True
-
-start_time = datetime.datetime.now()
-print("Starting run at {}")
-
-dimension = 3
-environments = environments.getEnv1(horizon)
-
-dimension_2 = 20
-environments_2 = environments.getEnv2(horizon)
-
-policies = [
-    {"archtype": UCB, "params": {}},
-    # {"archtype": Exp3, "params": {"gamma": 0.05}},
-    {"archtype": Exp3, "params": {"gamma": 0.1}},
-    # {"archtype": Exp3, "params": {"gamma": 0.25}},
-    # {"archtype": Exp3, "params": {"gamma": 0.5}},
-    # {"archtype": Exp3, "params": {"gamma": 0.75}},
-
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 100.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 50.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 20.0}},
-    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 10.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 5.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 2.0}},
-    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 1.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.5}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.2}},
-    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.1}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.05}},
-    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.01}},
-    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.001}},
-]
-
-policies_2 = [
-    {"archtype": UCB, "params": {}},
-    # {"archtype": Exp3, "params": {"gamma": 0.05}},
-    {"archtype": Exp3, "params": {"gamma": 0.1}},
-    # {"archtype": Exp3, "params": {"gamma": 0.5}},
-    # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 100.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 50.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 20.0}},
-    {"archtype": LinUCB, "params": {"dimension": dimension_2, "alpha": 10.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 5.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 2.0}},
-    {"archtype": LinUCB, "params": {"dimension": dimension_2, "alpha": 1.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.5}},
-    # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.2}},
-    {"archtype": LinUCB, "params": {"dimension": dimension_2, "alpha": 0.1}},
-    # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.05}},
-    {"archtype": LinUCB, "params": {"dimension": dimension_2, "alpha": 0.01}},
-    {"archtype": LinUCB, "params": {"dimension": dimension_2, "alpha": 0.001}},
-]
-
-configuration = {
-    "horizon": horizon,
-    "repetitions": repetitions,
-    "n_jobs": n_jobs,
-    "verbosity": verbosity,
-    "environment": environments,
-    "policies": policies
-}
-
-configuration_2 = {
-    "horizon": horizon,
-    "repetitions": repetitions,
-    "n_jobs": n_jobs,
-    "verbosity": verbosity,
-    "environment": environments_2,
-    "policies": policies_2
-}
-
-evaluator = EvaluatorContextual(configuration)
-evaluator_2 = EvaluatorContextual(configuration_2)
-
-evaluator.startAllEnv()
-evaluator_2.startAllEnv()
-secondEnv = True
-# evaluator.startOneEnv(4, evaluator.envs[4])
 
 figures_list = []
 text_list = []
@@ -154,13 +69,52 @@ def plot_env(evaluation, environment_id, start_plot_title_index=1):
     figures_list.append(figures)
 
 
+start_time = datetime.datetime.now()
+print("Starting run at {}")
+
+dimension = 20
+
+# environments = environments_gen.getEnv1(horizon)
+environments = environments_gen.getEnv2(horizon) + environments_gen.getEnv3(horizon) + environments_gen.getEnv4(horizon)
+
+policies = policies_gen.generatePolicySetContextualOneEach(dimension, horizon)
+
+configuration = {
+    "horizon": horizon,
+    "repetitions": repetitions,
+    "n_jobs": n_jobs,
+    "verbosity": verbosity,
+    "environment": environments,
+    "policies": policies
+}
+
+evaluator = EvaluatorContextual(configuration)
+
 for env_id in range(len(environments)):
     evaluator.startOneEnv(env_id, evaluator.envs[env_id])
     plot_env(evaluator, env_id)
 
-for env_id in range(len(environments_2)):
-    evaluator_2.startOneEnv(env_id, evaluator_2.envs[env_id])
-    plot_env(evaluator_2, env_id, start_plot_title_index=len(environments) + 1)
+if secondEnv:
+    dimension_2 = 20
+
+    # environments_2 = environments_gen.getEnv2(horizon) + environments_gen.getEnv3(horizon) + environments_gen.getEnv4(horizon)
+    environments_2 = []
+
+    policies_2 = policies_gen.generatePolicySetContextualOneEach(dimension_2, horizon)
+
+    configuration_2 = {
+        "horizon": horizon,
+        "repetitions": repetitions,
+        "n_jobs": n_jobs,
+        "verbosity": verbosity,
+        "environment": environments_2,
+        "policies": policies_2
+    }
+
+    evaluator_2 = EvaluatorContextual(configuration_2)
+    for env_id in range(len(environments_2)):
+        evaluator_2.startOneEnv(env_id, evaluator_2.envs[env_id])
+        plot_env(evaluator_2, env_id, start_plot_title_index=len(environments) + 1)
 
 end_time = datetime.datetime.now()
 file_root = "./plots/{}/".format(end_time.strftime("%Y-%m-%d %H;%M;%S"))

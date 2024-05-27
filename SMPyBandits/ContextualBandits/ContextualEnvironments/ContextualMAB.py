@@ -64,7 +64,10 @@ class ContextualMAB(object):
             print(" - with thetas ={}".format(self.thetas))
 
         if self.slow_changing and not hasattr(self, "change_points"):
-            self.interval = math.floor(horizon / (len(self.thetas) - 1))
+            if len(self.thetas) > 1:
+                self.interval = math.floor(horizon / (len(self.thetas) - 1))
+            else:
+                self.interval = self.horizon + 1
             print(" - with change interval ={}".format(self.interval))
 
         arms = configuration["arms"]
@@ -98,12 +101,12 @@ class ContextualMAB(object):
         print(" - with 'arms' represented as:", self.reprarms(1, latex=True))  # DEBUG
 
     def __init_perturbed_theta_index_array(self, change_points, change_durations, horizon):
-        self.index_array = np.zeros(horizon)
+        self.index_array = np.zeros(horizon, dtype=np.int8)
         for i, val in enumerate(change_points):
             np.put(self.index_array, range(val, val + change_durations[i]), i+1, 'clip')
 
     def __repr__(self):
-        return "{}(nbArms: {}, theta_star: {}, arms: {}, contexts: {})".format(self.__class__.__name__, self.nbArms, self.theta_star, self.arms, self.contexts)
+        return "{}(nbArms: {}, arms: {}, contexts: {})".format(self.__class__.__name__, self.nbArms, self.arms, self.contexts)
 
     def reprarms(self, nbPlayers=None, openTag='', endTag='^*', latex=True):
         """ Return a str representation of the list of the arms (like `repr(self.arms)` but better)
@@ -146,7 +149,7 @@ class ContextualMAB(object):
         return self.contexts[contextId].draw_context()
 
     def current_theta_star(self, t):
-        if self.slow_changing:
+        if self.slow_changing and len(self.thetas) > 1:
             formula = t / self.interval
             if formula >= len(self.thetas):
                 return self.thetas[-1]
@@ -154,6 +157,9 @@ class ContextualMAB(object):
             theta2 = self.thetas[math.ceil(formula)]
             interp = (theta1 * (1 - (formula % 1))) + (theta2 * (formula % 1))
             return interp
+
+        elif self.slow_changing:
+            return self.thetas[0]
 
         elif self.perturbed:
             return self.thetas[self.index_array[t]]
