@@ -21,11 +21,6 @@ environments_gen = EnvironmentConfigurations()
 policies_gen = PolicyConfigurations()
 
 
-horizon = 100
-repetitions = 2
-
-secondEnv = False
-
 n_jobs = 1
 verbosity = 2
 
@@ -72,10 +67,18 @@ def plot_env(evaluation, environment_id, start_plot_title_index=1):
 start_time = datetime.datetime.now()
 print("Starting run at {}")
 
+horizon = 2000
+repetitions = 10
+
+secondEnv = False
+
 dimension = 20
 
-# environments = environments_gen.getEnv1(horizon)
-environments = environments_gen.getEnv2(horizon) + environments_gen.getEnv3(horizon) + environments_gen.getEnv4(horizon)
+environments = []
+# environments += environments_gen.getEnv1(horizon)
+# environments += environments_gen.getEnv2(horizon)
+# environments += environments_gen.getEnv3(horizon)
+environments += environments_gen.getEnv4(horizon)
 
 policies = policies_gen.generatePolicySetContextualOneEach(dimension, horizon)
 
