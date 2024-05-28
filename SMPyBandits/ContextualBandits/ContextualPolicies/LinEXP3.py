@@ -4,26 +4,24 @@ from SMPyBandits.ContextualBandits.ContextualPolicies.ContextualBasePolicy impor
 
 ETA = 0.1
 GAMMA = 0.1
-BETA = 0.5
-M = 1000
+BETA = 1.0
+M = 1200
 
 class LinEXP3(ContextualBasePolicy):
     """
     The linEXP3 contextual bandit policy with a sophisticated estimator.
     """
 
-    def __init__(self, nbArms, dimension, eta=ETA, gamma=GAMMA, beta=BETA, m=M, lower=0., amplitude=1.):
+    def __init__(self, nbArms, dimension, m=M, beta=BETA, eta=ETA, gamma=GAMMA, lower=0., amplitude=1.):
         super(LinEXP3, self).__init__(nbArms, lower=lower, amplitude=amplitude)
         assert eta > 0, "Error: the 'eta' parameter for the LinEXP3 class must be greater than 0"
         assert 0 < gamma < 1, "Error: the 'gamma' parameter must be in the range (0, 1)"
         assert dimension > 0, "Error: the 'dimension' parameter for the LinEXP3 class must be greater than 0"
-        assert beta > 0, "Error: the 'beta' parameter for the LinEXP3 class must be greater than 0"
-        assert m > 0, "Error: the 'm' parameter for the LinEXP3 class must be greater than 0"
 
+        self.M = m
+        self.beta = beta
         self.eta = eta
         self.gamma = gamma
-        self.beta = beta
-        self.m = m
         self.dimension = dimension
         self.k = nbArms
         self.theta_hats = np.zeros((nbArms, dimension))
@@ -44,17 +42,6 @@ class LinEXP3(ContextualBasePolicy):
     def __str__(self):
         return r"linEXP3($\eta: {:.3g}$, $\gamma: {:.3g}$)".format(self.eta, self.gamma)
 
-    # def getReward(self, arm, reward, context): # basic covariance matrix computation
-    #     """Update the parameter estimates for the chosen arm."""
-    #     super(LinEXP3, self).getReward(arm, reward, context)
-
-    #     self.cumulative_loss[arm] -= reward
-
-    #     self.Sigma[arm] += np.outer(context[arm], context[arm])
-
-    #     inv_Sigma = np.linalg.inv(self.Sigma[arm])
-    #     self.theta_hats[arm] = np.dot(inv_Sigma, context[arm]) * reward
-
     def getReward(self, arm, reward, context):
         """Update the parameter estimates for the chosen arm."""
         super(LinEXP3, self).getReward(arm, reward, context)
@@ -63,12 +50,11 @@ class LinEXP3(ContextualBasePolicy):
 
         inv_Sigma = np.linalg.inv(self.Sigma[arm])
         inner_product = np.dot(context[arm], self.theta_hats[arm])
-        self.theta_hats[arm] = inv_Sigma @ (inner_product * context[arm]) * (-reward)
+        self.theta_hats[arm] = inv_Sigma @ (inner_product * context[arm]) * reward
         for a in range(self.k):
             if a == arm:
-                self.theta_hats[arm] += inv_Sigma @ (inner_product * context[arm]) * (-reward)
-            else:
-                self.cumulative_theta_hats[a] += self.theta_hats[a]
+                self.cumulative_theta_hats[arm] += inv_Sigma @ (inner_product * context[arm]) * reward
+            
 
     def choice(self, context):
         """Choose an arm based on the LINEXP3 policy."""
@@ -76,7 +62,7 @@ class LinEXP3(ContextualBasePolicy):
         
         # Update weights based on cumulative sum of past contexts and losses
         for a in range(self.k):
-            weights[a] = np.exp(-self.eta * np.dot(context[a], self.cumulative_theta_hats[a]))
+            weights[a] = np.exp(self.eta * np.dot(context[a], self.cumulative_theta_hats[a]))
 
         # Compute probabilities
         sum_weights = np.sum(weights)

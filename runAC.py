@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 from SMPyBandits.ContextualBandits.Contexts.NormalContext import NormalContext
 from SMPyBandits.ContextualBandits.ContextualPolicies.LinUCB import LinUCB
@@ -10,41 +11,29 @@ from SMPyBandits.Policies import UCB, Exp3
 
 HORIZON = 10000
 REPETITIONS = 20
-d = 3 
+d = 3
+nbArms = 4 
 
-HORIZON = 1000
+HORIZON = 2000
 
 # Environment 1: Draw nbArms of w_i and phi_i of d dimensions as the reward function setup
-w_list = [
-    np.array([0.2, 0.1, 0.3]),
-    np.array([0.2, 0.2, 0.1]),
-    np.array([0.05, 0.1, 0.82]),
-    np.array([0.44, 0.6, 0.2])
-]
+w_list = [np.array([0.44, 0.6, 0.2]) for _ in range(nbArms)]
 
-phi_list = [
-    np.array([0.2, 0.3, 0.1]),
-    np.array([0.1, 0.4, 0.1]),
-    np.array([0.2, 0.1, 0.45]),
-    np.array([0.4, 0.9, 0.6])
-]
+phi_list = [np.array([0.2, 0.1, 0.45]) for _ in range(nbArms)]
 
 # Create a list of ACArm instances
 arms = [ACArm(w, phi) for w, phi in zip(w_list, phi_list)]
 
-multivariate_contexts = [NormalContext([0.2, 0.1, 0.3], np.identity(3) * [0.2, 0.3, 0.1], d),
-                     NormalContext([0.2, 0.2, 0.1], np.identity(3) * [0.1, 0.4, 0.1], d),
-                     NormalContext([0.1, 0.1, 0.7], np.identity(3) * [0.1, 0.2, 0.3], d),
-                     NormalContext([0.5, 0.5, 0.35], np.identity(3) * [0.6, 0.6, 0.4], d)]
-
-N = NormalContext([0.6, 0.4, 0.65], np.identity(3) * [0.4, 0.4, 0.7], d)
-single_context = [N for _ in range(len(w_list))]
+multivariate_contexts = [NormalContext([0.2, 0.1, 0.3], np.identity(3) * [0., 0., 0.], d),
+                     NormalContext([0.5, 0.3, 0.4], np.identity(3) * [0., 0., 0.], d),
+                     NormalContext([0.4, 0.3, 0.7], np.identity(3) * [0., 0., 0.], d),
+                     NormalContext([0.5, 0.5, 0.35], np.identity(3) * [0., 0., 0.], d)]
 
 environments = [{
         "theta_star": [0.5, 0.5, 0.5], # could be ignored in this environment
         "arms": arms,
         # NormalContext(means, covariance_matrix, dimension)
-        "contexts": single_context
+        "contexts": multivariate_contexts
 }]
 
 
@@ -70,12 +59,13 @@ evaluator = EvaluatorContextual(configuration)
 
 evaluator.startAllEnv()
 
-def find_highest_reward(w_list, phi_list, context, t):
+def find_highest_reward():
     highest_reward = 0
 
     for t in range(HORIZON):
         best = float('-inf')
         for a in range(len(arms)):
+            context = multivariate_contexts[a]
             reward = calculate_reward(w_list[a], phi_list[a], context, t)
             if reward > best:
                 best = reward
@@ -85,13 +75,25 @@ def find_highest_reward(w_list, phi_list, context, t):
 
     return highest_reward
 
+def random_policy():
+    res = 0
+    for t in range(HORIZON):
+        r = random.randint(0, nbArms-1)
+        context = multivariate_contexts[r]
+        res += calculate_reward(w_list[r], phi_list[r], context, t)
+        
+    return res
+
 def calculate_reward(w, phi, context, t):
     return np.dot(np.sin(w * t + phi), context.means)
 
 
 def plot_env(evaluation, environment_id):
-    highest_reward = find_highest_reward(w_list, phi_list, N, HORIZON)
+    highest_reward = find_highest_reward()
     print("The best possible reward is: {:.6f}".format(highest_reward))
+
+    random_reward = random_policy()
+    print("The random dumb reward is: {:.6f}".format(random_reward))
     evaluation.printFinalRanking(environment_id)
     # evaluation.plotRegrets(environment_id)
     # evaluation.plotRegrets(environment_id, semilogx=True)

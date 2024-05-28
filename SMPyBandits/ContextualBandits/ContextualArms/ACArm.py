@@ -24,7 +24,6 @@ class ACArm(ContextualArm):
         return "ArbitraryChangingArm( w: {}, phi: {})".format(self.w, self.phi)
 
     def reward_function(self, context, t):
-        # Compute reward based on the given formula: theta_{i, a} = sin(w_i t + phi_i)
         return np.dot(np.sin(self.w * t + self.phi), context)
 
     def draw(self, theta_star, context, t=None):
