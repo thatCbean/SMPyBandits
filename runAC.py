@@ -1,5 +1,4 @@
 import numpy as np
-import random
 
 from SMPyBandits.ContextualBandits.Contexts.NormalContext import NormalContext
 from SMPyBandits.ContextualBandits.ContextualPolicies.LinUCB import LinUCB
@@ -14,15 +13,13 @@ REPETITIONS = 20
 d = 3
 nbArms = 4 
 
-HORIZON = 2000
-
 # Environment 1: Draw nbArms of w_i and phi_i of d dimensions as the reward function setup
-w_list = [np.array([0.44, 0.6, 0.2]) for _ in range(nbArms)]
+w = np.array([0.44, 0.6, 0.2])
 
-phi_list = [np.array([0.2, 0.1, 0.45]) for _ in range(nbArms)]
+phi = np.array([0.2, 0.1, 0.45])
 
 # Create a list of ACArm instances
-arms = [ACArm(w, phi) for w, phi in zip(w_list, phi_list)]
+arms = [ACArm(w, phi) for _ in range(nbArms)]
 
 multivariate_contexts = [NormalContext([0.2, 0.1, 0.3], np.identity(3) * [0., 0., 0.], d),
                      NormalContext([0.5, 0.3, 0.4], np.identity(3) * [0., 0., 0.], d),
@@ -38,7 +35,9 @@ environments = [{
 
 
 policies = [
-    {"archtype": LinEXP3, "params": {"dimension": 3, "eta" : 0.2, "gamma": 0.8}},
+    {"archtype": LinEXP3, "params": {"dimension": d, 
+                                     "m": int(np.sqrt(HORIZON)*nbArms*d/10), 
+                                     "eta" : 0.2, "gamma": 0.8}},
     {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.2}},
     {"archtype": Exp3, "params": {"gamma": 0.8}},
     {"archtype": UCB, "params": {}},
@@ -66,7 +65,7 @@ def find_highest_reward():
         best = float('-inf')
         for a in range(len(arms)):
             context = multivariate_contexts[a]
-            reward = calculate_reward(w_list[a], phi_list[a], context, t)
+            reward = calculate_reward(w, phi, context, t)
             if reward > best:
                 best = reward
             
@@ -78,9 +77,9 @@ def find_highest_reward():
 def random_policy():
     res = 0
     for t in range(HORIZON):
-        r = random.randint(0, nbArms-1)
+        r = np.random.randint(0, nbArms)
         context = multivariate_contexts[r]
-        res += calculate_reward(w_list[r], phi_list[r], context, t)
+        res += calculate_reward(w, phi, context, t)
         
     return res
 
@@ -90,14 +89,16 @@ def calculate_reward(w, phi, context, t):
 
 def plot_env(evaluation, environment_id):
     highest_reward = find_highest_reward()
+    # The best possible reward is: 422.303516
+    # The random dumb reward is: -8.059394
     print("The best possible reward is: {:.6f}".format(highest_reward))
 
     random_reward = random_policy()
     print("The random dumb reward is: {:.6f}".format(random_reward))
     evaluation.printFinalRanking(environment_id)
-    # evaluation.plotRegrets(environment_id)
-    # evaluation.plotRegrets(environment_id, semilogx=True)
-    # evaluation.plotRegrets(environment_id, meanReward=True)
+    evaluation.plotRegrets(environment_id)
+    evaluation.plotRegrets(environment_id, semilogx=True)
+    evaluation.plotRegrets(environment_id, meanReward=True)
     # evaluation.plotBestArmPulls(environment_id)
 
 

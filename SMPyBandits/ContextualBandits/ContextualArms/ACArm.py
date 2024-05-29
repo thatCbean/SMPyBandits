@@ -28,9 +28,6 @@ class ACArm(ContextualArm):
 
     def draw(self, theta_star, context, t=None):
         return self.reward_function(context, t)
-    
-    def optimalLoss(self):
-        return None
 
     def is_nonzero(self):
         return np.linalg.norm(self.w) != 0 and np.linalg.norm(self.phi) != 0
