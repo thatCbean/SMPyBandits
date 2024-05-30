@@ -1,6 +1,8 @@
 import datetime
 from errno import EEXIST
 from os import makedirs, path
+import sys
+sys.path.append("C:\\Users\\Dragos\\Desktop\\SMPyBandits")
 
 import numpy as np
 
@@ -17,7 +19,7 @@ from SMPyBandits.Policies import UCB, Exp3
 # horizon = 30000
 # horizon = 5000
 # horizon = 200
-horizon = 1000
+horizon = 5000
 repetitions = 10
 # repetitions = 5
 # repetitions = 2
@@ -30,7 +32,7 @@ repetitions = 10
 # horizon = 100
 # repetitions = 4
 
-n_jobs = 1
+n_jobs = -1
 verbosity = 2
 
 plot_rewards = False
@@ -48,23 +50,23 @@ print("Starting run at {}")
 
 environments = [
     {
-        "theta_star": [0.5, 0.5, 0.5],
+        "theta_star": [0.3, 0.5, 0.7],
         "arms": [
-            ContextualGaussianNoiseArm(0, 0.01),
-            ContextualGaussianNoiseArm(0, 0.01),
-            ContextualGaussianNoiseArm(0, 0.01)
+            ContextualGaussianNoiseArm(0.0, 0.01),
+            ContextualGaussianNoiseArm(0.0, 0.01),
+            ContextualGaussianNoiseArm(0.0, 0.01)
         ],
         "contexts": [
-            NormalContext([0.4, 0.4, 0.4], np.identity(3) * 0.5, 3),
-            NormalContext([0.4, 0.4, 0.4], np.identity(3) * 0.5, 3),
-            NormalContext([0.4, 0.4, 0.4], np.identity(3) * 0.5, 3)
+            NormalContext([0.2, 0.4, 0.6], np.identity(3) * 0.3, 3),
+            NormalContext([0.1, 0.3, 0.5], np.identity(3) * 0.5, 3),
+            NormalContext([0.3, 0.5, 0.7], np.identity(3) * 0.7, 3)
         ]
     }
 ]
 
 policies = [
     {"archtype": UCB, "params": {}},
-    {"archtype": Exp3, "params": {"gamma": 0.05}},
+    {"archtype": Exp3, "params": {"gamma": 0.01}},
     # {"archtype": Exp3, "params": {"gamma": 0.1}},
     # {"archtype": Exp3, "params": {"gamma": 0.25}},
     # {"archtype": Exp3, "params": {"gamma": 0.5}},
@@ -107,23 +109,23 @@ def plot_env(evaluation, environment_id, start_plot_title_index=1):
     _, _, text = evaluation.printFinalRanking(environment_id)
     text_list.append(text)
 
-    if plot_regret_normalized:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, normalizedRegret=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
-    if plot_regret_absolute:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
-    if plot_expectation_based_regret_normalized:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, normalizedRegret=True, subtitle="Alt Regret Calculation\nEnvironment #" + str(environment_id + start_plot_title_index)))
-    if plot_expectation_based_regret_absolute:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, subtitle="Alt Regret Calculation\nEnvironment #" + str(environment_id + start_plot_title_index)))
-    if plot_regret_over_max_return:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, regretOverMaxReturn=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
-    if plot_regret_logy:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, semilogy=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
-    if plot_regret_log:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, loglog=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
-    if plot_min_max:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, plotMaxMin=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
-
+    # if plot_regret_normalized:
+    #     figures.append(evaluation.plotRegrets(environment_id, show=False, normalizedRegret=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    # if plot_regret_absolute:
+    #     figures.append(evaluation.plotRegrets(environment_id, show=False, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    # if plot_expectation_based_regret_normalized:
+    #     figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, normalizedRegret=True, subtitle="Alt Regret Calculation\nEnvironment #" + str(environment_id + start_plot_title_index)))
+    # if plot_expectation_based_regret_absolute:
+    #     figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, subtitle="Alt Regret Calculation\nEnvironment #" + str(environment_id + start_plot_title_index)))
+    # if plot_regret_over_max_return:
+    #     figures.append(evaluation.plotRegrets(environment_id, show=False, regretOverMaxReturn=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    # if plot_regret_logy:
+    #     figures.append(evaluation.plotRegrets(environment_id, show=False, semilogy=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    # if plot_regret_log:
+    #     figures.append(evaluation.plotRegrets(environment_id, show=False, loglog=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    # if plot_min_max:
+    #     figures.append(evaluation.plotRegrets(environment_id, show=False, plotMaxMin=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    figures.append(evaluation.plotRegrets(environment_id, show=True, normalizedRegret=True))
     figures_list.append(figures)
 
 

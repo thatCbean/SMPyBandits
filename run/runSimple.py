@@ -1,3 +1,5 @@
+import sys
+sys.path.append("C:\\Users\\Dragos\\Desktop\\SMPyBandits")
 from SMPyBandits.Environment import Evaluator
 from SMPyBandits.Arms import Gaussian
 from SMPyBandits.Policies import UCB, Exp3
@@ -18,9 +20,9 @@ policies = [
 ]
 
 configuration = {
-    "horizon": 5000,
+    "horizon": 20000,
     "repetitions": 5,
-    "n_jobs": 4,
+    "n_jobs": -1,
     "verbosity": 6,
     "environment": environments,
     "policies": policies,
@@ -33,7 +35,7 @@ evaluator.startAllEnv()
 
 def plot_env(evaluation, environment_id):
     evaluation.printFinalRanking(environment_id)
-    evaluation.plotRegrets(environment_id, normalizedRegret=True, subtitle="Environment #" + str(environment_id))
+    evaluation.plotRegrets(environment_id, normalizedRegret=True)
     # evaluation.plotRegrets(environment_id, regretOverMaxReturn=True, subtitle="Environment #" + str(environment_id))
 
 
