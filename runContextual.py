@@ -49,16 +49,16 @@ print("Starting run at {}")
 
 environments = [
     {
-        "theta_star": [0.5, 0.5, 0.5],
+        "theta_star": [0.4, 0.8, 0.7],
         "arms": [
             ContextualGaussianNoiseArm(0, 0.01),
             ContextualGaussianNoiseArm(0, 0.01),
             ContextualGaussianNoiseArm(0, 0.01)
         ],
         "contexts": [
-            NormalContext([0.4, 0.4, 0.4], np.identity(3) * 0.5, 3),
-            NormalContext([0.4, 0.4, 0.4], np.identity(3) * 0.5, 3),
-            NormalContext([0.4, 0.4, 0.4], np.identity(3) * 0.5, 3)
+            NormalContext([0.2, 0.6, 0.3], np.identity(3) * 0.6, 3),
+            NormalContext([0.4, 0.8, 0.3], np.identity(3) * 0.25, 3),
+            NormalContext([0.1, 0.1, 0.5], np.identity(3) * 0.2, 3)
         ]
     }
 ]
@@ -97,9 +97,9 @@ policies = [
     {"archtype": LinEXP3, "params": {"dimension": 3, "eta": 0.1, "gamma": 0.8}},
     {"archtype": LinEXP3, "params": {"dimension": 3, "eta": 0.5, "gamma": 0.8}},
     {"archtype": LinEXP3, "params": {"dimension": 3, "eta": 0.8, "gamma": 0.8}},
-    {"archtype": LinEXP3, "params": {"dimension": 3, "eta": 0.5, "gamma": 0.5}},
-    {"archtype": LinEXP3, "params": {"dimension": 3, "eta": 0.1, "gamma": 0.5}},
-    {"archtype": LinEXP3, "params": {"dimension": 3, "eta": 0.1, "gamma": 0.1}},
+    # {"archtype": LinEXP3, "params": {"dimension": 3, "eta": 0.5, "gamma": 0.5}},
+    # {"archtype": LinEXP3, "params": {"dimension": 3, "eta": 0.1, "gamma": 0.5}},
+    # {"archtype": LinEXP3, "params": {"dimension": 3, "eta": 0.1, "gamma": 0.1}},
 ]
 
 policies_2 = [
