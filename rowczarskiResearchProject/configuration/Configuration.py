@@ -2,8 +2,8 @@ from rowczarskiResearchProject.environment.EnvironmentBernoulli import environme
 from rowczarskiResearchProject.environment.EnvironmentBernoulliContextual import environments as environments_bernoulli_contextual
 from rowczarskiResearchProject.policy.PoliciesDefault import policies as policies_default
 
-HORIZON = 10000
-REPETITIONS = 1
+HORIZON = 1000
+REPETITIONS = 10
 N_JOBS = 4
 VERBOSITY = 6
 ENVIRONMENTS = environments_bernoulli_contextual

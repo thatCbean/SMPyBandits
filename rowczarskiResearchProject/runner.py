@@ -1,11 +1,8 @@
 from SMPyBandits.ContextualBandits.ContextualEnvironments.EvaluatorContextual import EvaluatorContextual
-from SMPyBandits.Environment import Evaluator
 from rowczarskiResearchProject.configuration.Configuration import Configuration
-from rowczarskiResearchProject.environment.EnvironmentBernoulliContextual import environments as environments_bernoulli_contextual
 from rowczarskiResearchProject.environment.EnvironmentSparse import environments as environments_sparse
-from rowczarskiResearchProject.evaluator.EvaluatorContextualSequenced import EvaluatorContextualSequenced
 from rowczarskiResearchProject.policy.PoliciesSparse import policies as policies_sparse
-from rowczarskiResearchProject.policy.PoliciesDefault import policies as policies_default
+
 from rowczarskiResearchProject.plotting.Plotting import Plotting
 
 
@@ -19,7 +16,7 @@ policies = policies_sparse
 
 configuration = Configuration(environments=environments, policies=policies).getConfigurations()
 
-evaluator = EvaluatorContextualSequenced(configuration) # For environments with context
+evaluator = EvaluatorContextual(configuration) # For environments with context
 # evaluator = Evaluator(configuration) # Only when using non-contextual environments
 
 N = len(evaluator.envs)

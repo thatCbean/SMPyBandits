@@ -23,6 +23,7 @@ import seaborn as sns
 # Customize here if you want a signature on the titles or xlabel, of each plot
 from datetime import datetime
 import locale  # See this bug, http://numba.pydata.org/numba-doc/dev/user/faq.html#llvm-locale-bug
+
 locale.setlocale(locale.LC_TIME, 'C')
 monthyear = "{:%b.%Y}".format(datetime.today()).title()  #: Month.Year date
 
@@ -32,7 +33,8 @@ from os import getenv
 from pickle import dump as pickle_dump
 
 if getenv('DEBUG', 'False') == 'True':
-    signature = "\n(By Lilian Besson, {}, cf. SMPyBandits.GitHub.io - MIT Licensed)".format(monthyear)  #: A small string to use as a signature
+    signature = "\n(By Lilian Besson, {}, cf. SMPyBandits.GitHub.io - MIT Licensed)".format(
+        monthyear)  #: A small string to use as a signature
 else:
     signature = ""
 
@@ -70,8 +72,6 @@ if __name__ != '__main__':
     # mpl.rcParams['figure.titlesize'] = "small"
 
     mpl.rcParams['axes.labelsize']  = "medium"
-    mpl.rcParams['lines.linewidth']  = 10
-    mpl.rcParams['lines.markersize']  = 14
     mpl.rcParams['xtick.labelsize'] = "large"
     mpl.rcParams['ytick.labelsize'] = "large"
     mpl.rcParams['figure.titlesize'] = "large"
@@ -147,9 +147,9 @@ MAXNBOFLABELINFIGURE = 8
 
 
 def legend(putatright=PUTATRIGHT, fontsize="large",
-        shrinkfactor=SHRINKFACTOR, maxnboflabelinfigure=MAXNBOFLABELINFIGURE,
-        fig=None, title=None
-    ):
+           shrinkfactor=SHRINKFACTOR, maxnboflabelinfigure=MAXNBOFLABELINFIGURE,
+           fig=None, title=None
+           ):
     """plt.legend() with good options, cf. http://matplotlib.org/users/recipes.html#transparent-fancy-legends.
 
     - It can place the legend to the right also, see https://stackoverflow.com/a/4701285/.
@@ -157,7 +157,9 @@ def legend(putatright=PUTATRIGHT, fontsize="large",
     try:
         len_leg = len(plt.gca().get_legend_handles_labels()[1])
         putatright = len_leg > maxnboflabelinfigure
-        if len_leg > maxnboflabelinfigure: print("Warning: forcing to use putatright = {} because there is {} items in the legend.".format(putatright, len_leg))  # DEBUG
+        if len_leg > maxnboflabelinfigure: print(
+            "Warning: forcing to use putatright = {} because there is {} items in the legend.".format(putatright,
+                                                                                                      len_leg))  # DEBUG
     except (ValueError, AttributeError, IndexError) as e:
         # print("    e =", e)  # DEBUG
         pass
@@ -167,11 +169,12 @@ def legend(putatright=PUTATRIGHT, fontsize="large",
     if putatright:
         try:
             # Shrink current axis by 20% on xaxis and 10% on yaxis
-            delta_rect = (1. - shrinkfactor)/6.25
+            delta_rect = (1. - shrinkfactor) / 6.25
             # XXX rect = [left, bottom, right, top] in normalized (0, 1) figure coordinates.
-            fig.tight_layout(rect=[delta_rect, delta_rect, shrinkfactor, 1 - 2*delta_rect])
+            fig.tight_layout(rect=[delta_rect, delta_rect, shrinkfactor, 1 - 2 * delta_rect])
             # Put a legend to the right of the current axis
-            fig.legend(loc='center left', numpoints=1, fancybox=True, framealpha=0.8, bbox_to_anchor=(1, 0.5), title=title, fontsize=fontsize)
+            fig.legend(loc='center left', numpoints=1, fancybox=True, framealpha=0.8, bbox_to_anchor=(1, 0.5),
+                       title=title, fontsize=fontsize)
         except:
             fig.legend(loc='best', numpoints=1, fancybox=True, framealpha=0.8, title=title, fontsize=fontsize)
     else:
@@ -208,6 +211,8 @@ def maximizeWindow():
 #: List of formats to use for saving the figures, by default.
 #: It is a smart idea to save in both a raster and vectorial formats
 FORMATS = ('png', 'pdf')
+
+
 # FORMATS = ('png', 'pdf', 'eps')
 # FORMATS = ('png', 'pdf', 'eps', 'svg')
 
@@ -226,15 +231,20 @@ def show_and_save(showplot=True, savefig=None, formats=FORMATS, pickleit=False, 
             print("Saving raw figure with format {}, to file '{}'...".format(form, path))  # DEBUG
             with open(path, "bw") as f:
                 pickle_dump(fig, f)
-            print("       Saved! '{}' created of size '{}b', at '{:%c}' ...".format(path, os.path.getsize(path), datetime.fromtimestamp(os.path.getatime(path))))
+            print("       Saved! '{}' created of size '{}b', at '{:%c}' ...".format(path, os.path.getsize(path),
+                                                                                    datetime.fromtimestamp(
+                                                                                        os.path.getatime(path))))
         for form in formats:
             path = "{}.{}".format(savefig, form)
             print("Saving figure with format {}, to file '{}'...".format(form, path))  # DEBUG
             try:
                 plt.savefig(path, bbox_inches=BBOX_INCHES)
-                print("       Saved! '{}' created of size '{}b', at '{:%c}' ...".format(path, os.path.getsize(path), datetime.fromtimestamp(os.path.getatime(path))))
+                print("       Saved! '{}' created of size '{}b', at '{:%c}' ...".format(path, os.path.getsize(path),
+                                                                                        datetime.fromtimestamp(
+                                                                                            os.path.getatime(path))))
             except Exception as exc:
-                print("Error: could not save current figure to {} because of error {}... Skipping!".format(path, exc))  # DEBUG
+                print("Error: could not save current figure to {} because of error {}... Skipping!".format(path,
+                                                                                                           exc))  # DEBUG
     try:
         plt.show(block=True) if showplot else plt.close()
     except (TypeError, AttributeError):
@@ -257,12 +267,15 @@ def add_percent_formatter(which="xaxis", amplitude=1.0, oldformatter="%.2g%%", f
     elif which == "yaxis":
         ax = plt.axes().yaxis
     else:
-        raise ValueError("Unknown value '{}' for 'which' in function add_percent_formatter() : only xaxis,yaxis are accepted...".format(which))
+        raise ValueError(
+            "Unknown value '{}' for 'which' in function add_percent_formatter() : only xaxis,yaxis are accepted...".format(
+                which))
     # Which formatter to use ?
     try:
         my_frmt = mtick.StrMethodFormatter(formatter)  # Use new format string
     except Exception:
-        my_frmt = mtick.FormatStrFormatter(oldformatter)  # Use old format string, better looking but not correctly scaled
+        my_frmt = mtick.FormatStrFormatter(
+            oldformatter)  # Use old format string, better looking but not correctly scaled
     if hasattr(mtick, 'PercentFormatter'):
         my_frmt = mtick.PercentFormatter(amplitude)
     # Use it!
@@ -388,17 +401,17 @@ def adjust_xticks_subplots(ylabel=None, labels=(), maxNbOfLabels=MAX_NB_OF_LABEL
     locs, xticks_labels = plt.xticks()  # XXX don't name xticks_labels, labels or it erases the argument of the function and labels are not correctly displayed.
     plt.xticks(locs, labels, rotation=80, verticalalignment="top", fontsize="xx-small")
     if max_length_of_labels >= 50:
-        plt.subplots_adjust(bottom=max_length_of_labels/135.0)
+        plt.subplots_adjust(bottom=max_length_of_labels / 135.0)
         if ylabel is not None: plt.ylabel(ylabel, fontsize="x-small")
     else:
-        plt.subplots_adjust(bottom=max_length_of_labels/90.0)
+        plt.subplots_adjust(bottom=max_length_of_labels / 90.0)
 
 
 def table_to_latex(mean_data, std_data=None,
-        labels=None, fmt_function=None, name_of_table=None,
-        filename=None, erase_output=False,
-        *args, **kwargs
-    ):
+                   labels=None, fmt_function=None, name_of_table=None,
+                   filename=None, erase_output=False,
+                   *args, **kwargs
+                   ):
     """ Tries to print the data from the input array or collection of array or :class:`pandas.DataFrame` to the stdout and to the file ``filename`` (if it does not exist).
 
     - Give ``std_data`` to print ``mean +- std`` instead of just ``mean`` from ``mean_data``,
@@ -417,7 +430,8 @@ def table_to_latex(mean_data, std_data=None,
     else:
         format_data = np.vectorize(fmt_function)
         input_data = format_data(mean_data)
-    print("Using input_data of shape = {} and size = {}\n{}".format(np.shape(input_data), np.size(input_data), input_data))  # DEBUG
+    print("Using input_data of shape = {} and size = {}\n{}".format(np.shape(input_data), np.size(input_data),
+                                                                    input_data))  # DEBUG
     # 1. try with pandas module
     try:
         import pandas as pd
@@ -427,7 +441,8 @@ def table_to_latex(mean_data, std_data=None,
             df = pd.DataFrame(input_data)
         output_string = df.to_latex(*args, **kwargs)
     except ImportError:
-        print("Error: the pandas module is not available, install it with 'pip install pandas' or 'conda install pandas'.")  # DEBUG
+        print(
+            "Error: the pandas module is not available, install it with 'pip install pandas' or 'conda install pandas'.")  # DEBUG
     # 2. if pandas failed, try with tabulate
     if output_string is None:
         try:
@@ -437,7 +452,8 @@ def table_to_latex(mean_data, std_data=None,
             else:
                 output_string = tabulate.tabulate(input_data, tablefmt="latex_raw", *args, **kwargs)
         except ImportError:
-            print("Error: the tabulate module is not available, install it with 'pip install tabulate' or 'conda install tabulate'.")  # DEBUG
+            print(
+                "Error: the tabulate module is not available, install it with 'pip install tabulate' or 'conda install tabulate'.")  # DEBUG
     if filename is not None and not erase_output and os.path.exists(filename):
         print("Error: the file named '{}' already exists, and option 'erase_output' is False.".format(filename))
         return -1
@@ -447,10 +463,13 @@ def table_to_latex(mean_data, std_data=None,
 %s
 \caption{%s}
 \end{table}""" % (output_string, name_of_table)
-    print("\nThe data from object (shape = {} and size = {}) can be pretty printed in a LaTeX table looking like this one:".format(np.shape(input_data), np.size(input_data)))  # DEBUG
+    print(
+        "\nThe data from object (shape = {} and size = {}) can be pretty printed in a LaTeX table looking like this one:".format(
+            np.shape(input_data), np.size(input_data)))  # DEBUG
     print(output_string)
     if filename is not None:
-        print("\nThe data from object (shape = {} and size = {}) will be saved to the file {}...".format(np.shape(input_data), np.size(input_data), filename))  # DEBUG
+        print("\nThe data from object (shape = {} and size = {}) will be saved to the file {}...".format(
+            np.shape(input_data), np.size(input_data), filename))  # DEBUG
         with open(filename, 'w') as open_file:
             print(output_string, file=open_file)
     return 0
@@ -461,5 +480,6 @@ def table_to_latex(mean_data, std_data=None,
 if __name__ == "__main__":
     # Code for debugging purposes.
     from doctest import testmod
+
     print("\nTesting automatically all the docstring written in each functions of this module :")
     testmod(verbose=True)

@@ -3,7 +3,6 @@ import time
 from datetime import datetime
 
 from SMPyBandits.ContextualBandits.ContextualEnvironments.EvaluatorContextual import EvaluatorContextual
-from rowczarskiResearchProject.evaluator.EvaluatorContextualSequenced import EvaluatorContextualSequenced
 
 PLOT_DIR = 'plots'
 SEMILOG_X = False
@@ -105,26 +104,26 @@ class Plotting:
             savefig = self.mainFigure
             print(" - Plotting the cumulative rewards, and saving the plot to {} ...".format(savefig))
             self.evaluator.plotRegrets(envId, savefig=savefig)
-            savefig = self.mainFigure.replace('main', 'main_LessAccurate')
-            self.evaluator.plotRegrets(envId, savefig=savefig)
-            savefig = self.mainFigure.replace('main', 'main_BestArmPulls')
-            if not isinstance(self.evaluator, EvaluatorContextual):
-                print(" - Plotting the probability of picking the best arm, and saving the plot to {} ...".format(savefig))
-                self.evaluator.plotBestArmPulls(envId, savefig=savefig)
-            savefig = self.mainFigure.replace('main', 'main_semilogy')
-            self.evaluator.plotRegrets(envId, savefig=savefig, semilogy=True)
-
-            if self.configuration['horizon'] >= 1000:
-                savefig = self.mainFigure.replace('main', 'main_loglog')
-                self.evaluator.plotRegrets(envId, savefig=savefig, loglog=True)
-
-            if self.configuration['repetitions'] > 1:
-                savefig = savefig.replace('main', 'main_STD')
-                # self.evaluator.plotRegrets(envId, savefig=savefig, semilogx=semilogx, semilogy=semilogy, loglog=loglog,
-                #                            plotSTD=True) TODO: Fix this
-                savefig = savefig.replace('main', 'main_MaxMin')
-                self.evaluator.plotRegrets(envId, savefig=savefig, semilogx=semilogx, semilogy=semilogy, loglog=loglog,
-                                           plotMaxMin=True)
+            # savefig = self.mainFigure.replace('main', 'main_LessAccurate')
+            # self.evaluator.plotRegrets(envId, savefig=savefig)
+            # savefig = self.mainFigure.replace('main', 'main_BestArmPulls')
+            # if not isinstance(self.evaluator, EvaluatorContextual):
+            #     print(" - Plotting the probability of picking the best arm, and saving the plot to {} ...".format(savefig))
+            #     self.evaluator.plotBestArmPulls(envId, savefig=savefig)
+            # savefig = self.mainFigure.replace('main', 'main_semilogy')
+            # self.evaluator.plotRegrets(envId, savefig=savefig, semilogy=True)
+            #
+            # if self.configuration['horizon'] >= 1000:
+            #     savefig = self.mainFigure.replace('main', 'main_loglog')
+            #     self.evaluator.plotRegrets(envId, savefig=savefig, loglog=True)
+            #
+            # if self.configuration['repetitions'] > 1:
+            #     savefig = savefig.replace('main', 'main_STD')
+            #     # self.evaluator.plotRegrets(envId, savefig=savefig, semilogx=semilogx, semilogy=semilogy, loglog=loglog,
+            #     #                            plotSTD=True) TODO: Fix this
+            #     savefig = savefig.replace('main', 'main_MaxMin')
+            #     self.evaluator.plotRegrets(envId, savefig=savefig, semilogx=semilogx, semilogy=semilogy, loglog=loglog,
+            #                                plotMaxMin=True)
 
         else:
             self.evaluator.plotRegrets(envId)
@@ -184,17 +183,13 @@ class Plotting:
                 self.evaluator.plotLastRegrets(envId, sharex=sharex, sharey=sharey)
 
     def plot_all(self, envId):
-        if isinstance(self.evaluator, EvaluatorContextualSequenced):
-            self.evaluator.plotRegrets()
-            return
-
         if not isinstance(self.evaluator, EvaluatorContextual):
             self.plot_history_of_means(envId)
-        self.plot_boxplot_regret(envId)
-        self.plot_running_times(envId)
-        self.plot_memory_consumption(envId)
-        self.plot_number_of_cp_detections(envId)
-        self.plot_mean_rewards(envId, semilogx=SEMILOG_X, semilogy=SEMILOG_Y, loglog=LOG_LOG)
+        # self.plot_boxplot_regret(envId)
+        # self.plot_running_times(envId)
+        # self.plot_memory_consumption(envId)
+        # self.plot_number_of_cp_detections(envId)
+        # self.plot_mean_rewards(envId, semilogx=SEMILOG_X, semilogy=SEMILOG_Y, loglog=LOG_LOG)
         self.plot_all_regrets(envId, semilogx=SEMILOG_X, semilogy=SEMILOG_Y, loglog=LOG_LOG)
-        self.plot_normalized_regrets(envId, semilogx=SEMILOG_X, semilogy=SEMILOG_Y, loglog=LOG_LOG)
-        self.plot_histograms_regret(envId)
+        # self.plot_normalized_regrets(envId, semilogx=SEMILOG_X, semilogy=SEMILOG_Y, loglog=LOG_LOG)
+        # self.plot_histograms_regret(envId)

@@ -25,6 +25,7 @@ import time
 from copy import deepcopy
 # Scientific imports
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -61,7 +62,7 @@ STORE_ALL_REWARDS = False  #: Store all rewards?
 STORE_REWARDS_SQUARED = False  #: Store rewards squared?
 MORE_ACCURATE = False  #: Use the count of selections instead of rewards for a more accurate mean/var reward measure.
 FINAL_RANKS_ON_AVERAGE = True  #: Final ranks are printed based on average on last 1% rewards and not only the last rewards
-USE_JOBLIB_FOR_POLICIES = False  #: Don't use joblib to parallelize the simulations on various policies (we parallelize the random Monte Carlo repetitions)
+USE_JOBLIB_FOR_POLICIES = True  #: Don't use joblib to parallelize the simulations on various policies (we parallelize the random Monte Carlo repetitions)
 
 
 def _nbOfArgs(function):
@@ -237,10 +238,23 @@ class EvaluatorContextual(object):
         for policyId, policy in enumerate(self.policies):
             total = 100 * (((envId * self.nbPolicies) + policyId) / (len(self.envs) * self.nbPolicies))
             print("\n\n\n- Evaluating environment {}/{}\n    policy {}/{}\n    total {}%\n    {}".format(envId + 1, len(self.envs), policyId + 1, self.nbPolicies, str(total)[:5], policy))
-            for repeatId in (tqdm(range(self.repetitions), desc="Repeat") if self.verbosity > 3 else range(self.repetitions)):
-                r = delayed_play(env, policy, self.horizon, self.all_contexts, self.all_rewards, envId,
-                                 repeatId=repeatId, verbose=(self.verbosity > 4))
-                store(r, policyId, repeatId)
+            if self.useJoblib:
+                repeatIdout = 0
+                for r in Parallel(n_jobs=self.cfg['n_jobs'], pre_dispatch='3*n_jobs', verbose=self.cfg['verbosity'])(
+                        delayed(delayed_play)(env, policy, self.horizon, self.all_contexts, self.all_rewards, envId,
+                                              repeatId=repeatId, verbose=(self.verbosity > 4))
+                        for repeatId in range(self.repetitions)
+                ):
+                    store(r, policyId, repeatIdout)
+                    repeatIdout += 1
+
+            else:
+                for repeatId in (
+                        tqdm(range(self.repetitions), desc="Repeat") if self.verbosity > 3 else range(
+                            self.repetitions)):
+                    r = delayed_play(env, policy, self.horizon, self.all_contexts, self.all_rewards, envId,
+                                     repeatId=repeatId, verbose=(self.verbosity > 4))
+                    store(r, policyId, repeatId)
 
     def getRunningTimes(self, envId=0):
         """Get the means and stds and list of running time of the different policies."""
@@ -486,7 +500,7 @@ class EvaluatorContextual(object):
             else:
                 plot_method(X[::self.delta_t_plot], Y[::self.delta_t_plot], label=policy.__cachedstr__,
                             color=colors[policyId],
-                            marker=markers[policyId], markevery=(policyId / 50., 0.1), lw=lw, ms=int(1.5 * lw))
+                            marker=markers[policyId], lw=1, ms=2)
             if semilogx or loglog:  # Manual fix for issue https://github.com/SMPyBandits/SMPyBandits/issues/38
                 plt.xscale('log')
             if semilogy or loglog:  # Manual fix for issue https://github.com/SMPyBandits/SMPyBandits/issues/38
@@ -508,7 +522,10 @@ class EvaluatorContextual(object):
                 plt.fill_between(X[::self.delta_t_plot], Y[::self.delta_t_plot] - MaxMinY[::self.delta_t_plot],
                                  Y[::self.delta_t_plot] + MaxMinY[::self.delta_t_plot], facecolor=colors[policyId],
                                  alpha=0.2)
+
+
         self._xlabel(envId, r"Time steps $t = 1...T$, horizon $T = {}$".format(self.horizon))
+
         if not meanReward:
             if semilogy or loglog:
                 ymin = max(0, ymin)
@@ -538,6 +555,7 @@ class EvaluatorContextual(object):
                 self.repetitions, subtitle)
             )
         else:
+
             # FIXED for semilogx plots, truncate to only show t >= 100
             if semilogx or loglog:
                 X = X[X >= 100]
@@ -548,11 +566,30 @@ class EvaluatorContextual(object):
             plt.title("Cumulative regrets, averaged over ${}$ repetitions{}".format(
                 self.repetitions, subtitle)
             )
+            # mpl.rcParams['lines.linewidth'] = 1
+            # mpl.rcParams['lines.markersize'] = 1
+            for policyId, policy in enumerate(self.policies):
+                x = [0, 111, 222, 333, 444, 555, 666, 777, 888, 999]
+                y = self.getMeanYForErrors(policyId, envId)
+                print(x)
+                print(y)
+                y_errors = self.getErrors(policyId, envId)
+                print(y_errors)
+                print(y.shape)
+                plt.errorbar(x, y, y_errors, fmt='o', color=colors[policyId], label='Error bars', linewidth=2)
 
         if show:
             show_and_save(self.showplot, savefig, fig=fig, pickleit=USE_PICKLE)
 
         return fig
+
+    def getErrors(self, policyId, envId):
+        regrets = self.getCumulatedRegrets(policyId, envId)
+        return np.array([np.std(regrets[:, t]) for t in range(0, self.horizon, 111)])
+
+    def getMeanYForErrors(self, policyId, envId):
+        meanY = self.getCumulatedRegretAverage(policyId, envId)
+        return np.array([meanY[t] for t in range(0, self.horizon, 111)])
 
     def printRunningTimes(self, envId=0, precision=3):
         """Print the average+-std running time of the different policies."""
@@ -704,7 +741,7 @@ class EvaluatorContextual(object):
         # table_to_latex(mean_data=means, std_data=stds, labels=[policy.__cachedstr__ for policy in self.policies])
 
     def plotLastRegrets(self, envId=0,
-                        normed=False, subplots=True, nbbins=15, log=False,
+                        normed=False, subplots=True, nbbins=10, log=False,
                         all_on_separate_figures=False, sharex=False, sharey=False,
                         boxplot=False, normalized_boxplot=True,
                         savefig=None, moreAccurate=False):
