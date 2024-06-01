@@ -39,6 +39,11 @@ class ContextualMAB(object):
         self.non_zero_means = 0
         self.horizon = horizon
 
+        if "name" in configuration:
+            self.name = configuration["name"]
+        else:
+            self.name = "ContextualMAB"
+
         print("  Reading arms of this Contextual MAB problem from a dictionary 'configuration' = {} ...".format(
             configuration))  # DEBUG
 

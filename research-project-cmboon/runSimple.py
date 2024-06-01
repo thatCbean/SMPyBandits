@@ -8,17 +8,17 @@ from SMPyBandits.Policies import UCB, Exp3
 environments = [
     {
         "arm_type": Gaussian,
-        "params": [(0.2, 0.25), (0.25, 0.25), (0.3, 0.25), (0.3, 0.25), (0.4, 0.25), (0.5, 0.25), (0.55, 0.25)]
+        "params": [(0.4, 0.4), (0.4, 0.4), (0.4, 0.4), (0.4, 0.4), (0.4, 0.4), (0.4, 0.25), (0.42, 0.25)]
     }
 ]
 
 policies = [
     {"archtype": UCB, "params": {}},
-    {"archtype": Exp3, "params": {"gamma": 0.01}},
+    # {"archtype": Exp3, "params": {"gamma": 0.01}},
 ]
 
 configuration = {
-    "horizon": 5000,
+    "horizon": 500000,
     "repetitions": 5,
     "n_jobs": 4,
     "verbosity": 6,
@@ -33,7 +33,7 @@ evaluator.startAllEnv()
 
 def plot_env(evaluation, environment_id):
     evaluation.printFinalRanking(environment_id)
-    evaluation.plotRegrets(environment_id, normalizedRegret=True, subtitle="Environment #" + str(environment_id))
+    evaluation.plotRegrets(environment_id, normalizedRegret=True)
     # evaluation.plotRegrets(environment_id, regretOverMaxReturn=True, subtitle="Environment #" + str(environment_id))
 
 

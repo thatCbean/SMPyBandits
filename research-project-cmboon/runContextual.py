@@ -21,14 +21,14 @@ environments_gen = EnvironmentConfigurations()
 policies_gen = PolicyConfigurations()
 
 
-n_jobs = 1
-verbosity = 2
-
 plot_rewards = False
+
 plot_regret_normalized = True
 plot_regret_absolute = True
-plot_expectation_based_regret_normalized = False
-plot_expectation_based_regret_absolute = False
+plot_best_policy_regret = True
+plot_relative_to_best_policy_regret = True
+plot_expectation_based_regret_normalized = False # Does not work in changing environments yet!!!
+plot_expectation_based_regret_absolute = False # Does not work in changing environments yet!!!
 plot_regret_over_max_return = True
 plot_regret_logy = True
 plot_regret_log = True
@@ -36,6 +36,15 @@ plot_min_max = True
 
 figures_list = []
 text_list = []
+
+start_time = datetime.datetime.now()
+print("Starting run at {}")
+
+horizon = 10000
+repetitions = 10
+# I have 16 cores so this works for me, you may want to lower it if you have fewer cores than repetitions
+n_jobs = repetitions
+verbosity = 2
 
 
 def plot_env(evaluation, environment_id, start_plot_title_index=1):
@@ -48,10 +57,14 @@ def plot_env(evaluation, environment_id, start_plot_title_index=1):
         figures.append(evaluation.plotRegrets(environment_id, show=False, normalizedRegret=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
     if plot_regret_absolute:
         figures.append(evaluation.plotRegrets(environment_id, show=False, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    if plot_best_policy_regret:
+        figures.append(evaluation.plotRegrets(environment_id, show=False, bestPolicyRegret=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    if plot_relative_to_best_policy_regret:
+        figures.append(evaluation.plotRegrets(environment_id, show=False, relativeToBestPolicy=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
     if plot_expectation_based_regret_normalized:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, normalizedRegret=True, subtitle="Alt Regret Calculation\nEnvironment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, normalizedRegret=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
     if plot_expectation_based_regret_absolute:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, subtitle="Alt Regret Calculation\nEnvironment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
     if plot_regret_over_max_return:
         figures.append(evaluation.plotRegrets(environment_id, show=False, regretOverMaxReturn=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
     if plot_regret_logy:
@@ -64,23 +77,19 @@ def plot_env(evaluation, environment_id, start_plot_title_index=1):
     figures_list.append(figures)
 
 
-start_time = datetime.datetime.now()
-print("Starting run at {}")
-
-horizon = 2000
-repetitions = 10
-
 secondEnv = False
 
 dimension = 20
 
 environments = []
+# environments += environments_gen.getEnv0(horizon)
 # environments += environments_gen.getEnv1(horizon)
 # environments += environments_gen.getEnv2(horizon)
-# environments += environments_gen.getEnv3(horizon)
-environments += environments_gen.getEnv4(horizon)
+environments += environments_gen.getEnvPerturbedOld(horizon)
+# environments += environments_gen.getEnv4(horizon)
 
-policies = policies_gen.generatePolicySetContextualOneEach(dimension, horizon)
+# policies = policies_gen.generatePolicySetContextualOneEach(dimension, horizon)
+policies = policies_gen.generatePolicySetContextualMany(dimension, horizon)
 
 configuration = {
     "horizon": horizon,

@@ -2,6 +2,8 @@
 """
 The BOB policy.
 
+BROKEN!!!!
+
 Reference:
     [W. C. Cheung, D. Simchi-Levi, and R. Zhu, “Learning to optimize under non-stationarity,” in The 22nd
     International Conference on Artificial Intelligence and Statistics, PMLR, 2019, pp. 1079–1087.]
@@ -114,7 +116,7 @@ class BOB(ContextualBasePolicy):
                     ((self.s_j1[j] / np.sum(self.s_j1)) + (self.gamma / (self.DELTA + 1)))
                 )
                 self.j[j] = binomial(1, self.p_i[j]) * self.j[j]
-            self.w_i = math.floor(self.H ** (self.j[math.floor(t / self.H)] / self.DELTA))
+            self.w_i = math.floor(self.H ** (self.j[min(self.DELTA, math.floor(t / self.H))] / self.DELTA))
             self.V_i = np.identity(self.dimension) * self.labda
 
         theta_t = np.zeros(self.dimension)
