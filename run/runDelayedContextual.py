@@ -5,6 +5,7 @@ import sys
 import numpy as np
 sys.path.append("C:\\Users\\Dragos\\Desktop\\SMPyBandits")
 
+from SMPyBandits.Delays.GeometricDelay import GeometricDelay
 from SMPyBandits.DelayedContextualBandits.Policies.DeLinUCB import DeLinUCB
 from SMPyBandits.ContextualBandits.ContextualPolicies import LinUCB
 from SMPyBandits.ContextualBandits.ContextualPolicies.ContextualBasePolicy import ContextualBasePolicy
@@ -28,8 +29,8 @@ from SMPyBandits.ContextualBandits.ContextualArms.ContextualGaussianNoiseArm imp
 
 # Code based on:
 # https://github.com/SMPyBandits/SMPyBandits/blob/master/notebooks/Example_of_a_small_Single-Player_Simulation.ipynb
-horizon = 10000
-repetitions = 2
+horizon = 20000
+repetitions = 10
 n_jobs = -1
 verbosity = 2
 
@@ -52,26 +53,35 @@ environments = [
         "arms": [
             ContextualGaussianNoiseArm(0, 0.01),
             ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
+            ContextualGaussianNoiseArm(0, 0.01),
             ContextualGaussianNoiseArm(0, 0.01)
         ],
         "contexts": [
             NormalContext([0.2, 0.4, 0.6], np.identity(3) * 0.3, 3),
             NormalContext([0.1, 0.3, 0.5], np.identity(3) * 0.5, 3),
-            NormalContext([0.3, 0.5, 0.7], np.identity(3) * 0.7, 3)
+            NormalContext([0.6, 0.05, 0.01], np.identity(3) * 0.7, 3),
+            NormalContext([0.2, 0.7, 0.001], np.identity(3) * 0.3, 3),
+            NormalContext([0.4, 0.1, 0.2], np.identity(3) * 0.5, 3),
+            NormalContext([0.3, 0.5, 0.15], np.identity(3) * 0.7, 3),
         ],
         "delays": [
+            PoissonDelay(3, 0, 0, 700),
+            PoissonDelay(3, 0, 0, 800),
+            PoissonDelay(3, 0, 0, 900),
+            GeometricDelay(3, 0, 0, 0.3),
             PoissonDelay(3, 0, 0, 200),
-            PoissonDelay(3, 0, 0, 300),
-            PoissonDelay(3, 0, 0, 400),
+            PoissonDelay(3, 0, 0, 500),
         ]
     }
 ]
 
 policies = [
-    # {"archtype": UCBWithDelay, "params": {}},
-    # {"archtype": Exp3WithDelay, "params": {"gamma": 0.05}},
+    {"archtype": UCBWithDelay, "params": {}},
+    {"archtype": Exp3WithDelay, "params": {"gamma": 0.01}},
     {"archtype": LinUCBWithDelay, "params": {"dimension": 3, "alpha": 0.01}},
-    {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "m" : 500}},
+    {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 0.2, "m" : 500}},
 ]
 
 configuration = {

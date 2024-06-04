@@ -24,7 +24,7 @@ class DeLinUCB(ContextualBasePolicyWithDelay):
     The linUCB contextual bandit policy.
     """
 
-    def __init__(self, nbArms, dimension, horizon, alpha=ALPHA, lambda_reg=0.1, m=10,
+    def __init__(self, nbArms, dimension, horizon, alpha=ALPHA, lambda_reg=0.001, m=1500,
                  lower=0., amplitude=1.):
         super(DeLinUCB, self).__init__(nbArms, lower=lower, amplitude=amplitude)
         assert alpha > 0, "Error: the 'alpha' parameter for the LinUCB class must be greater than 0"
@@ -34,20 +34,19 @@ class DeLinUCB(ContextualBasePolicyWithDelay):
         self.k = nbArms
         self.dimension = dimension
         self.lambda_reg = lambda_reg
-        self.V = np.identity(dimension)
-        self.B = np.zeros(dimension)
         self.time_window = deque(maxlen=m)
         self.time_window.append(np.zeros(dimension))
-        self.time_window_sum = 0
         self.f = self.compute_f_values(lambda_reg, alpha, dimension, horizon)
         self.Vinv = np.identity(dimension)
-        self.a = 2 * self.f[0]
+
 
     def startGame(self):
         """Start with uniform weights."""
         super(DeLinUCB, self).startGame()
         self.V = np.identity(self.dimension)
         self.B = np.zeros(self.dimension)
+        self.Vinv = np.identity(self.dimension)
+        self.a = 2 * self.f[0]
 
     def __str__(self):
         return r"DelinUCB($\alpha: {:.3g}$)".format(self.alpha)
@@ -57,16 +56,16 @@ class DeLinUCB(ContextualBasePolicyWithDelay):
         self.Vinv = np.linalg.inv(self.V)
         ##TODO
         ##update_estimators is called for rewards that have already been observed, so they can be added to B
-        self.B = self.B + contexts[arm] * reward
-        context_to_discard = self.time_window.popleft()
-        
-        self.time_window.append(contexts[arm])
+        self.B = self.B + reward * contexts[arm]
+        self.time_window.popleft()
         self.a = 2 * self.f[self.t] + self.helper()
+        self.time_window.append(contexts[arm])
 
     def helper(self):
         time_window_sum = 0
         for context in self.time_window:
-            self.time_window_sum += self.get_L2_norm(context, self.Vinv)
+            time_window_sum = time_window_sum + self.get_L2_norm(context, self.Vinv)
+
         return time_window_sum
 
 

@@ -1,6 +1,7 @@
 
 import random
 import time
+from joblib import Parallel, delayed
 from matplotlib import pyplot as plt
 import numpy as np
 import time
@@ -113,9 +114,22 @@ class EvaluatorDelayedContextual(EvaluatorContextual):
             total = 100 * (((envId * self.nbPolicies) + policyId) / (len(self.envs) * self.nbPolicies))
             print("\n\n\n- Evaluating environment {}/{}\n    policy {}/{}\n    total {}%\n    {}".format(envId + 1, len(self.envs), policyId + 1, self.nbPolicies, str(total)[:5], policy))
             for repeatId in (tqdm(range(self.repetitions), desc="Repeat") if self.verbosity > 3 else range(self.repetitions)):
-                r = delayed_play(env, policy, self.horizon, self.all_contexts, self.all_rewards, self.all_delays, envId,
-                                 repeatId=repeatId, verbose=(self.verbosity > 4))
-                store(r, policyId, repeatId)
+                if self.useJoblib:
+                    repeatIdout = 0
+                    for r in Parallel(n_jobs=self.cfg['n_jobs'], pre_dispatch='3*n_jobs', verbose=self.cfg['verbosity'])(
+                            delayed(delayed_play)(env, policy, self.horizon, self.all_contexts, self.all_rewards, self.all_delays, envId,
+                                                    repeatId=repeatId, verbose=(self.verbosity > 4))
+                            for repeatId in range(self.repetitions)
+                    ):
+                        store(r, policyId, repeatIdout)
+                        repeatIdout += 1
+                else:
+                    for repeatId in (tqdm(range(self.repetitions), desc="Repeat") if self.verbosity > 3 else range(self.repetitions)):
+                        r = delayed_play(env, policy, self.horizon, self.all_contexts, self.all_rewards, envId,
+                                        repeatId=repeatId, verbose=(self.verbosity > 4))
+                        store(r, policyId, repeatId)
+
+
     
 
 

@@ -1,6 +1,8 @@
 
 import numpy as np
 
+from SMPyBandits.Delays.BaseDelay import BaseDelay
+
 
 class GeometricDelay(BaseDelay):
     """ Geometric delay, with a fixed parameter. """
