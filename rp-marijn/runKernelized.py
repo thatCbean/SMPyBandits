@@ -3,21 +3,27 @@ from errno import EEXIST
 from os import makedirs, path
 
 import numpy as np
+import GPy
 
+from sklearn.metrics.pairwise import rbf_kernel
 from SMPyBandits.ContextualBandits.Contexts.NormalContext import NormalContext
+from SMPyBandits.ContextualBandits.Contexts.BaseContext import BaseContext
 from SMPyBandits.ContextualBandits.ContextualArms.ContextualGaussianNoiseArm import \
     ContextualGaussianNoiseArm
 from SMPyBandits.ContextualBandits.ContextualPolicies.LinUCB import LinUCB
+from GPUCB import GPUCB
 from SMPyBandits.ContextualBandits.ContextualEnvironments.EvaluatorContextual import EvaluatorContextual
 from SMPyBandits.Policies import UCB, Exp3
 
 # Code based on:
 # https://github.com/SMPyBandits/SMPyBandits/blob/master/notebooks/Example_of_a_small_Single-Player_Simulation.ipynb
+# https://github.com/akhadangi/Multi-armed-Bandits/blob/master/Multi-armed%20Bandits.ipynb
+# https://papers.nips.cc/paper_files/paper/2011/file/f3f1b7fc5a8779a9e618e1f23a7b7860-Paper.pdf
 
 # horizon = 30000
 # horizon = 5000
 # horizon = 200
-horizon = 500
+horizon = 1000
 repetitions = 1
 # repetitions = 5
 # repetitions = 2
@@ -62,45 +68,7 @@ environments = [
     }
 ]
 
-environments_2 = [
-    {
-        "theta_star": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
-        "arms": [
-            ContextualGaussianNoiseArm(0, 0.01),
-            ContextualGaussianNoiseArm(0, 0.01),
-            ContextualGaussianNoiseArm(0, 0.01)
-        ],
-        "contexts": [
-            NormalContext([0.3, 0.5, 0.2, 0.4, 0.6, 0.3, 0.5, 0.2, 0.4, 0.6, 0.3, 0.5, 0.2, 0.4, 0.6, 0.3, 0.5, 0.2, 0.4, 0.6], np.identity(20) * 0.5, 20),
-            NormalContext([0.7, 0.3, 0.3, 0.2, 0.6, 0.7, 0.3, 0.3, 0.2, 0.6, 0.7, 0.3, 0.3, 0.2, 0.6, 0.7, 0.3, 0.3, 0.2, 0.6], np.identity(20) * 0.5, 20),
-            NormalContext([0.4, 0.6, 0.1, 0.2, 0.7, 0.4, 0.6, 0.1, 0.2, 0.7, 0.4, 0.6, 0.1, 0.2, 0.7, 0.4, 0.6, 0.1, 0.2, 0.7], np.identity(20) * 0.5, 20)
-        ]
-    }
-]
-
 policies = [
-    {"archtype": UCB, "params": {}},
-    {"archtype": Exp3, "params": {"gamma": 0.05}},
-    # {"archtype": Exp3, "params": {"gamma": 0.1}},
-    # {"archtype": Exp3, "params": {"gamma": 0.25}},
-    # {"archtype": Exp3, "params": {"gamma": 0.5}},
-    # {"archtype": Exp3, "params": {"gamma": 0.75}},
-
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 100.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 50.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 20.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 10.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 5.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 2.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 1.0}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.5}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.2}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.1}},
-    # {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.05}},
-    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.01}}
-]
-
-policies_2 = [
     {"archtype": UCB, "params": {}},
     {"archtype": Exp3, "params": {"gamma": 0.05}},
     # {"archtype": Exp3, "params": {"gamma": 0.1}},
@@ -116,7 +84,8 @@ policies_2 = [
     # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.2}},
     # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.1}},
     # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.05}},
-    {"archtype": LinUCB, "params": {"dimension": 20, "alpha": 0.01}}
+    {"archtype": GPUCB, "params": {"dimension": 3, "kern": rbf_kernel, "eta": 1.0, "gamma": 1.5}},
+    {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.01}}
 ]
 
 configuration = {
@@ -128,21 +97,9 @@ configuration = {
     "policies": policies
 }
 
-configuration_2 = {
-    "horizon": horizon,
-    "repetitions": repetitions,
-    "n_jobs": n_jobs,
-    "verbosity": verbosity,
-    "environment": environments_2,
-    "policies": policies_2
-}
-
 evaluator = EvaluatorContextual(configuration)
-evaluator_2 = EvaluatorContextual(configuration_2)
 
 evaluator.startAllEnv()
-evaluator_2.startAllEnv()
-secondEnv = True
 # evaluator.startOneEnv(4, evaluator.envs[4])
 
 figures_list = []
@@ -179,60 +136,45 @@ for env_id in range(len(environments)):
     evaluator.startOneEnv(env_id, evaluator.envs[env_id])
     plot_env(evaluator, env_id)
 
-for env_id in range(len(environments_2)):
-    evaluator_2.startOneEnv(env_id, evaluator_2.envs[env_id])
-    plot_env(evaluator_2, env_id, start_plot_title_index=len(environments) + 1)
-
 end_time = datetime.datetime.now()
-file_root = "./plots/{}/".format(end_time.strftime("%Y-%m-%d %H;%M;%S"))
-
-for env, figure_list in enumerate(figures_list):
-    file_path = file_root + "environment_{}".format(env)
-    try:
-        makedirs(file_path)
-    except OSError as exc:
-        if exc.errno == EEXIST and path.isdir(file_path):
-            pass
-        else:
-            raise
-    if env < len(environments):
-        with open(file_root + "regrets_environment_{}.txt".format(env), "w") as f:
-            evaluator.getEnvCumulatedRegrets(env).astype(str).tofile(f, ",")
-    else:
-        with open(file_root + "regrets_environment_{}.txt".format(env), "w") as f:
-            evaluator.getEnvCumulatedRegrets(env - len(environments)).astype(str).tofile(f, ",")
-
-    for i, figure in enumerate(figure_list):
-        figure.savefig("{}/SMPyBandits plot {}.png".format(file_path, i))
-
 equals_string = "".join(["=" for i in range(100)])
+gen_plots = True
+if gen_plots:
+    file_root = "./plots/{}/".format(end_time.strftime("%Y-%m-%d %H;%M;%S"))
 
-rankings_text = equals_string.join(text_list)
+    for env, figure_list in enumerate(figures_list):
+        file_path = file_root + "environment_{}".format(env)
+        try:
+            makedirs(file_path)
+        except OSError as exc:
+            if exc.errno == EEXIST and path.isdir(file_path):
+                pass
+            else:
+                raise
+        if env < len(environments):
+            with open(file_root + "regrets_environment_{}.txt".format(env), "w") as f:
+                evaluator.getEnvCumulatedRegrets(env).astype(str).tofile(f, ",")
+        else:
+            with open(file_root + "regrets_environment_{}.txt".format(env), "w") as f:
+                evaluator.getEnvCumulatedRegrets(env - len(environments)).astype(str).tofile(f, ",")
 
-with open(file_root + "rankings.txt", "w") as f:
-    f.write(rankings_text)
+        for i, figure in enumerate(figure_list):
+            figure.savefig("{}/SMPyBandits plot {}.png".format(file_path, i))
 
-with open(file_root + "rewards.txt", "w") as f:
-    for value in evaluator.all_rewards.values():
-        value.astype(str).tofile(f, ",")
+    rankings_text = equals_string.join(text_list)
 
-with open(file_root + "contexts.txt", "w") as f:
-    for value in evaluator.all_contexts.values():
-        value.astype(str).tofile(f, ",")
+    with open(file_root + "rankings.txt", "w") as f:
+        f.write(rankings_text)
 
-with open(file_root + "chosen_rewards.txt", "w") as f:
-    evaluator.rewards.astype(str).tofile(f, ",")
-
-if secondEnv:
-    with open(file_root + "rewards_env2.txt", "w") as f:
-        for value in evaluator_2.all_rewards.values():
+    with open(file_root + "rewards.txt", "w") as f:
+        for value in evaluator.all_rewards.values():
             value.astype(str).tofile(f, ",")
 
-    with open(file_root + "contexts_env2.txt", "w") as f:
-        for value in evaluator_2.all_contexts.values():
+    with open(file_root + "contexts.txt", "w") as f:
+        for value in evaluator.all_contexts.values():
             value.astype(str).tofile(f, ",")
 
-    with open(file_root + "chosen_rewards_env2.txt", "w") as f:
-        evaluator_2.rewards.astype(str).tofile(f, ",")
+    with open(file_root + "chosen_rewards.txt", "w") as f:
+        evaluator.rewards.astype(str).tofile(f, ",")
 
 print("\n\n{}\n\nStarted run at {}\nFinished at {}\nTotal time taken: {}".format(equals_string, str(start_time), str(end_time), str(end_time - start_time)))

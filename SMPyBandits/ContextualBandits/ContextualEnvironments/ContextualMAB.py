@@ -57,12 +57,8 @@ class ContextualMAB(object):
         # XXX try to read sparsity
         self._sparsity = configuration["sparsity"] if "sparsity" in configuration else None
 
-        contexts = configuration["contexts"]
+        self.contexts = contexts = configuration["contexts"]
         print(" - and contexts =", contexts)
-
-        for context in contexts:
-            if isinstance(context, BaseContext):
-                self.contexts.append(context)
 
         assert len(self.contexts) == len(self.arms), \
             "Error: The number of contexts should be equal to the number of arms"

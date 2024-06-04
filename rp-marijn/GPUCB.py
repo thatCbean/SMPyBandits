@@ -1,0 +1,163 @@
+# -*- coding: utf-8 -*-
+from __future__ import division, print_function  # Python 2 compatibility
+
+import math
+
+import numpy as np
+import GPy
+
+from SMPyBandits.ContextualBandits.ContextualPolicies.ContextualBasePolicy import ContextualBasePolicy
+
+class GPUCB(ContextualBasePolicy):
+    """
+    The GP-UCB contextual bandit policy.
+    """
+
+    def __init__(self, nbArms, dimension, kern, eta, gamma,
+                 lower=0., amplitude=1.):
+        super(GPUCB, self).__init__(nbArms, lower=lower, amplitude=amplitude)
+        #assert delta > 0, "Error: the 'delta' parameter for the GP-UCB class must be greater than 0"
+        assert dimension > 0, "Error: the 'dimension' parameter for the GP-UCB class must be greater than 0"
+        print("Initiating policy GP-UCB with {} arms, dimension: {}, eta: {}, gamma: {}".format(nbArms, dimension, eta, gamma))
+        self.k = nbArms
+        self.dimension = dimension
+
+        self.narms = nbArms
+        # Number of context features
+        self.ndims = dimension
+        # regularization parameter
+        self.eta = eta
+        # exploration parameter
+        self.gamma = gamma
+        # kernel function
+        self.kern = kern
+        # u_n_t values
+        self.u = np.zeros(self.narms)
+        # sigma_n_t values
+        self.sigma = np.zeros(self.narms)
+        # list of contexts of chosen actions to the moment
+        self.pulled = []
+        # list of rewards corresponding to chosen actions to the moment
+        self.Erewards = []
+        # define a dictionary to store kernel matrix inverse in each tround
+        self.Kinv = {}
+        
+
+    def startGame(self):
+        """Start with uniform weights."""
+        super(GPUCB, self).startGame()
+
+    def __str__(self):
+        return r"GP-UCB($\eta: {:.3g}, \gamma: {:.3g}$)".format(self.eta, self.gamma)
+
+    def getReward(self, arm, reward, context):
+        super(GPUCB, self).getReward(arm, reward, context)  # XXX Call to BasePolicy
+        # get the flattened context and reshape it to an array of shape (narms,ndims)
+        context = np.reshape(context, (self.narms, self.ndims))
+        # append the context of choesn arm (index = [arm]) with the previous list of contexts (self.pulled)
+        # the obserbved context is being reshaped into a column vector simultanesously for future kernel calculations
+        self.pulled.append(context[arm].reshape(1,-1))
+        # set currently observed context of chosen arm as x_t
+        x_t = context[arm].reshape(1,-1)
+        
+        #========================================
+        #    Calculating all possible k_x ...
+        #========================================
+        
+        # To perform kernel UCB in the least and efficient time as possible I propose to
+        # calculate k_x for all of the contexts and not just for chosen context (x_t)
+        # this will be hugely beneficiary to calculating sigma_n_t step in for loop
+        
+        # calculate the kernel between each of the contexts of narms and the pulled 
+        # contexts of chosen arms to the moment
+        
+        # self.pulled is just a list of arrays, and hence reshaping it to a valid
+        # numpy array of shape (tround+1,ndims). Since tround is starting from zero
+        # it is being added by 1 to give valid shape in each round especially for
+        # the first round
+        k_x = self.kern(context,np.reshape(self.pulled,(self.tround+1,self.ndims)))
+        
+        # append the observed reward value of chosen action to the previous list of rewards
+        self.Erewards.append(reward)
+        # generate array of y. Since tround is starting from zero
+        # it is being added by 1 to give valid shape in each round especially for
+        # the first round
+        self.y = np.reshape(self.Erewards,(self.tround+1,1))
+        
+        # building inverse of kernel matrix for first round is different from consequent rounds.
+        if self.tround==0:
+            self.Kinv[self.tround] = 1.0/(self.kern(x_t,x_t) + self.gamma)
+        else:
+            # set inverse of kernel matrix as the kernel matrix inverse of the previous round
+            Kinv = self.Kinv[self.tround-1]
+            # set b as k_(x_t) excluding the kernel value of the current round
+            b = k_x[arm][:-1]
+            # reshape b into the valid numpy column vector
+            b = b.reshape(self.tround,1)
+            # compute b.T.dot(kernel matrix inverse)
+            bKinv = np.dot(b.T,Kinv)
+            # compute (kernel matrix inverse).dot(b)
+            Kinvb = np.dot(Kinv,b)
+            
+            #==========================================================================
+            #    Calculating components of current Kernel matrix inverse (Kinv_tround)
+            #==========================================================================
+            
+            K22 = 1.0/(k_x[arm][-1] + self.gamma - np.dot(bKinv,b))            
+            K11 = Kinv + K22*np.dot(Kinvb,bKinv)
+            K12 = -K22*Kinvb
+            K21 = -K22*bKinv
+            K11 = np.reshape(K11,(self.tround,self.tround))
+            K12 = np.reshape(K12,(self.tround,1))
+            K21 = np.reshape(K21,(1,self.tround))
+            K22 = np.reshape(K22,(1,1))
+            # stack components into an array of shape(self.tround, self.tround)
+            self.Kinv[self.tround] = np.vstack((np.hstack((K11,K12)),np.hstack((K21,K22)))) 
+
+    def choice(self, context):
+        # get the flattened context and reshape it to an array of shape (narms,ndims)
+        self.tround = self.t
+        context = np.reshape(context, (self.narms,self.ndims))
+        
+        if self.tround == 0:
+            # Always start with action 1
+            self.u[0] = 1.0
+        else:
+            
+            #========================================
+            #    Calculating all possible k_x ...
+            #========================================
+        
+            # To perform kernel UCB in the least and efficient time as possible I propose to
+            # calculate k_x for all of the contexts and not just for chosen context (x_t)
+            # this will be hugely beneficiary to calculating sigma_n_t step in for loop
+        
+            # calculate the kernel between each of the contexts of narms and the pulled 
+            # contexts of chosen arms to the moment
+        
+            # self.pulled is just a list of arrays, and hence reshaping it to a valid
+            # numpy array of shape (tround+1,ndims). Since tround is starting from zero
+            # it is being added by 1 to give valid shape in each round especially for
+            # the first round
+            
+            k_x = self.kern(context, np.reshape(self.pulled, (self.tround, self.ndims)))
+            
+            #===============================
+            #    MAIN LOOP ...
+            #===============================
+            
+            for i in range(self.narms):
+                self.sigma[i] = np.sqrt(
+                    self.kern(context[i].reshape(1, -1), context[i].reshape(1,-1)) -
+                        k_x[i].T.dot(self.Kinv[self.tround - 1]).dot(k_x[i]))  
+                self.u[i] = k_x[i].T.dot(self.Kinv[self.tround-1]).dot(self.y) + (self.eta/np.sqrt(self.gamma))*self.sigma[i]
+            
+        # Breaking ties arbitrarily
+        action = np.random.choice(np.where(self.u==max(self.u))[0])
+        #print("============= T : " + str(self.tround) + " =============")
+        #print("ACTION : " + str(action))
+        #print("REWARDS : " + str(self.Erewards))
+        #print("U : " + str(self.u))
+        #print("SIGMA : " + str(self.sigma))
+        #print("CONTEXT : " + str(context))
+        return action
