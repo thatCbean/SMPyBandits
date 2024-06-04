@@ -11,7 +11,7 @@ class NullContext(BaseContext):
     """ A context generator drawing normalized Gaussian vectors """
 
     def __init__(self):
-        print("\nInitiating Null Context\n")
+        # print("\nInitiating Null Context\n")
         BaseContext.__init__(self, 1, 1, 0)
 
     def draw_context(self):

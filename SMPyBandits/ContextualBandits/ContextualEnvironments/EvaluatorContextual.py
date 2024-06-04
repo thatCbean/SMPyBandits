@@ -146,7 +146,8 @@ class EvaluatorContextual(object):
     def __initEnvironments__(self):
         """ Create environments."""
         for configuration_envs in self.cfg['environment']:
-            print("Using this dictionary to create a new environment:\n", configuration_envs)  # DEBUG
+            if self.verbosity > 2:
+                print("Using this dictionary to create a new environment:\n", configuration_envs)  # DEBUG
             if isinstance(configuration_envs, dict) \
                     and ((
                                  "theta_star" in configuration_envs
@@ -165,19 +166,22 @@ class EvaluatorContextual(object):
                     configuration_envs["thetas"][0])
                 assert self.dimension == -1 or self.dimension == dim, "Error: All contexts must have the same dimension"
                 self.dimension = dim
-                self.envs.append(ContextualMAB(configuration_envs, self.horizon))
+                self.envs.append(ContextualMAB(configuration_envs, self.horizon, self.verbosity))
 
     def __initPolicies__(self, env):
         """ Create or initialize policies."""
         for policyId, policy in enumerate(self.cfg['policies']):
-            print("- Adding policy #{} = {} ...".format(policyId + 1, policy))  # DEBUG
+            if self.verbosity > 2:
+                print("- Adding policy #{} = {} ...".format(policyId + 1, policy))  # DEBUG
             if isinstance(policy, dict):
-                print("  Creating this policy from a dictionnary 'self.cfg['policies'][{}]' = {} ...".format(policyId,
-                                                                                                             policy))  # DEBUG
+                if self.verbosity > 2:
+                    print("  Creating this policy from a dictionary 'self.cfg['policies'][{}]' = {} ...".format(policyId,
+                                                                                                                 policy))  # DEBUG
                 self.policies.append(policy['archtype'](env.nbArms, **policy['params']))
             else:
-                print("  Using this already created policy 'self.cfg['policies'][{}]' = {} ...".format(policyId,
-                                                                                                       policy))  # DEBUG
+                if self.verbosity > 2:
+                    print("  Using this already created policy 'self.cfg['policies'][{}]' = {} ...".format(policyId,
+                                                                                                           policy))  # DEBUG
                 self.policies.append(policy)
         for policyId in range(self.nbPolicies):
             self.policies[policyId].__cachedstr__ = str(self.policies[policyId])
@@ -192,10 +196,11 @@ class EvaluatorContextual(object):
 
         rewards = np.zeros((self.repetitions, self.horizon, env.nbArms))
         contexts = np.zeros((self.repetitions, self.horizon, env.nbArms, self.dimension))
-        print(
-            "\n===> Pre-computing the rewards ... Of shape {} ...\n    In order for all simulated algorithms to face the same random rewards (robust comparison of A1,..,An vs Aggr(A1,..,An)) ...\n".format(
-                np.shape(rewards)))  # DEBUG
         if self.verbosity > 2:
+            print(
+                "\n===> Pre-computing the rewards ... Of shape {} ...\n    In order for all simulated algorithms to face the same random rewards (robust comparison of A1,..,An vs Aggr(A1,..,An)) ...\n".format(
+                    np.shape(rewards)))  # DEBUG
+        if self.verbosity > 3:
             for repetitionId in tqdm(range(self.repetitions), desc="Repetitions"):
                 for t in tqdm(range(self.horizon), desc="Time steps"):
                     for arm_id in tqdm(range(len(env.arms)), desc="Arms"):
@@ -207,6 +212,20 @@ class EvaluatorContextual(object):
                         contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id] = env.draw(arm_id, t)
         return contexts, rewards
 
+    def clear_generated_data(self, envId):
+        self.all_contexts[envId] = np.zeros(
+            (self.repetitions, self.horizon, self.envs[envId].nbArms, self.dimension))
+        self.all_rewards[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
+        self.rewards = np.zeros((self.repetitions, self.nbPolicies, len(self.envs),
+                                 self.horizon))  #: For each env, history of rewards, ie accumulated rewards
+        self.sumRewards = np.zeros((self.nbPolicies, len(self.envs),
+                                    self.repetitions))  #: For each env, last accumulated rewards, to compute variance and histogram of whole regret R_T
+        self.minCumRewards = np.full((self.nbPolicies, len(self.envs), self.horizon),
+                                     +np.inf)  #: For each env, history of minimum of rewards, to compute amplitude (+- STD)
+        self.maxCumRewards = np.full((self.nbPolicies, len(self.envs), self.horizon),
+                                     -np.inf)  #: For each env, history of maximum of rewards, to compute amplitude (+- STD)
+
+
     def startAllEnv(self):
         """Simulate all envs."""
         for envId, env in enumerate(self.envs):
@@ -215,7 +234,7 @@ class EvaluatorContextual(object):
     def startOneEnv(self, envId, env):
         """Simulate that env."""
         plt.close('all')
-        print("\n\nEvaluating environment:", repr(env))
+        print("\nEvaluating environment:", repr(env))
         self.policies = []
         self.__initPolicies__(env)
 
@@ -244,14 +263,14 @@ class EvaluatorContextual(object):
         # Start for all policies
         for policyId, policy in enumerate(self.policies):
             total = 100 * (((envId * self.nbPolicies) + policyId) / (len(self.envs) * self.nbPolicies))
-            print("\n\n\n- Evaluating environment {}/{}\n    policy {}/{}\n    total {}%\n    {}"
+            print("\nEvaluating environment {}/{}\n\tpolicy {}/{}\n\ttotal {}%\n\t{}"
                   .format(envId + 1, len(self.envs), policyId + 1, self.nbPolicies, str(total)[:5], policy))
 
             if self.useJoblib:
                 repeatIdout = 0
                 for r in Parallel(n_jobs=self.cfg['n_jobs'], pre_dispatch='3*n_jobs', verbose=self.cfg['verbosity'])(
                         delayed(delayed_play)(env, policy, self.horizon, self.all_contexts, self.all_rewards, envId,
-                                              repeatId=repeatId, verbose=(self.verbosity > 4))
+                                              repeatId=repeatId, verbose=(self.verbosity > 5))
                         for repeatId in range(self.repetitions)
                 ):
                     store(r, policyId, repeatIdout)
@@ -259,9 +278,9 @@ class EvaluatorContextual(object):
 
             else:
                 for repeatId in (
-                tqdm(range(self.repetitions), desc="Repeat") if self.verbosity > 3 else range(self.repetitions)):
+                tqdm(range(self.repetitions), desc="Repeat") if self.verbosity > 4 else range(self.repetitions)):
                     r = delayed_play(env, policy, self.horizon, self.all_contexts, self.all_rewards, envId,
-                                     repeatId=repeatId, verbose=(self.verbosity > 4))
+                                     repeatId=repeatId, verbose=(self.verbosity > 5))
                     store(r, policyId, repeatId)
 
     def getRunningTimes(self, envId=0):
@@ -399,8 +418,18 @@ class EvaluatorContextual(object):
             for t in range(self.horizon)
         ])
 
+    def getCumulativeRegretStandardDeviation(self, policyId, envId):
+        cumulative_regrets = self.getLastRegrets(policyId, envId)
+        mean_regret = np.mean(cumulative_regrets)
+        cumulative_regrets -= mean_regret
+        cumulative_regrets **= 2
+        sum_of_squared_deviations = np.sum(cumulative_regrets)
+        sum_of_squared_deviations /= self.repetitions
+        return math.sqrt(sum_of_squared_deviations)
+
     def printAndReturn(self, strii):
-        print(strii)
+        if self.verbosity > 2:
+            print(strii)
         return strii
 
     def printFinalRanking(self, envId=0):
@@ -409,7 +438,7 @@ class EvaluatorContextual(object):
         assert 0 < self.averageOn < 1, "Error, the parameter averageOn of a EvaluatorMultiPlayers classs has to be in (0, 1) strictly, but is = {} here ...".format(
             self.averageOn)  # DEBUG
 
-        stri += self.printAndReturn("\nFinal ranking for this environment #{}".format(envId))
+        stri += self.printAndReturn("\nFinal ranking for environment #{}: \n".format(envId + 1) + self.envs[envId].name)
 
         nbPolicies = self.nbPolicies
         totalRegret = np.zeros(nbPolicies)
@@ -417,17 +446,19 @@ class EvaluatorContextual(object):
         totalRewards = np.zeros(nbPolicies)
         # lastRegret = np.zeros(nbPolicies)
         # lastAltRegret = np.zeros(nbPolicies)
+        standard_deviations = np.zeros(nbPolicies)
         for i, policy in enumerate(self.policies):
             Y = self.getCumulatedRegretAverage(i, envId)
             totalRegret[i] = Y[-1]
             totalRewards[i] = np.sum(self.rewards[:, i, envId, :]) / self.repetitions
+            standard_deviations[i] = self.getCumulativeRegretStandardDeviation(i, envId)
         # Sort lastRegret and give ranking
         index_of_sorting = np.argsort(totalRegret)
         for i, k in enumerate(index_of_sorting):
             policy = self.policies[k]
             stri += self.printAndReturn(
-                "- Policy '{}'\twas ranked\t{} / {} for this simulation\n\t(total regret = {:.5g},\ttotal reward = {:.5g}.".format(
-                    policy.__cachedstr__, i + 1, nbPolicies, totalRegret[k], totalRewards[k]))
+                "\n\nPolicy '{}'\n\tRank:\t{} / {} for this simulation\n\tTotal regret: {:.5g}\n\tTotal reward: {:.5g}\n\tStandard Deviation: {:.5g}".format(
+                    policy.__cachedstr__, i + 1, nbPolicies, totalRegret[k], totalRewards[k], standard_deviations[k]))
         return totalRegret, index_of_sorting, stri
 
     def _xlabel(self, envId, *args, **kwargs):
@@ -464,6 +495,7 @@ class EvaluatorContextual(object):
         ymin = None
         colors = palette(self.nbPolicies)
         markers = makemarkers(self.nbPolicies)
+        env = self.envs[envId]
         # range_start = min(50, math.floor(self.horizon / 20))
         # print("Starting plots at index {}", range_start)
         X = self._times - 1
@@ -554,41 +586,43 @@ class EvaluatorContextual(object):
             legend()
             plt.ylabel("Mean reward" + ylabel2)
             plt.title(
-                "Mean rewards for different bandit algorithms, averaged over ${}$ repetitions{}".format(
-                    self.repetitions, subtitle
+                "Mean rewards for different bandit algorithms, averaged over ${}$ repetitions\n{}{}".format(
+                    self.repetitions, env.name, subtitle
                 ))
 
         elif normalizedRegret:
             legend()
             plt.ylabel("Normalized regret" + ylabel2)
             plt.title(
-                "Normalized cumulated regrets, averaged over ${}$ repetitions{}".format(
-                    self.repetitions, subtitle
+                "Normalized cumulated regrets, averaged over ${}$ repetitions\n{}{}".format(
+                    self.repetitions, env.name, subtitle
                 ))
         elif regretOverMaxReturn:
             legend()
             plt.ylabel(r"$\frac{R_t}{r_{max}}$")
-            plt.title("Regrets $R_t$ relative to maximum rewards $r_{{max}}$, averaged over ${}$ repetitions{}".format(
-                self.repetitions, subtitle)
+            plt.title("Regrets $R_t$ relative to maximum rewards $r_{{max}}$, averaged over ${}$ repetitions\n{}{}".format(
+                self.repetitions, env.name, subtitle)
             )
         elif bestPolicyRegret:
             legend()
             plt.ylabel(r"$r_{\pi_{best},t} - r_{\pi,t}$")
             plt.title(
-                r"Best policy regret\n$r_{{\pi_{{best}},t}}$ - $r_{{\pi,t}}$, averaged over ${}$ repetitions{}".format(
-                    self.repetitions, subtitle)
+                "Best policy regret\n$r_{{\pi_{{best}},t}}$ - $r_{{\pi,t}}$, averaged over ${}$ repetitions\n{}{}".format(
+                    self.repetitions, env.name, subtitle)
             )
         elif relativeToBestPolicy:
             legend()
             plt.ylabel(r"$R_{\pi,t} / R_{\pi_{best},t}$")
             plt.title(
-                r"Best policy's regret\n$R_{{\pi,t}}$ / $R_{{\pi_{{best}},t}}$, averaged over ${}$ repetitions{}".format(
-                    self.repetitions, subtitle)
+                "Best policy's regret\n$R_{{\pi,t}}$ / $R_{{\pi_{{best}},t}}$, averaged over ${}$ repetitions\n{}{}".format(
+                    self.repetitions, env.name, subtitle)
             )
         elif relativeRegret:
             legend()
             plt.ylabel(r"R_{\pi,t} / R_{max, t}$")
-            plt.title("Regret relative to R_{{max, t}}")
+            plt.title("Regret relative to $R_{{max, t}}$, averaged over ${}$ repetitions\n{}{}".format(
+                self.repetitions, env.name, subtitle
+            ))
         else:
             # FIXED for semilogx plots, truncate to only show t >= 100
             if semilogx or loglog:
@@ -597,8 +631,8 @@ class EvaluatorContextual(object):
                 X = X[X >= 1]
             legend()
             plt.ylabel(r"Average regret" + ylabel2)
-            plt.title("Cumulative regrets, averaged over ${}$ repetitions{}".format(
-                self.repetitions, subtitle)
+            plt.title("Cumulative regrets, averaged over ${}$ repetitions\n{}{}".format(
+                self.repetitions, env.name, subtitle)
             )
 
         if show:

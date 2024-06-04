@@ -11,10 +11,10 @@ class NormalContext(BaseContext):
     """ A context generator drawing normalized Gaussian vectors """
 
     def __init__(self, means=None, covariance_matrix=None, dimension=1, lower=0., amplitude=1.):
-        print(
-            "\nInitiating Normal Context with params:\nMeans: {}\nCovariance matrix:\n{}\nDimension: {}\nLower: {}\nAmplitude: {}\n"
-            .format(means, covariance_matrix, dimension, lower, amplitude)
-        )
+        # print(
+        #     "\nInitiating Normal Context with params:\nMeans: {}\nCovariance matrix:\n{}\nDimension: {}\nLower: {}\nAmplitude: {}\n"
+        #     .format(means, covariance_matrix, dimension, lower, amplitude)
+        # )
         if means is None:
             means = np.full(shape=dimension, fill_value=(1./dimension))
         else:

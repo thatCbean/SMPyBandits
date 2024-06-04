@@ -55,7 +55,7 @@ class SW_UCB(ContextualBasePolicy):
         self.window_index = 0
 
     def __str__(self):
-        return r"SW_UCB()".format()
+        return r"SW_UCB($window_size: {}, R: {:.1g}, L: {:.1g}$, S: {:.1g}, \lambda: {:.3g}, \delta: {:.3g})".format(self.window_size, self.R, self.L, self.S, self.labda, self.delta)
 
     def getReward(self, arm, reward, contexts, t=0):
         r"""Process the received reward

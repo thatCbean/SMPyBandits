@@ -25,12 +25,13 @@ class ContextualMAB(object):
 
     """
 
-    def __init__(self, configuration, horizon):
+    def __init__(self, configuration, horizon, verbosity=3):
         """New Contextual MAB."""
 
         assert isinstance(configuration, dict), "Error: configuration should be a dict"
 
-        print("\n\nCreating a new Contextual MAB problem ...")  # DEBUG
+        if verbosity > 2:
+            print("\n\nCreating a new Contextual MAB problem ...")  # DEBUG
         self.isChangingAtEachRepetition = False  #: Flag to know if the problem is changing at each repetition or not.
         self.isDynamic = False  #: Flag to know if the problem is static or not.
         self.arms = []  #: List of arms
@@ -44,8 +45,9 @@ class ContextualMAB(object):
         else:
             self.name = "ContextualMAB"
 
-        print("  Reading arms of this Contextual MAB problem from a dictionary 'configuration' = {} ...".format(
-            configuration))  # DEBUG
+        if verbosity > 2:
+            print("  Reading arms of this Contextual MAB problem from a dictionary 'configuration' = {} ...".format(
+                configuration))  # DEBUG
 
         self.slow_changing = configuration["slow_changing"] if "slow_changing" in configuration else False
         self.perturbed = configuration["perturbed"] if "perturbed" in configuration else False
@@ -53,30 +55,36 @@ class ContextualMAB(object):
 
         if not self.slow_changing and not self.perturbed:
             self.theta_star = np.array(configuration['theta_star'])
-            print(" - with theta_star ={}".format(self.theta_star))
+            if verbosity > 2:
+                print(" - with theta_star ={}".format(self.theta_star))
 
         if self.perturbed or "change_points" in configuration:
             self.change_points = np.array(configuration["change_points"])
-            print(" - with change_points ={}".format(self.change_points))
+            if verbosity > 2:
+                print(" - with change_points ={}".format(self.change_points))
 
         if self.perturbed:
             self.change_durations = np.array(configuration["change_durations"])
-            print(" - with change_durations ={}".format(self.change_durations))
+            if verbosity > 2:
+                print(" - with change_durations ={}".format(self.change_durations))
             self.__init_perturbed_theta_index_array(self.change_points, self.change_durations, self.horizon)
 
         if self.slow_changing or self.perturbed:
             self.thetas = np.array(configuration["thetas"])
-            print(" - with thetas ={}".format(self.thetas))
+            if verbosity > 2:
+                print(" - with thetas ={}".format(self.thetas))
 
         if self.slow_changing and not hasattr(self, "change_points"):
             if len(self.thetas) > 1:
                 self.interval = math.floor(horizon / (len(self.thetas) - 1))
             else:
                 self.interval = self.horizon + 1
-            print(" - with change interval ={}".format(self.interval))
+            if verbosity > 2:
+                print(" - with change interval ={}".format(self.interval))
 
         arms = configuration["arms"]
-        print(" - with arms =", arms)  # DEBUG
+        if verbosity > 2:
+            print(" - with arms =", arms)  # DEBUG
         # Each 'param' could be one value (eg. 'mean' = probability for a Bernoulli) or a tuple (eg. '(mu, sigma)' for a Gaussian) or a dictionnary
         for arm in arms:
             if isinstance(arm, ContextualArm):
@@ -87,7 +95,8 @@ class ContextualMAB(object):
         self._sparsity = configuration["sparsity"] if "sparsity" in configuration else None
 
         contexts = configuration["contexts"]
-        print(" - and contexts =", contexts)
+        if verbosity > 2:
+            print(" - and contexts =", contexts)
 
         for context in contexts:
             if isinstance(context, BaseContext):
@@ -97,13 +106,15 @@ class ContextualMAB(object):
             "Error: The number of contexts should be equal to the number of arms"
 
         # Compute the means and stats
-        print(" - with 'arms' =", self.arms)  # DEBUG
         self.nbArms = len(self.arms)  #: Number of arms
-        print(" - with 'nbArms' =", self.nbArms)  # DEBUG
-        print(" - with 'contexts' =", self.contexts)
-        if self._sparsity is not None:
-            print(" - with 'sparsity' =", self._sparsity)  # DEBUG
-        print(" - with 'arms' represented as:", self.reprarms(1, latex=True))  # DEBUG
+        if verbosity > 2:
+            print(" - with 'nbArms' =", self.nbArms)  # DEBUG
+            print(" - with 'contexts' =", self.contexts)
+            print(" - with 'arms' represented as:", self.reprarms(1, latex=True))  # DEBUG
+            print(" - with 'arms' =", self.arms)  # DEBUG
+
+            if self._sparsity is not None:
+                print(" - with 'sparsity' =", self._sparsity)  # DEBUG
 
     def __init_perturbed_theta_index_array(self, change_points, change_durations, horizon):
         self.index_array = np.zeros(horizon, dtype=np.int8)

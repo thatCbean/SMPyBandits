@@ -75,107 +75,140 @@ class EnvironmentConfigurations(object):
 
         return cfg
 
-    arm_counts = [5, 20, 50, 100]
-    noise_variances = [0.01, 0.05, 0.1, 0.2]
+    arm_counts = [5]
+    noise_variances = [0.01]
 
     def base_vectors(self, dimension):
         return [
             np.full(dimension, 0.1),
-            np.full(dimension, 0.2),
+            # np.full(dimension, 0.2),
             np.full(dimension, 0.4),
 
             np.full(dimension, -0.1),
-            np.full(dimension, -0.2),
+            # np.full(dimension, -0.2),
             np.full(dimension, -0.4),
 
             np.linspace(0, 1, dimension),
             np.linspace(1, 0, dimension),
 
-            np.linspace(0.1, 0.4, dimension),
-            np.linspace(0.4, 0.1, dimension),
+            # np.linspace(0.1, 0.4, dimension),
+            # np.linspace(0.4, 0.1, dimension),
 
             np.linspace(-0.4, 0.4, dimension),
-            np.linspace(-0.4, 0.2, dimension),
-            np.linspace(-0.2, 0.4, dimension),
-            np.linspace(-1.0, 1.0, dimension),
+            # np.linspace(-0.4, 0.2, dimension),
+            # np.linspace(-0.2, 0.4, dimension),
+            # np.linspace(-1.0, 1.0, dimension),
 
             np.linspace(-1.0, 0.0, dimension),
-            np.linspace(0.0, -1.0, dimension)
+            # np.linspace(0.0, -1.0, dimension)
+        ]
+
+    def direct_vector_subset(self, dimension):
+        vectors = self.base_vectors(dimension)
+        return [
+            vectors[0],
+            vectors[1],
+            vectors[3],
+            vectors[4],
+            # vectors[6],
+            vectors[7]
+        ]
+
+    def non_neg_vector_subset(self, dimension):
+        vectors = self.base_vectors(dimension)
+        return [
+            vectors[0],
+            vectors[1],
+            vectors[4],
         ]
 
     def change_schemes(self, count):
-        schemes = [np.full(count, vector_id) for vector_id in range(len(self.base_vectors(1)))]
+        schemes = [np.full(count, vector_id) for vector_id in [0, 1, 3, 4]]
 
-        vector = list()
-        j = 0
-        for i in range(count):
-            vector.append(j)
-            j = (j + 1) % 3
-        schemes.append(vector)
+        # vector = list()
+        # j = 0
+        # for i in range(count):
+        #     vector.append(j)
+        #     j = (j + 1) % 2
+        # schemes.append(vector)
 
-        vector = list()
-        j = 0
-        for i in range(count):
-            vector.append(j + 3)
-            j = (j + 1) % 3
-        schemes.append(vector)
+        # vector = list()
+        # j = 0
+        # for i in range(count):
+        #     vector.append(j + 4)
+        #     j = (j + 1) % 2
+        # schemes.append(vector)
+        #
+        # vector = list()
+        # j = 0
+        # for i in range(count):
+        #     vector.append(j + 6)
+        #     j = (j + 1) % 2
+        # schemes.append(vector)
 
-        vector = list()
-        j = 0
-        for i in range(count):
-            vector.append(j + 6)
-            j = (j + 1) % 2
-        schemes.append(vector)
-
-        vector = list()
-        j = 0
-        for i in range(count):
-            vector.append(j + 8)
-            j = (j + 1) % 2
-        schemes.append(vector)
-
-        vector = list()
-        j = 0
-        for i in range(count):
-            vector.append(j + 10)
-            j = (j + 1) % 4
-        schemes.append(vector)
-
-        vector = list()
-        j = 0
-        for i in range(count):
-            vector.append(j + 14)
-            j = (j + 1) % 2
-        schemes.append(vector)
+        # vector = list()
+        # j = 0
+        # for i in range(count):
+        #     vector.append(j + 8)
+        #     j = (j + 1) % 2
+        # schemes.append(vector)
+        #
+        # vector = list()
+        # j = 0
+        # for i in range(count):
+        #     vector.append(j + 10)
+        #     j = (j + 1) % 4
+        # schemes.append(vector)
+        #
+        # vector = list()
+        # j = 0
+        # for i in range(count):
+        #     vector.append(j + 14)
+        #     j = (j + 1) % 2
+        # schemes.append(vector)
 
         return schemes
 
-    def thetas(self, dimension, changes):
-        thetas_vectors = self.base_vectors(dimension)
+    def thetas_for_perturbed(self, dimension, changes):
+        thetas_vectors = self.direct_vector_subset(dimension)
         change_schemes = self.change_schemes(changes)
         res = list()
         for i in range(len(thetas_vectors)):
             for j in range(len(change_schemes)):
+                if i == j:
+                    continue
+
                 thetas_vectors_i = [thetas_vectors[i]]
                 for k in range(changes):
                     thetas_vectors_i.append(thetas_vectors[change_schemes[j][k]])
                 res.append(thetas_vectors_i)
         return res
 
-    def base_change_counts(self, horizon):
+    def thetas_for_slow_changing(self, dimension):
+        thetas_vectors = self.base_vectors(dimension)
+        res = list()
+        res.append([thetas_vectors[0]])
+        res.append([thetas_vectors[1]])
+        res.append([thetas_vectors[0], thetas_vectors[1]])
+        res.append([thetas_vectors[1], thetas_vectors[3]])
+        res.append([thetas_vectors[4], thetas_vectors[5]])
+        return res
+
+
+    def base_change_counts_perturbed(self, horizon):
         return [
             0,
-            1,
-            2,
-            4,
-            math.floor(horizon / 5),
+            # 1,
+            # 2,
+            # 4,
+            # math.floor(horizon / 5),
             math.floor(horizon / 10),
-            math.floor(horizon / 20),
+            # math.floor(horizon / 20),
         ]
 
     def base_interval(self, horizon, change_count):
         if change_count == 0:
-            return []
+            return horizon
         else:
             return math.floor(horizon / (change_count + 2))
 
@@ -187,32 +220,33 @@ class EnvironmentConfigurations(object):
     def base_change_durations(self, horizon, change_count):
         interval = self.base_interval(horizon, change_count)
         durations = [
-            0.5,
-            0.25,
-            0.15,
-            0.1
+            # 0.5,
+            # 0.25,
+            0.3,
+            # 0.15,
+            # 0.1
         ]
 
         res = list()
         for duration in durations:
-            res.append(np.full(change_count, interval / duration))
+            res.append(np.full(change_count, interval * duration))
         return res
 
     def getEnvStochastic(self, horizon):
         env = list()
         for arm_id, arm_count in enumerate(self.arm_counts):
-            for reward_mean_id, reward_means in enumerate(self.base_vectors(arm_count)):
-                for reward_variance_id, reward_variance in enumerate(self.base_vectors(arm_count)):
-                    env.append(self.generateSimulatedStochasticEnvironment("Simulated stochastic environment with '{}' arms, mean reward '{}' and reward variance '{}'".format(arm_id, reward_mean_id, reward_variance_id), arm_count, reward_means, reward_variance))
+            for reward_mean_id, reward_means in enumerate(self.non_neg_vector_subset(arm_count)):
+                for reward_variance_id, reward_variance in enumerate(self.non_neg_vector_subset(arm_count)):
+                    env.append(self.generateSimulatedStochasticEnvironment("Stochastic environment {}.{}.{}".format(arm_id, reward_mean_id, reward_variance_id), arm_count, reward_means, reward_variance))
         return env
 
     def getEnvContextual(self, horizon, dimension):
         env = list()
         for arm_id, arm_count in enumerate(self.arm_counts):
             for noise_variance_id, noise_variance in enumerate(self.noise_variances):
-                for theta_star_id, theta_star in enumerate(self.base_vectors(dimension)):
-                    for context_mean_id, context_means in enumerate(self.base_vectors(arm_count)):
-                        for context_variance_id, context_variance in enumerate(self.base_vectors(arm_count)):
+                for theta_star_id, theta_star in enumerate(self.direct_vector_subset(dimension)):
+                    for context_mean_id, context_means in enumerate(self.non_neg_vector_subset(arm_count)):
+                        for context_variance_id, context_variance in enumerate(self.non_neg_vector_subset(arm_count)):
                             env.append(self.generateContextualGaussianNoiseNormalContextEnvironment("Contextual environment {}.{}.{}.0.0.{}.{}.{}".format(arm_id, noise_variance_id, theta_star_id, context_mean_id, context_variance_id, dimension), arm_count, noise_variance, theta_star, context_means, context_variance, dimension))
         return env
 
@@ -222,12 +256,12 @@ class EnvironmentConfigurations(object):
         env = list()
         for arm_id, arm_count in enumerate(self.arm_counts):
             for noise_variance_id, noise_variance in enumerate(self.noise_variances):
-                for change_id, changes in enumerate(self.base_change_counts(horizon)):
-                    for thetas_id, thetas in enumerate(self.thetas(dimension, changes)):
+                for change_id, changes in enumerate(self.base_change_counts_perturbed(horizon)):
+                    for thetas_id, thetas in enumerate(self.thetas_for_perturbed(dimension, changes)):
                         for change_durations_id, change_durations in enumerate(self.base_change_durations(horizon, changes)):
                             change_points = self.base_change_points(horizon, changes)
-                            for context_mean_id, context_means in enumerate(self.base_vectors(arm_count)):
-                                for context_variance_id, context_variance in enumerate(self.base_vectors(arm_count)):
+                            for context_mean_id, context_means in enumerate(self.non_neg_vector_subset(arm_count)):
+                                for context_variance_id, context_variance in enumerate(self.non_neg_vector_subset(arm_count)):
                                     env.append(self.generatePerturbedContextualGaussianNoiseNormalContextEnvironment("Perturbed contextual environment {}.{}.{}.{}.{}.{}.{}.{}".format(arm_id, noise_variance_id, change_id, thetas_id, change_durations_id, context_mean_id, context_variance_id, dimension), arm_count, noise_variance, thetas, change_points, change_durations, context_means, context_variance, dimension))
         return env
 
@@ -235,12 +269,10 @@ class EnvironmentConfigurations(object):
         env = list()
         for arm_id, arm_count in enumerate(self.arm_counts):
             for noise_variance_id, noise_variance in enumerate(self.noise_variances):
-                for change_id, changes in enumerate(self.base_change_counts(horizon)):
-                    for thetas_id, thetas in enumerate(self.thetas(dimension, changes)):
-                        change_points = self.base_change_points(horizon, changes)
-                        for context_mean_id, context_means in enumerate(self.base_vectors(arm_count)):
-                            for context_variance_id, context_variance in enumerate(self.base_vectors(arm_count)):
-                                env.append(self.generateSlowChangingContextualGaussianNoiseNormalContextEnvironment("Slow changing contextual environment {}.{}.{}.{}.0.{}.{}.{}".format(arm_id, noise_variance_id, change_id, thetas_id, context_mean_id, context_variance_id, dimension), arm_count, noise_variance, thetas, change_points, context_means, context_variance))
+                for thetas_id, thetas in enumerate(self.thetas_for_slow_changing(dimension)):
+                    for context_mean_id, context_means in enumerate(self.non_neg_vector_subset(arm_count)):
+                        for context_variance_id, context_variance in enumerate(self.non_neg_vector_subset(arm_count)):
+                            env.append(self.generateSlowChangingContextualGaussianNoiseNormalContextEnvironment("Slow changing contextual environment {}.{}.0.{}.0.{}.{}.{}".format(arm_id, noise_variance_id, thetas_id, context_mean_id, context_variance_id, dimension), arm_count, noise_variance, thetas, context_means, context_variance, dimension))
         return env
 
     def getEnvStochasticOld(self, horizon, dimension):
