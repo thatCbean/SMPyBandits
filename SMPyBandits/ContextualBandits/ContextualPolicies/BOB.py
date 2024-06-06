@@ -32,8 +32,8 @@ class BOB(ContextualBasePolicy):
 
     def __init__(self, nbArms, dimension, horizon, R=_R,
                  L=_L, S=_S, labda=LAMBDA, lower=0.,
-                 amplitude=1.):
-        super(BOB, self).__init__(nbArms, lower=lower, amplitude=amplitude)
+                 amplitude=1., group=-1):
+        super(BOB, self).__init__(nbArms, lower=lower, amplitude=amplitude, group=group)
         self.R = R
         self.L = L
         self.S = S

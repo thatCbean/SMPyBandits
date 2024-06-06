@@ -23,19 +23,32 @@ policies_gen = PolicyConfigurations()
 
 equals_string = "".join(["=" for i in range(100)])
 
+plot_std = True
 
-plot_rewards = True
-
+plot_rewards = False
 plot_regret_normalized = False
-plot_regret_absolute = True
+plot_regret_absolute = False
 plot_best_policy_regret = False
 plot_relative_to_best_policy_regret = False
 plot_expectation_based_regret_normalized = False # Does not work in changing environments yet!!!
 plot_expectation_based_regret_absolute = False # Does not work in changing environments yet!!!
-plot_regret_over_max_return = True
-plot_regret_logy = True
+plot_regret_over_max_return = False
+plot_regret_logy = False
 plot_regret_log = False
 plot_min_max = False
+
+plot_rewards_best_in_group = True
+
+plot_regret_normalized_best_in_group = False
+plot_regret_absolute_best_in_group = True
+plot_best_policy_regret_best_in_group = False
+plot_relative_to_best_policy_regret_best_in_group = False
+plot_expectation_based_regret_normalized_best_in_group = False # Does not work in changing environments yet!!!
+plot_expectation_based_regret_absolute_best_in_group = False # Does not work in changing environments yet!!!
+plot_regret_over_max_return_best_in_group = False
+plot_regret_logy_best_in_group = True
+plot_regret_log_best_in_group = False
+plot_min_max_best_in_group = False
 
 figures_list = []
 text_list = []
@@ -68,14 +81,14 @@ environments = []
 # environments += environments_gen.getEnvPerturbedOld(horizon, dimension)
 # environments += environments_gen.getEnvSlowChangingOld(horizon, dimension)
 #
-environments += environments_gen.getEnvStochastic(horizon)
+# environments += environments_gen.getEnvStochastic(horizon)
 # environments += environments_gen.getEnvContextual(horizon, dimension)
 # environments += environments_gen.getEnvPerturbed(horizon, dimension)
-# environments += environments_gen.getEnvSlowChanging(horizon, dimension)
+environments += environments_gen.getEnvSlowChanging(horizon, dimension)[18:]
 
 # policies = policies_gen.generatePolicySetContextualOneEach(dimension, horizon)
-# policies = policies_gen.generatePolicySetContextualMany(dimension, horizon)
-policies = policies_gen.generatePolicySetStochastic(dimension, horizon)
+policies = policies_gen.generatePolicySetContextualMany(dimension, horizon)
+# policies = policies_gen.generatePolicySetStochastic(dimension, horizon)
 
 
 def plot_env(evaluation, environment_id, start_plot_title_index=1):
@@ -84,12 +97,10 @@ def plot_env(evaluation, environment_id, start_plot_title_index=1):
     _, _, text = evaluation.printFinalRanking(environment_id)
     # text_list.append(text)
 
-    if plot_rewards:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, meanReward=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
     if plot_regret_normalized:
         figures.append(evaluation.plotRegrets(environment_id, show=False, normalizedRegret=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
     if plot_regret_absolute:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, plotSTD=plot_std, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
     if plot_best_policy_regret:
         figures.append(evaluation.plotRegrets(environment_id, show=False, bestPolicyRegret=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
     if plot_relative_to_best_policy_regret:
@@ -106,6 +117,31 @@ def plot_env(evaluation, environment_id, start_plot_title_index=1):
         figures.append(evaluation.plotRegrets(environment_id, show=False, loglog=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
     if plot_min_max:
         figures.append(evaluation.plotRegrets(environment_id, show=False, plotMaxMin=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    if plot_rewards:
+        figures.append(evaluation.plotRegrets(environment_id, show=False, meanReward=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+
+    if plot_regret_normalized_best_in_group:
+        figures.append(evaluation.plotRegrets(environment_id, show=False, normalizedRegret=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    if plot_regret_absolute_best_in_group:
+        figures.append(evaluation.plotRegrets(environment_id, show=False, plotSTD=plot_std, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    if plot_best_policy_regret_best_in_group:
+        figures.append(evaluation.plotRegrets(environment_id, show=False, bestPolicyRegret=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    if plot_relative_to_best_policy_regret_best_in_group:
+        figures.append(evaluation.plotRegrets(environment_id, show=False, relativeToBestPolicy=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    if plot_expectation_based_regret_normalized_best_in_group:
+        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, normalizedRegret=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    if plot_expectation_based_regret_absolute_best_in_group:
+        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    if plot_regret_over_max_return_best_in_group:
+        figures.append(evaluation.plotRegrets(environment_id, show=False, regretOverMaxReturn=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    if plot_regret_logy_best_in_group:
+        figures.append(evaluation.plotRegrets(environment_id, show=False, semilogy=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    if plot_regret_log_best_in_group:
+        figures.append(evaluation.plotRegrets(environment_id, show=False, loglog=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    if plot_min_max_best_in_group:
+        figures.append(evaluation.plotRegrets(environment_id, show=False, plotMaxMin=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+    if plot_rewards_best_in_group:
+        figures.append(evaluation.plotRegrets(environment_id, show=False, meanReward=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
 
     # figures_list.append(figures)
     return figures, text
@@ -174,7 +210,7 @@ for env_id in range(len(environments)):
     fig, txt = plot_env(evaluator, env_id)
     savePlot(env_id, fig, txt)
     env_end_time = datetime.datetime.now()
-    print("\n\n{}\n\nFinished environment {} / {} at {} in {}\nTotal time taken: {}\nProjected time remaining: {}\n\n{}\n\n".format(equals_string, env_id, len(environments), str(env_end_time), str(env_end_time - env_start_time), str(env_end_time - start_time), str((env_end_time - env_start_time) * (len(environments) - env_id)), equals_string))
+    print("\n\n{}\n\nFinished environment {} / {} at {} in {}\nTotal time taken: {}\nProjected time remaining: {}\n\n{}\n\n".format(equals_string, env_id + 1, len(environments), str(env_end_time), str(env_end_time - env_start_time), str(env_end_time - start_time), str((env_end_time - start_time) / ((len(environments) - (env_id + 1))/len(environments))), equals_string))
 
 
 end_time = datetime.datetime.now()

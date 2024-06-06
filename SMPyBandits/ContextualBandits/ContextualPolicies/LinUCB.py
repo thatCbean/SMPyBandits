@@ -23,11 +23,11 @@ class LinUCB(ContextualBasePolicy):
     """
 
     def __init__(self, nbArms, dimension, alpha=ALPHA,
-                 lower=0., amplitude=1.):
-        super(LinUCB, self).__init__(nbArms, lower=lower, amplitude=amplitude)
+                 lower=0., amplitude=1., group=-1):
+        super(LinUCB, self).__init__(nbArms, lower=lower, amplitude=amplitude, group=group)
         assert alpha > 0, "Error: the 'alpha' parameter for the LinUCB class must be greater than 0"
         assert dimension > 0, "Error: the 'dimension' parameter for the LinUCB class must be greater than 0"
-        print("Initiating policy LinUCB with {} arms, dimension: {}, alpha: {}".format(nbArms, dimension, alpha))
+        # print("Initiating policy LinUCB with {} arms, dimension: {}, alpha: {}".format(nbArms, dimension, alpha))
         self.alpha = alpha
         self.k = nbArms
         self.dimension = dimension

@@ -237,7 +237,7 @@ class EnvironmentConfigurations(object):
         for arm_id, arm_count in enumerate(self.arm_counts):
             for reward_mean_id, reward_means in enumerate(self.non_neg_vector_subset(arm_count)):
                 for reward_variance_id, reward_variance in enumerate(self.non_neg_vector_subset(arm_count)):
-                    env.append(self.generateSimulatedStochasticEnvironment("Stochastic environment {}.{}.{}".format(arm_id, reward_mean_id, reward_variance_id), arm_count, reward_means, reward_variance))
+                    env.append(self.generateSimulatedStochasticEnvironment("Stochastic environment", arm_count, reward_means, reward_variance))
         return env
 
     def getEnvContextual(self, horizon, dimension):
@@ -247,7 +247,7 @@ class EnvironmentConfigurations(object):
                 for theta_star_id, theta_star in enumerate(self.direct_vector_subset(dimension)):
                     for context_mean_id, context_means in enumerate(self.non_neg_vector_subset(arm_count)):
                         for context_variance_id, context_variance in enumerate(self.non_neg_vector_subset(arm_count)):
-                            env.append(self.generateContextualGaussianNoiseNormalContextEnvironment("Contextual environment {}.{}.{}.0.0.{}.{}.{}".format(arm_id, noise_variance_id, theta_star_id, context_mean_id, context_variance_id, dimension), arm_count, noise_variance, theta_star, context_means, context_variance, dimension))
+                            env.append(self.generateContextualGaussianNoiseNormalContextEnvironment("Contextual environment", arm_count, noise_variance, theta_star, context_means, context_variance, dimension))
         return env
 
     def getEnvPerturbed(self, horizon, dimension):
@@ -262,7 +262,7 @@ class EnvironmentConfigurations(object):
                             change_points = self.base_change_points(horizon, changes)
                             for context_mean_id, context_means in enumerate(self.non_neg_vector_subset(arm_count)):
                                 for context_variance_id, context_variance in enumerate(self.non_neg_vector_subset(arm_count)):
-                                    env.append(self.generatePerturbedContextualGaussianNoiseNormalContextEnvironment("Perturbed contextual environment {}.{}.{}.{}.{}.{}.{}.{}".format(arm_id, noise_variance_id, change_id, thetas_id, change_durations_id, context_mean_id, context_variance_id, dimension), arm_count, noise_variance, thetas, change_points, change_durations, context_means, context_variance, dimension))
+                                    env.append(self.generatePerturbedContextualGaussianNoiseNormalContextEnvironment("Perturbed contextual environment", arm_count, noise_variance, thetas, change_points, change_durations, context_means, context_variance, dimension))
         return env
 
     def getEnvSlowChanging(self, horizon, dimension):
@@ -272,7 +272,7 @@ class EnvironmentConfigurations(object):
                 for thetas_id, thetas in enumerate(self.thetas_for_slow_changing(dimension)):
                     for context_mean_id, context_means in enumerate(self.non_neg_vector_subset(arm_count)):
                         for context_variance_id, context_variance in enumerate(self.non_neg_vector_subset(arm_count)):
-                            env.append(self.generateSlowChangingContextualGaussianNoiseNormalContextEnvironment("Slow changing contextual environment {}.{}.0.{}.0.{}.{}.{}".format(arm_id, noise_variance_id, thetas_id, context_mean_id, context_variance_id, dimension), arm_count, noise_variance, thetas, context_means, context_variance, dimension))
+                            env.append(self.generateSlowChangingContextualGaussianNoiseNormalContextEnvironment("Slow changing contextual environment", arm_count, noise_variance, thetas, context_means, context_variance, dimension))
         return env
 
     def getEnvStochasticOld(self, horizon, dimension):

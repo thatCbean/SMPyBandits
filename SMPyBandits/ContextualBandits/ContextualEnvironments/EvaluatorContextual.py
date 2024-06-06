@@ -104,6 +104,7 @@ class EvaluatorContextual(object):
 
         self.envs = []  #: List of environments
         self.policies = []  #: List of policies
+        self.policy_groups = []
         self.dimension = -1
         self.__initEnvironments__()
 
@@ -176,13 +177,19 @@ class EvaluatorContextual(object):
             if isinstance(policy, dict):
                 if self.verbosity > 2:
                     print("  Creating this policy from a dictionary 'self.cfg['policies'][{}]' = {} ...".format(policyId,
-                                                                                                                 policy))  # DEBUG
+                                                                                                                policy))  # DEBUG
                 self.policies.append(policy['archtype'](env.nbArms, **policy['params']))
+                if "group" in policy['params'] and policy['params']['group'] not in self.policy_groups:
+                    self.policy_groups.append(policy['params']['group'])
+
             else:
                 if self.verbosity > 2:
                     print("  Using this already created policy 'self.cfg['policies'][{}]' = {} ...".format(policyId,
                                                                                                            policy))  # DEBUG
                 self.policies.append(policy)
+                if policy.group is not None and policy.group not in self.policy_groups:
+                    self.policy_groups.append(policy.group)
+
         for policyId in range(self.nbPolicies):
             self.policies[policyId].__cachedstr__ = str(self.policies[policyId])
 
@@ -224,7 +231,6 @@ class EvaluatorContextual(object):
                                      +np.inf)  #: For each env, history of minimum of rewards, to compute amplitude (+- STD)
         self.maxCumRewards = np.full((self.nbPolicies, len(self.envs), self.horizon),
                                      -np.inf)  #: For each env, history of maximum of rewards, to compute amplitude (+- STD)
-
 
     def startAllEnv(self):
         """Simulate all envs."""
@@ -278,7 +284,7 @@ class EvaluatorContextual(object):
 
             else:
                 for repeatId in (
-                tqdm(range(self.repetitions), desc="Repeat") if self.verbosity > 4 else range(self.repetitions)):
+                        tqdm(range(self.repetitions), desc="Repeat") if self.verbosity > 4 else range(self.repetitions)):
                     r = delayed_play(env, policy, self.horizon, self.all_contexts, self.all_rewards, envId,
                                      repeatId=repeatId, verbose=(self.verbosity > 5))
                     store(r, policyId, repeatId)
@@ -419,6 +425,23 @@ class EvaluatorContextual(object):
         ])
 
     def getCumulativeRegretStandardDeviation(self, policyId, envId):
+        cumulative_regrets = self.getCumulatedRegrets(policyId, envId)
+        mean_regret = np.array([np.mean(cumulative_regrets[:, t]) for t in range(self.horizon)])
+        mean_regret_blocked = np.repeat(mean_regret, self.repetitions).reshape(self.repetitions, self.horizon)
+        cumulative_regrets -= mean_regret_blocked
+        cumulative_regrets **= 2
+        sum_of_squared_deviations = np.array([np.sum(cumulative_regrets[:, t]) for t in range(self.horizon)])
+        sum_of_squared_deviations /= np.arange(1, self.horizon + 1)
+        return np.sqrt(sum_of_squared_deviations)
+
+    def getCumulativeRegretStandardDeviationBounds(self, policyId, envId):
+        double_cumulative_std = self.getCumulativeRegretStandardDeviation(policyId, envId) * 2
+        cumulative_regret_average = self.getCumulatedRegretAverage(policyId, envId)
+        upper = cumulative_regret_average + double_cumulative_std
+        lower = cumulative_regret_average - double_cumulative_std
+        return lower, upper
+
+    def getCumulativeRegretStandardDeviationFinal(self, policyId, envId):
         cumulative_regrets = self.getLastRegrets(policyId, envId)
         mean_regret = np.mean(cumulative_regrets)
         cumulative_regrets -= mean_regret
@@ -426,6 +449,23 @@ class EvaluatorContextual(object):
         sum_of_squared_deviations = np.sum(cumulative_regrets)
         sum_of_squared_deviations /= self.repetitions
         return math.sqrt(sum_of_squared_deviations)
+
+    def getBestInGroupIndices(self, envId):
+        avg_cumulative_regrets = np.array([self.getCumulatedRegretAverage(policyId, envId) for policyId in range(self.nbPolicies)])
+        best_indices = list()
+
+        for group_index in self.policy_groups:
+            best_found = -np.inf
+            index_best_found = -1
+
+            for policyId, policy in enumerate(self.policies):
+                if policy.group == group_index and avg_cumulative_regrets[policyId][-1] > best_found:
+                    best_found = avg_cumulative_regrets[policyId][-1]
+                    index_best_found = policyId
+
+            best_indices.append(index_best_found)
+
+        return best_indices
 
     def printAndReturn(self, strii):
         if self.verbosity > 2:
@@ -451,7 +491,7 @@ class EvaluatorContextual(object):
             Y = self.getCumulatedRegretAverage(i, envId)
             totalRegret[i] = Y[-1]
             totalRewards[i] = np.sum(self.rewards[:, i, envId, :]) / self.repetitions
-            standard_deviations[i] = self.getCumulativeRegretStandardDeviation(i, envId)
+            standard_deviations[i] = self.getCumulativeRegretStandardDeviationFinal(i, envId)
         # Sort lastRegret and give ranking
         index_of_sorting = np.argsort(totalRegret)
         for i, k in enumerate(index_of_sorting):
@@ -485,7 +525,7 @@ class EvaluatorContextual(object):
             normalizedRegret=False, relativeRegret=False,
             regretOverMaxReturn=False, altRegret=False,
             bestPolicyRegret=False, relativeToBestPolicy=False,
-            subtitle=""
+            showOnlyBestInGroup=False, subtitle=""
     ):
         """
         Plot the centralized cumulated regret, support more than one environment
@@ -515,7 +555,14 @@ class EvaluatorContextual(object):
                 highest = np.max(
                     np.array([self.getCumulatedRegretAverage(policyId, envId) for policyId in range(self.nbPolicies)])[
                     :, -1])
+
+        if showOnlyBestInGroup:
+            best_group_indices = self.getBestInGroupIndices(envId)
+
         for policyId, policy in enumerate(self.policies):
+            if showOnlyBestInGroup and policyId not in best_group_indices:
+                continue
+
             if meanReward:
                 Y = np.array(self.getCumulatedRewardAverage(policyId, envId))
             elif regretOverMaxReturn:
@@ -541,6 +588,7 @@ class EvaluatorContextual(object):
                 ymin = min(ymin, np.min(Y))
             lw = 8
             if len(self.policies) > 8: lw -= 1
+
             if semilogx or loglog:
                 # FIXED for semilogx plots, truncate to only show t >= 100
                 X_to_plot_here = X[X >= 100]
@@ -559,12 +607,12 @@ class EvaluatorContextual(object):
                 plt.yscale('log')
             # Print standard deviation of regret
             # TODO
-            # if plotSTD and self.repetitions > 1:
-            #     stdY = self.getSTDRegret(policyId, envId, meanReward=meanReward)
+            if plotSTD and self.repetitions > 1:
+                stdY = self.getCumulativeRegretStandardDeviation(policyId, envId)
             #     if normalizedRegret:
             #         stdY /= np.log(2 + X)
-            #     plt.fill_between(X[::self.delta_t_plot], Y[::self.delta_t_plot] - stdY[::self.delta_t_plot],
-            #                      Y[::self.delta_t_plot] + stdY[::self.delta_t_plot], facecolor=colors[policyId], alpha=0.2)
+                plt.fill_between(X[::self.delta_t_plot], Y[::self.delta_t_plot] - stdY[::self.delta_t_plot],
+                                 Y[::self.delta_t_plot] + stdY[::self.delta_t_plot], facecolor=colors[policyId], alpha=0.2)
 
             # Print amplitude of regret
             if plotMaxMin and self.repetitions > 1:
@@ -580,7 +628,7 @@ class EvaluatorContextual(object):
                 ymin = max(0, ymin)
             plt.ylim(ymin, plt.ylim()[1])
         # Get a small string to add to ylabel
-        ylabel2 = r"%s%s" % (r", $\pm 1$ standard deviation" if (plotSTD and not plotMaxMin) else "",
+        ylabel2 = r"%s%s" % (r", $\pm 2$ standard deviations" if (plotSTD and not plotMaxMin) else "",
                              r", $\pm 1$ amplitude" if (plotMaxMin and not plotSTD) else "")
         if meanReward:
             legend()

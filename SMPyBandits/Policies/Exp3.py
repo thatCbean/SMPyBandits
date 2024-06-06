@@ -35,8 +35,8 @@ class Exp3(BasePolicy):
     """
 
     def __init__(self, nbArms, gamma=GAMMA,
-                 unbiased=UNBIASED, lower=0., amplitude=1.):
-        super(Exp3, self).__init__(nbArms, lower=lower, amplitude=amplitude)
+                 unbiased=UNBIASED, lower=0., amplitude=1., group=-1):
+        super(Exp3, self).__init__(nbArms, lower=lower, amplitude=amplitude, group=group)
         if gamma is None:  # Use a default value for the gamma parameter
             gamma = np.sqrt(np.log(nbArms) / nbArms)
         assert 0 < gamma <= 1, "Error: the 'gamma' parameter for Exp3 class has to be in (0, 1]."  # DEBUG

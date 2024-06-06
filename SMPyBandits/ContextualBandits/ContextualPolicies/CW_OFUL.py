@@ -27,8 +27,8 @@ class CW_OFUL(ContextualBasePolicy):
 
     def __init__(self, nbArms, dimension, alpha=ALPHA,
                  beta=BETA, labda=LAMBDA, lower=0.,
-                 amplitude=1.):
-        super(CW_OFUL, self).__init__(nbArms, lower=lower, amplitude=amplitude)
+                 amplitude=1., group=-1):
+        super(CW_OFUL, self).__init__(nbArms, lower=lower, amplitude=amplitude, group=group)
         assert alpha > 0, "Error: the 'alpha' parameter for the CW_OFUL class must be greater than 0"
         assert beta > 0, "Error: the 'beta' parameter for the CW_OFUL class must be greater than 0"
         assert labda > 0, "Error: the 'lambda' parameter for the CW_OFUL class must be greater than 0"

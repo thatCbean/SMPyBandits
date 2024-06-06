@@ -19,13 +19,13 @@ except (ImportError, SystemError):
 class IndexPolicy(BasePolicy):
     """ Class that implements a generic index policy."""
 
-    def __init__(self, nbArms, lower=0., amplitude=1.):
+    def __init__(self, nbArms, lower=0., amplitude=1., group=-1):
         """ New generic index policy.
 
         - nbArms: the number of arms,
         - lower, amplitude: lower value and known amplitude of the rewards.
         """
-        super(IndexPolicy, self).__init__(nbArms, lower=lower, amplitude=amplitude)
+        super(IndexPolicy, self).__init__(nbArms, lower=lower, amplitude=amplitude, group=group)
         self.index = np.zeros(nbArms)  #: Numerical index for each arms
 
     # --- Start game, and receive rewards

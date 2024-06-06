@@ -14,7 +14,7 @@ import numpy as np
 class ContextualBasePolicy(object):
     """ Base class for any contextual policy."""
 
-    def __init__(self, nbArms, lower=0., amplitude=1.):
+    def __init__(self, nbArms, lower=0., amplitude=1., group=-1):
         """ New policy."""
         # Parameters
         assert nbArms > 0, "Error: the 'nbArms' parameter of a {} object cannot be <= 0.".format(self)  # DEBUG
@@ -22,6 +22,7 @@ class ContextualBasePolicy(object):
         self.lower = lower  #: Lower values for rewards
         assert amplitude > 0, "Error: the 'amplitude' parameter of a {} object cannot be <= 0.".format(self)  # DEBUG
         self.amplitude = amplitude  #: Larger values for rewards
+        self.group = group
         # Internal memory
         self.t = 0  #: Internal time
         self.pulls = np.zeros(nbArms, dtype=int)  #: Number of pulls of each arms
