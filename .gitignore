@@ -1,6 +1,8 @@
 # Virtualenv
 Scripts/
 pyvenv.cfg
+plots/
+.vscode/
 
 # Jupyter
 share/

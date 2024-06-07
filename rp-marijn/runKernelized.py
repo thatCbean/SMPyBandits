@@ -3,15 +3,15 @@ from errno import EEXIST
 from os import makedirs, path
 
 import numpy as np
-import GPy
 
 from sklearn.metrics.pairwise import rbf_kernel
+from sklearn.gaussian_process.kernels import Matern
 from SMPyBandits.ContextualBandits.Contexts.NormalContext import NormalContext
 from SMPyBandits.ContextualBandits.Contexts.BaseContext import BaseContext
 from SMPyBandits.ContextualBandits.ContextualArms.ContextualGaussianNoiseArm import \
     ContextualGaussianNoiseArm
 from SMPyBandits.ContextualBandits.ContextualPolicies.LinUCB import LinUCB
-from GPUCB import GPUCB
+from KernelUCB import KernelUCB
 from SMPyBandits.ContextualBandits.ContextualEnvironments.EvaluatorContextual import EvaluatorContextual
 from SMPyBandits.Policies import UCB, Exp3
 
@@ -23,7 +23,7 @@ from SMPyBandits.Policies import UCB, Exp3
 # horizon = 30000
 # horizon = 5000
 # horizon = 200
-horizon = 1000
+horizon = 500
 repetitions = 1
 # repetitions = 5
 # repetitions = 2
@@ -57,8 +57,8 @@ environments = [
         "theta_star": [0.5, 0.5, 0.5],
         "arms": [
             ContextualGaussianNoiseArm(0, 0.01),
-            ContextualGaussianNoiseArm(0, 0.01),
-            ContextualGaussianNoiseArm(0, 0.01)
+            ContextualGaussianNoiseArm(1, 0.01),
+            ContextualGaussianNoiseArm(2, 0.01)
         ],
         "contexts": [
             NormalContext([0.4, 0.4, 0.4], np.identity(3) * 0.5, 3),
@@ -67,6 +67,8 @@ environments = [
         ]
     }
 ]
+
+matern_kernel = 1.0 * Matern(length_scale=1.0, length_scale_bounds=(1e-1, 10.0), nu=1.5)
 
 policies = [
     {"archtype": UCB, "params": {}},
@@ -84,7 +86,8 @@ policies = [
     # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.2}},
     # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.1}},
     # {"archtype": LinUCB, "params": {"dimension": 5, "alpha": 0.05}},
-    {"archtype": GPUCB, "params": {"dimension": 3, "kern": rbf_kernel, "eta": 1.0, "gamma": 1.5}},
+    {"archtype": KernelUCB, "params": {"dimension": 3, "kname": "Mátern", "kern": matern_kernel, "eta": 1.0, "gamma": 1.5}},
+    {"archtype": KernelUCB, "params": {"dimension": 3, "kname": "RBF", "kern": rbf_kernel, "eta": 1.0, "gamma": 1.5}},
     {"archtype": LinUCB, "params": {"dimension": 3, "alpha": 0.01}}
 ]
 
