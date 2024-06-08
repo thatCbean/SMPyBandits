@@ -125,12 +125,12 @@ class EnvironmentConfigurations(object):
     def change_schemes(self, count):
         schemes = [np.full(count, vector_id) for vector_id in [0, 1, 3, 4]]
 
-        # vector = list()
-        # j = 0
-        # for i in range(count):
-        #     vector.append(j)
-        #     j = (j + 1) % 2
-        # schemes.append(vector)
+        vector = list()
+        j = 0
+        for i in range(count):
+            vector.append(j + 1)
+            j = (j + 1) % 2
+        schemes.append(vector)
 
         # vector = list()
         # j = 0
@@ -197,11 +197,11 @@ class EnvironmentConfigurations(object):
 
     def base_change_counts_perturbed(self, horizon):
         return [
-            0,
+            # 0,
             # 1,
             # 2,
             # 4,
-            # math.floor(horizon / 5),
+            math.floor(horizon / 5),
             math.floor(horizon / 10),
             # math.floor(horizon / 20),
         ]
@@ -223,13 +223,13 @@ class EnvironmentConfigurations(object):
             # 0.5,
             # 0.25,
             0.3,
-            # 0.15,
+            0.15,
             # 0.1
         ]
 
         res = list()
         for duration in durations:
-            res.append(np.full(change_count, interval * duration))
+            res.append(np.full(change_count, math.floor(interval * duration)))
         return res
 
     def getEnvStochastic(self, horizon):

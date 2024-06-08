@@ -26,7 +26,7 @@ class UCB(IndexPolicy):
 
     def __init__(self, nbArms, group=-1):
 
-        super(UCB, self).__init__(nbArms, group)
+        super(UCB, self).__init__(nbArms, group=group)
 
     def computeIndex(self, arm):
         r""" Compute the current index, at time t and after :math:`N_k(t)` pulls of arm k:

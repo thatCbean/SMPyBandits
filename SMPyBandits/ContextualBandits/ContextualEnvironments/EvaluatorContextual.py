@@ -135,9 +135,9 @@ class EvaluatorContextual(object):
             self.runningTimes[envId] = np.zeros((self.nbPolicies, self.repetitions))
             self.memoryConsumption[envId] = np.zeros((self.nbPolicies, self.repetitions))
             self.numberOfCPDetections[envId] = np.zeros((self.nbPolicies, self.repetitions), dtype=np.int32)
-            self.all_contexts[envId] = np.zeros(
-                (self.repetitions, self.horizon, self.envs[envId].nbArms, self.dimension))
-            self.all_rewards[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
+            # self.all_contexts[envId] = np.zeros(
+            #     (self.repetitions, self.horizon, self.envs[envId].nbArms, self.dimension))
+            # self.all_rewards[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
         print("Number of environments to try:", len(self.envs))
         # To speed up plotting
         self._times = np.arange(1, 1 + self.horizon)
@@ -220,17 +220,19 @@ class EvaluatorContextual(object):
         return contexts, rewards
 
     def clear_generated_data(self, envId):
-        self.all_contexts[envId] = np.zeros(
-            (self.repetitions, self.horizon, self.envs[envId].nbArms, self.dimension))
-        self.all_rewards[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
-        self.rewards = np.zeros((self.repetitions, self.nbPolicies, len(self.envs),
-                                 self.horizon))  #: For each env, history of rewards, ie accumulated rewards
-        self.sumRewards = np.zeros((self.nbPolicies, len(self.envs),
-                                    self.repetitions))  #: For each env, last accumulated rewards, to compute variance and histogram of whole regret R_T
-        self.minCumRewards = np.full((self.nbPolicies, len(self.envs), self.horizon),
-                                     +np.inf)  #: For each env, history of minimum of rewards, to compute amplitude (+- STD)
-        self.maxCumRewards = np.full((self.nbPolicies, len(self.envs), self.horizon),
-                                     -np.inf)  #: For each env, history of maximum of rewards, to compute amplitude (+- STD)
+        # self.all_contexts[envId] = np.zeros(
+        #     (self.repetitions, self.horizon, self.envs[envId].nbArms, self.dimension))
+        self.all_rewards.pop(envId)
+        # self.all_rewards[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
+        self.all_contexts.pop(envId)
+        # self.rewards = np.zeros((self.repetitions, self.nbPolicies, len(self.envs),
+        #                          self.horizon))  #: For each env, history of rewards, ie accumulated rewards
+        # self.sumRewards = np.zeros((self.nbPolicies, len(self.envs),
+        #                             self.repetitions))  #: For each env, last accumulated rewards, to compute variance and histogram of whole regret R_T
+        # self.minCumRewards = np.full((self.nbPolicies, len(self.envs), self.horizon),
+        #                              +np.inf)  #: For each env, history of minimum of rewards, to compute amplitude (+- STD)
+        # self.maxCumRewards = np.full((self.nbPolicies, len(self.envs), self.horizon),
+        #                              -np.inf)  #: For each env, history of maximum of rewards, to compute amplitude (+- STD)
 
     def startAllEnv(self):
         """Simulate all envs."""

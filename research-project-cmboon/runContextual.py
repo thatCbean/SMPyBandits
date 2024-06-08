@@ -75,6 +75,8 @@ verbosity = 2
 
 dimension = 20
 
+print("Constructing environments and policies...")
+
 environments = []
 # environments += environments_gen.getEnvStochasticOld(horizon, dimension)
 # environments += environments_gen.getEnvContextualOld(horizon, dimension)
@@ -83,12 +85,14 @@ environments = []
 #
 # environments += environments_gen.getEnvStochastic(horizon)
 # environments += environments_gen.getEnvContextual(horizon, dimension)
-# environments += environments_gen.getEnvPerturbed(horizon, dimension)
-environments += environments_gen.getEnvSlowChanging(horizon, dimension)[18:]
+environments += environments_gen.getEnvPerturbed(horizon, dimension)[0:51]
+# environments += environments_gen.getEnvSlowChanging(horizon, dimension)[18:]
 
 # policies = policies_gen.generatePolicySetContextualOneEach(dimension, horizon)
 policies = policies_gen.generatePolicySetContextualMany(dimension, horizon)
 # policies = policies_gen.generatePolicySetStochastic(dimension, horizon)
+
+print("Finished constructing {} environments and {} policies".format(len(environments), len(policies)))
 
 
 def plot_env(evaluation, environment_id, start_plot_title_index=1):
@@ -210,7 +214,7 @@ for env_id in range(len(environments)):
     fig, txt = plot_env(evaluator, env_id)
     savePlot(env_id, fig, txt)
     env_end_time = datetime.datetime.now()
-    print("\n\n{}\n\nFinished environment {} / {} at {} in {}\nTotal time taken: {}\nProjected time remaining: {}\n\n{}\n\n".format(equals_string, env_id + 1, len(environments), str(env_end_time), str(env_end_time - env_start_time), str(env_end_time - start_time), str((env_end_time - start_time) / ((len(environments) - (env_id + 1))/len(environments))), equals_string))
+    print("\n\n{}\n\nFinished environment {} / {} at {} in {}\nTotal time taken: {}\nProjected time remaining: {}\n\n{}\n\n".format(equals_string, env_id + 1, len(environments), str(env_end_time), str(env_end_time - env_start_time), str(env_end_time - start_time), str((env_end_time - start_time) / ((env_id + 1)/len(environments))), equals_string))
 
 
 end_time = datetime.datetime.now()

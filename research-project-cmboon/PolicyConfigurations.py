@@ -20,7 +20,7 @@ class PolicyConfigurations(object):
 
     def generatePolicySetContextualMany(self, dimension, horizon):
         return [
-            {"archtype": UCB, "params": {"group": 0}},
+            {"archtype": UCB, "params": {"group": 5}},
 
             {"archtype": Exp3, "params": {"gamma": 0.01, "group": 1}},
             {"archtype": Exp3, "params": {"gamma": 0.1, "group": 1}},
