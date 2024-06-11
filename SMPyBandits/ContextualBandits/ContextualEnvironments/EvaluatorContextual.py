@@ -242,7 +242,7 @@ class EvaluatorContextual(object):
     def startOneEnv(self, envId, env):
         """Simulate that env."""
         plt.close('all')
-        print("\nEvaluating environment:", repr(env))
+        # print("\nEvaluating environment:", repr(env))
         self.policies = []
         self.__initPolicies__(env)
 
@@ -457,11 +457,11 @@ class EvaluatorContextual(object):
         best_indices = list()
 
         for group_index in self.policy_groups:
-            best_found = -np.inf
+            best_found = np.inf
             index_best_found = -1
 
             for policyId, policy in enumerate(self.policies):
-                if policy.group == group_index and avg_cumulative_regrets[policyId][-1] > best_found:
+                if policy.group == group_index and avg_cumulative_regrets[policyId][-1] < best_found:
                     best_found = avg_cumulative_regrets[policyId][-1]
                     index_best_found = policyId
 

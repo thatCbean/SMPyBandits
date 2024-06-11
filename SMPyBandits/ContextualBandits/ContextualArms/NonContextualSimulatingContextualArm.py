@@ -18,7 +18,7 @@ REWARD_VAR = 0.2
 class NonContextualSimulatingContextualArm(ContextualArm):
 
     """ An arm that generates a reward using a Normal distribution with a probability based on its mean """
-    def __init__(self, reward_mean=REWARD_MEAN, reward_variance=REWARD_VAR):
+    def __init__(self, reward_mean=REWARD_MEAN, reward_variance=REWARD_VAR, dimension=1):
         super(__class__, self).__init__()
         self.reward_mean = reward_mean
         self.reward_var = reward_variance
@@ -26,12 +26,13 @@ class NonContextualSimulatingContextualArm(ContextualArm):
         self.amplitude = 1
         self.min = 0
         self.max = 1
+        self.dimension = dimension
 
     def __str__(self):
         return "NonContextualGaussian"
 
     def __repr__(self):
-        return "NonContextualGaussian(mu: {}, sigma^2: {})".format(self.reward_mean, self.reward_var)
+        return "NonContextualGaussian(mu: {}, sigma^2: {}, dimension: {})".format(self.reward_mean, self.reward_var, self.dimension)
 
     def draw(self, theta_star, context, t=None):
         return min(

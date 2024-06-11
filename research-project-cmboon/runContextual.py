@@ -83,10 +83,12 @@ environments = []
 # environments += environments_gen.getEnvPerturbedOld(horizon, dimension)
 # environments += environments_gen.getEnvSlowChangingOld(horizon, dimension)
 #
-# environments += environments_gen.getEnvStochastic(horizon)
+# environments += environments_gen.getEnvStochastic(horizon, dimension)
 # environments += environments_gen.getEnvContextual(horizon, dimension)
-environments += environments_gen.getEnvPerturbed(horizon, dimension)[0:51]
-# environments += environments_gen.getEnvSlowChanging(horizon, dimension)[18:]
+# environments += environments_gen.getEnvPerturbed(horizon, dimension)[0:51]
+environments += environments_gen.getEnvSlowChanging(horizon, dimension)[18:]
+
+# environments = environments[43:]
 
 # policies = policies_gen.generatePolicySetContextualOneEach(dimension, horizon)
 policies = policies_gen.generatePolicySetContextualMany(dimension, horizon)

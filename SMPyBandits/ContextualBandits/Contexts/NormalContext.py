@@ -33,6 +33,9 @@ class NormalContext(BaseContext):
     def __str__(self):
         return r"NormalContext($\vec{\mu: {}}, \Sigma: {}$)".format(self.means, self.covariance_matrix)
 
+    def __repr__(self):
+        return "NormalContext(means: {}, covariance: {})".format(self.means, self.covariance_matrix)
+
     def draw_context(self):
         res = multivariate_normal(self.means, self.covariance_matrix)
         # res = normal(self.means, self.covariance_matrix.diagonal())

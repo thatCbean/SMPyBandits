@@ -11,19 +11,19 @@ from SMPyBandits.ContextualBandits.ContextualArms.NonContextualSimulatingContext
 
 class EnvironmentConfigurations(object):
 
-    def generateSimulatedStochasticEnvironment(self, name, arm_count, reward_means, reward_variances):
+    def generateSimulatedStochasticEnvironment(self, name, arm_count, reward_means, reward_variances, dimension):
         cfg = dict()
 
         cfg['name'] = name
-        cfg['theta_star'] = [1]
+        cfg['theta_star'] = np.full(dimension, 1)
         cfg['arms'] = list()
         cfg['contexts'] = list()
 
         for i in range(arm_count):
             cfg['arms'].append(
-                NonContextualSimulatingContextualArm(reward_means[i], reward_variances[i])
+                NonContextualSimulatingContextualArm(reward_means[i], reward_variances[i], dimension=dimension)
             )
-            cfg['contexts'].append(NullContext())
+            cfg['contexts'].append(NullContext(dimension=dimension))
 
         return cfg
 
@@ -232,12 +232,12 @@ class EnvironmentConfigurations(object):
             res.append(np.full(change_count, math.floor(interval * duration)))
         return res
 
-    def getEnvStochastic(self, horizon):
+    def getEnvStochastic(self, horizon, dimension):
         env = list()
         for arm_id, arm_count in enumerate(self.arm_counts):
             for reward_mean_id, reward_means in enumerate(self.non_neg_vector_subset(arm_count)):
                 for reward_variance_id, reward_variance in enumerate(self.non_neg_vector_subset(arm_count)):
-                    env.append(self.generateSimulatedStochasticEnvironment("Stochastic environment", arm_count, reward_means, reward_variance))
+                    env.append(self.generateSimulatedStochasticEnvironment("Stochastic environment", arm_count, reward_means, reward_variance, dimension))
         return env
 
     def getEnvContextual(self, horizon, dimension):

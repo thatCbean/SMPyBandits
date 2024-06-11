@@ -9,13 +9,14 @@ class PolicyConfigurations(object):
 
     def generatePolicySetStochastic(self, dimension, horizon):
         return [
-            {"archtype": UCB, "params": {}},
+            {"archtype": UCB, "params": {"group": 0}},
 
-            # {"archtype": Exp3, "params": {"gamma": 0.05}},
-            {"archtype": Exp3, "params": {"gamma": 0.1}},
-            # {"archtype": Exp3, "params": {"gamma": 0.25}},
-            # {"archtype": Exp3, "params": {"gamma": 0.5}},
-            # {"archtype": Exp3, "params": {"gamma": 0.75}},
+            {"archtype": Exp3, "params": {"gamma": 0.01, "group": 1}},
+            {"archtype": Exp3, "params": {"gamma": 0.05, "group": 1}},
+            {"archtype": Exp3, "params": {"gamma": 0.1, "group": 1}},
+            {"archtype": Exp3, "params": {"gamma": 0.25, "group": 1}},
+            {"archtype": Exp3, "params": {"gamma": 0.5, "group": 1}},
+            {"archtype": Exp3, "params": {"gamma": 0.75, "group": 1}},
         ]
 
     def generatePolicySetContextualMany(self, dimension, horizon):
