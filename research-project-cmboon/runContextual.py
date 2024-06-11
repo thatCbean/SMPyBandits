@@ -83,10 +83,10 @@ environments = []
 # environments += environments_gen.getEnvPerturbedOld(horizon, dimension)
 # environments += environments_gen.getEnvSlowChangingOld(horizon, dimension)
 #
-# environments += environments_gen.getEnvStochastic(horizon, dimension)
+environments += environments_gen.getEnvStochastic(horizon, dimension)
 # environments += environments_gen.getEnvContextual(horizon, dimension)
 # environments += environments_gen.getEnvPerturbed(horizon, dimension)[0:51]
-environments += environments_gen.getEnvSlowChanging(horizon, dimension)[18:]
+# environments += environments_gen.getEnvSlowChanging(horizon, dimension)[18:]
 
 # environments = environments[43:]
 
@@ -216,7 +216,7 @@ for env_id in range(len(environments)):
     fig, txt = plot_env(evaluator, env_id)
     savePlot(env_id, fig, txt)
     env_end_time = datetime.datetime.now()
-    print("\n\n{}\n\nFinished environment {} / {} at {} in {}\nTotal time taken: {}\nProjected time remaining: {}\n\n{}\n\n".format(equals_string, env_id + 1, len(environments), str(env_end_time), str(env_end_time - env_start_time), str(env_end_time - start_time), str((env_end_time - start_time) / ((env_id + 1)/len(environments))), equals_string))
+    print("\n\n{}\n\nFinished environment {} / {} at {} in {}\nTotal time taken: {}\nProjected time remaining: {}\n\n{}\n\n".format(equals_string, env_id + 1, len(environments), str(env_end_time), str(env_end_time - env_start_time), str(env_end_time - start_time), str(((env_end_time - start_time) / (env_id + 1)) / len(environments) * (len(environments) - env_id - 1)), equals_string))
 
 
 end_time = datetime.datetime.now()

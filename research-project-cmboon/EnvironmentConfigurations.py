@@ -76,7 +76,7 @@ class EnvironmentConfigurations(object):
         return cfg
 
     arm_counts = [5]
-    noise_variances = [0.01]
+    noise_variances = [0.1]
 
     def base_vectors(self, dimension):
         return [
