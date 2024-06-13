@@ -75,6 +75,7 @@ verbosity = 2
 
 dimension = 20
 
+
 print("Constructing environments and policies...")
 
 environments = []
@@ -83,11 +84,13 @@ environments = []
 # environments += environments_gen.getEnvPerturbedOld(horizon, dimension)
 # environments += environments_gen.getEnvSlowChangingOld(horizon, dimension)
 #
-environments += environments_gen.getEnvStochastic(horizon, dimension)
-# environments += environments_gen.getEnvContextual(horizon, dimension)
-# environments += environments_gen.getEnvPerturbed(horizon, dimension)[0:51]
+# environments += environments_gen.getEnvStochastic(horizon, dimension)
+# environments += environments_gen.getEnvContextual(horizon, dimension)[40:]
+environments += environments_gen.getEnvPerturbed(horizon, dimension)[::5]
 # environments += environments_gen.getEnvSlowChanging(horizon, dimension)[18:]
 
+start_env_index = 1
+env_index_step = 5
 # environments = environments[43:]
 
 # policies = policies_gen.generatePolicySetContextualOneEach(dimension, horizon)
@@ -97,57 +100,57 @@ policies = policies_gen.generatePolicySetContextualMany(dimension, horizon)
 print("Finished constructing {} environments and {} policies".format(len(environments), len(policies)))
 
 
-def plot_env(evaluation, environment_id, start_plot_title_index=1):
+def plot_env(evaluation, environment_id, start_plot_title_index=1, step_plot_title_index = 1):
     figures = list()
 
     _, _, text = evaluation.printFinalRanking(environment_id)
     # text_list.append(text)
 
     if plot_regret_normalized:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, normalizedRegret=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, normalizedRegret=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_regret_absolute:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, plotSTD=plot_std, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, plotSTD=plot_std, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_best_policy_regret:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, bestPolicyRegret=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, bestPolicyRegret=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_relative_to_best_policy_regret:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, relativeToBestPolicy=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, relativeToBestPolicy=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_expectation_based_regret_normalized:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, normalizedRegret=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, normalizedRegret=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_expectation_based_regret_absolute:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_regret_over_max_return:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, regretOverMaxReturn=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, regretOverMaxReturn=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_regret_logy:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, semilogy=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, semilogy=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_regret_log:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, loglog=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, loglog=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_min_max:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, plotMaxMin=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, plotMaxMin=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_rewards:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, meanReward=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, meanReward=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
 
     if plot_regret_normalized_best_in_group:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, normalizedRegret=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, normalizedRegret=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_regret_absolute_best_in_group:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, plotSTD=plot_std, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, plotSTD=plot_std, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_best_policy_regret_best_in_group:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, bestPolicyRegret=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, bestPolicyRegret=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_relative_to_best_policy_regret_best_in_group:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, relativeToBestPolicy=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, relativeToBestPolicy=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_expectation_based_regret_normalized_best_in_group:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, normalizedRegret=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, normalizedRegret=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_expectation_based_regret_absolute_best_in_group:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_regret_over_max_return_best_in_group:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, regretOverMaxReturn=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, regretOverMaxReturn=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_regret_logy_best_in_group:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, semilogy=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, semilogy=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_regret_log_best_in_group:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, loglog=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, loglog=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_min_max_best_in_group:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, plotMaxMin=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, plotMaxMin=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_rewards_best_in_group:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, meanReward=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, meanReward=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
 
     # figures_list.append(figures)
     return figures, text
@@ -156,7 +159,7 @@ def plot_env(evaluation, environment_id, start_plot_title_index=1):
 keep_characters = (' ', '.', '_')
 
 
-def savePlot(env, figure_list, rankings_text):
+def savePlot(env, figure_list, rankings_text, start_plot_title_index=1, step_plot_title_index=1):
     env_name = evaluator.envs[env].name
 
     # file_path = file_root + "environment_{}_{}/".format(env + 1, "".join(c for c in env_name if c.isalnum() or c in keep_characters).rstrip())
@@ -176,11 +179,11 @@ def savePlot(env, figure_list, rankings_text):
     #         evaluator.getEnvCumulatedRegrets(env - len(environments)).astype(str).tofile(f, ",")
 
     for i, figure in enumerate(figure_list):
-        figure.savefig("{}Plot_{}_Environment_{} {}.png".format(plots_path, i, env + 1, env_name))
+        figure.savefig("{}Plot_{}_Environment_{} {}.png".format(plots_path, i, env * step_plot_title_index + start_plot_title_index, env_name))
 
     # rankings_text = equals_string.join(text_list)
 
-    with open(file_root + "rankings_environment_{}.txt".format(env + 1), "w") as f:
+    with open(file_root + "rankings_environment_{}.txt".format(env * step_plot_title_index + start_plot_title_index), "w") as f:
         f.write(rankings_text)
 
     #
@@ -213,10 +216,10 @@ evaluator = EvaluatorContextual(configuration)
 for env_id in range(len(environments)):
     env_start_time = datetime.datetime.now()
     evaluator.startOneEnv(env_id, evaluator.envs[env_id])
-    fig, txt = plot_env(evaluator, env_id)
-    savePlot(env_id, fig, txt)
+    fig, txt = plot_env(evaluator, env_id, start_env_index, env_index_step)
+    savePlot(env_id, fig, txt, start_env_index, env_index_step)
     env_end_time = datetime.datetime.now()
-    print("\n\n{}\n\nFinished environment {} / {} at {} in {}\nTotal time taken: {}\nProjected time remaining: {}\n\n{}\n\n".format(equals_string, env_id + 1, len(environments), str(env_end_time), str(env_end_time - env_start_time), str(env_end_time - start_time), str(((env_end_time - start_time) / (env_id + 1)) / len(environments) * (len(environments) - env_id - 1)), equals_string))
+    print("\n\n{}\n\nFinished environment {} / {} at {} in {}\nTotal time taken: {}\nProjected time remaining: {}\n\n{}\n\n".format(equals_string, env_id + 1, len(environments), str(env_end_time), str(env_end_time - env_start_time), str(env_end_time - start_time), str(((env_end_time - start_time) / (env_id + 1)) * (len(environments) - env_id - 1)), equals_string))
 
 
 end_time = datetime.datetime.now()
