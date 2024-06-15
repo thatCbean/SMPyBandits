@@ -611,6 +611,7 @@ class EvaluatorContextual(object):
             # TODO
             if plotSTD and self.repetitions > 1:
                 stdY = self.getCumulativeRegretStandardDeviation(policyId, envId)
+                stdY *= 2
             #     if normalizedRegret:
             #         stdY /= np.log(2 + X)
                 plt.fill_between(X[::self.delta_t_plot], Y[::self.delta_t_plot] - stdY[::self.delta_t_plot],
