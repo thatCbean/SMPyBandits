@@ -31,7 +31,7 @@ class Plotting:
         create_folder_plot_if_needed()
 
     def create_subfolder(self, N, environment, environmentId, hashValue):
-        subfolder = "{}_SP__K{}_T{}_N{}__{}_algos_Normal".format(
+        subfolder = "{}_SP__K{}_T{}_N{}__{}_algos_Normal_comparison".format(
             datetime.now().strftime("%Y%m%d%H%M%S"),
             environment.nbArms, self.configuration['horizon'],
             self.configuration['repetitions'],
