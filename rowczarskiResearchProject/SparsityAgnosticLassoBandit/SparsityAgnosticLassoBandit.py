@@ -30,7 +30,7 @@ class SparsityAgnosticLassoBandit(ContextualBasePolicy):
         self.observed_rewards = []
 
     def __str__(self):
-        return r"SparsityAgnosticLassoBandit($\lambda_0: {:.3g}$)".format(self.lambda_zero)
+        return r"SALasso($\lambda_0: {:.3g}$)".format(self.lambda_zero)
 
     def choice(self, context):
         estimated_rewards = context.dot(self.betaHat)

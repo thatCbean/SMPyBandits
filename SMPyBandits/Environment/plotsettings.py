@@ -74,7 +74,7 @@ if __name__ != '__main__':
     mpl.rcParams['axes.labelsize']  = "medium"
     mpl.rcParams['xtick.labelsize'] = "large"
     mpl.rcParams['ytick.labelsize'] = "large"
-    mpl.rcParams['figure.titlesize'] = "large"
+    mpl.rcParams['figure.titlesize'] = "x-large"
 
     # Configure the DPI of all images, once and for all!
     mpl.rcParams['figure.dpi'] = DPI

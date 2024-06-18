@@ -4,7 +4,7 @@ from rowczarskiResearchProject.policy.PoliciesDefault import policies as policie
 
 HORIZON = 1000
 REPETITIONS = 10
-N_JOBS = 4
+N_JOBS = 10
 VERBOSITY = 6
 ENVIRONMENTS = environments_bernoulli_contextual
 POLICIES = policies_default

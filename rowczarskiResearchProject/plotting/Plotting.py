@@ -31,7 +31,7 @@ class Plotting:
         create_folder_plot_if_needed()
 
     def create_subfolder(self, N, environment, environmentId, hashValue):
-        subfolder = "{}_SP__K{}_T{}_N{}__{}_algos".format(
+        subfolder = "{}_SP__K{}_T{}_N{}__{}_algos_Normal".format(
             datetime.now().strftime("%Y%m%d%H%M%S"),
             environment.nbArms, self.configuration['horizon'],
             self.configuration['repetitions'],
@@ -186,9 +186,9 @@ class Plotting:
         if not isinstance(self.evaluator, EvaluatorContextual):
             self.plot_history_of_means(envId)
         # self.plot_boxplot_regret(envId)
-        # self.plot_running_times(envId)
-        # self.plot_memory_consumption(envId)
-        # self.plot_number_of_cp_detections(envId)
+        self.plot_running_times(envId)
+        self.plot_memory_consumption(envId)
+        self.plot_number_of_cp_detections(envId)
         # self.plot_mean_rewards(envId, semilogx=SEMILOG_X, semilogy=SEMILOG_Y, loglog=LOG_LOG)
         self.plot_all_regrets(envId, semilogx=SEMILOG_X, semilogy=SEMILOG_Y, loglog=LOG_LOG)
         # self.plot_normalized_regrets(envId, semilogx=SEMILOG_X, semilogy=SEMILOG_Y, loglog=LOG_LOG)

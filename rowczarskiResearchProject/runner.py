@@ -2,6 +2,7 @@ from SMPyBandits.ContextualBandits.ContextualEnvironments.EvaluatorContextual im
 from rowczarskiResearchProject.configuration.Configuration import Configuration
 from rowczarskiResearchProject.environment.EnvironmentSparse import environments as environments_sparse
 from rowczarskiResearchProject.policy.PoliciesSparse import policies as policies_sparse
+from rowczarskiResearchProject.policy.PoliciesSparse import policies_test as policies_sparse_test
 
 from rowczarskiResearchProject.plotting.Plotting import Plotting
 
@@ -13,6 +14,7 @@ environments = environments_sparse
 # Configure policies
 #policies = policies_default
 policies = policies_sparse
+policies_test = policies_sparse_test
 
 configuration = Configuration(environments=environments, policies=policies).getConfigurations()
 
@@ -31,6 +33,7 @@ for environmentId, environment in enumerate(evaluator.envs):
         [(len(k) if isinstance(k, (dict, tuple, list)) else k) for k in configuration.values()]))))
 
     evaluator.startOneEnv(environmentId, environment)
+    evaluator.printFinalRanking(environmentId)
 
     # Display the final regrets and rankings for that env
     # evaluator.printLastRegrets(environmentId)
