@@ -9,8 +9,10 @@ import sys
 import pickle
 from copy import deepcopy
 from SMPyBandits.ContextualBandits.ContextualEnvironments.EvaluatorContextual import EvaluatorContextual
+from SMPyBandits.ContextualBandits.ContextualPolicies.ContextualBasePolicy import ContextualBasePolicy
 from SMPyBandits.DelayedContextualBandits.DelayedContextualEnvironments.DelayedContextualMAB import DelayedContextualMAB
 from SMPyBandits.DelayedContextualBandits.Policies.ContextualBasePolicyWithDelay import ContextualBasePolicyWithDelay
+from SMPyBandits.DelayedContextualBandits.Policies.DeLinUCB import DeLinUCB
 from SMPyBandits.Environment.Result import Result
 from SMPyBandits.Environment.memory_consumption import getCurrentMemory, sizeof_fmt
 from SMPyBandits.Environment.usetqdm import USE_TQDM, tqdm
@@ -64,7 +66,7 @@ class EvaluatorDelayedContextual(EvaluatorContextual):
 
         rewards = np.zeros((self.repetitions, self.horizon, env.nbArms))
         contexts = np.zeros((self.repetitions, self.horizon, env.nbArms, self.dimension))
-        delays =  np.zeros((self.repetitions, self.horizon, env.nbArms))
+        delays =  np.zeros(shape = (self.repetitions, self.horizon, env.nbArms), dtype = int)
         print(
             "\n===> Pre-computing the rewards ... Of shape {} ...\n    In order for all simulated algorithms to face the same random rewards (robust comparison of A1,..,An vs Aggr(A1,..,An)) ...\n".format(
                 np.shape(rewards)))  # DEBUG
@@ -125,24 +127,51 @@ class EvaluatorDelayedContextual(EvaluatorContextual):
                         repeatIdout += 1
                 else:
                     for repeatId in (tqdm(range(self.repetitions), desc="Repeat") if self.verbosity > 3 else range(self.repetitions)):
-                        r = delayed_play(env, policy, self.horizon, self.all_contexts, self.all_rewards, envId,
+                        r = delayed_play(env, policy, self.horizon, self.all_contexts, self.all_rewards, self.all_delays, envId,
                                         repeatId=repeatId, verbose=(self.verbosity > 4))
                         store(r, policyId, repeatId)
+
+    def plotRegrets(
+            self, envId=0, show=True,
+            savefig=None, meanReward=False,
+            plotSTD=False, plotMaxMin=False,
+            semilogx=False, semilogy=False, loglog=False,
+            normalizedRegret=False, relativeRegret=False,
+            regretOverMaxReturn=False, altRegret=False,
+            relativeToBestPolicy=False, subtitle="", include_delay_info = False
+            ):
+        fig = super(EvaluatorDelayedContextual, self).plotRegrets(envId, show,
+            savefig, meanReward,
+            plotSTD, plotMaxMin,
+            semilogx, semilogy, loglog,
+            normalizedRegret, relativeRegret,
+            regretOverMaxReturn, altRegret,
+            relativeToBestPolicy, subtitle)
+        if(include_delay_info):
+            delays = self.envs[envId].delays
+            delay_info = "Delay of each arm:\n" + "\n".join([f"{i+1}. {repr(delay)}" for i, delay in enumerate(delays)])
+            #Adding delay information as a text box on the right side of the plot
+            fig.text(0.72, 0.95, delay_info, transform=fig.transFigure, fontsize=18,
+             verticalalignment='top', horizontalalignment='left', linespacing=3,
+             bbox=dict(boxstyle='round,pad=0.5', facecolor='white', alpha=0.5))
+            
+        fig.subplots_adjust(right=0.65)
+        return fig  
 
 
     
 
 
     ##current time + delay should be used here
-def add_to_window(window, t, arm_id, reward):
-    if t not in window:
-        window[t] = []
-    window[t].append((arm_id, reward))
+def add_to_buffer(buffer, t, delay, reward):
+    if t not in buffer:
+        buffer[t] = []
+    buffer[t].append((delay, reward))
 
 ##current time is used here
-def remove_from_window(window, t):
-    if t in window:
-        return window.pop(t)
+def remove_from_buffer(buffer, t):
+    if t in buffer:
+        return buffer.pop(t)
     else:
         return []
 
@@ -159,7 +188,7 @@ def delayed_play(env, policy, horizon,
     env = deepcopy(env)
     policy = deepcopy(policy)
 
-    window = {}
+
     
     # Start game
     policy.startGame()
@@ -171,25 +200,30 @@ def delayed_play(env, policy, horizon,
     pretty_range = tqdm(range(horizon), desc="Time t") if repeatId == 0 and verbose == True else range(horizon)
     ##TODO change the 4th sttep. Instead of observing the reward instantly, we should observe the reward after a delay
     ##keep a data structure with rewards, time steps and so on
+    buffer = {}
     for t in pretty_range:
         # 1. A context is drawn
         contexts = all_contexts[env_id][repeatId, t]
 
-        if isinstance(policy, ContextualBasePolicyWithDelay):
+        if isinstance(policy, ContextualBasePolicy):
             # 2. The player's policy choose an arm
             choice = policy.choice(contexts)
-
-            policy.pull_arm(choice)
 
             # 3. A random reward is drawn, from this arm at this time
             reward = all_rewards[env_id][repeatId, t, choice]
 
             #4. A random delay is drawn, from this arm at this time, the current reward(if its exists) is observed and the drawn reward is delayed for later observation
             delay = all_delays[env_id][repeatId, t, choice]
-            add_to_window(window, t + delay, choice, reward)
-            for(arm_id, reward) in remove_from_window(window, t):
-                policy.update_reward(arm_id, reward)
-                policy.update_estimators(arm_id, reward, contexts)
+            
+            add_to_buffer(buffer, t + delay, delay, reward)
+            current_context = contexts[choice]
+            policy.getReward(choice, reward, contexts)
+            policy.update_covariance_matrix(current_context)
+            if isinstance(policy, DeLinUCB):
+                for(delay, past_reward) in remove_from_buffer(buffer, t):
+                    policy.update_beta(delay, past_reward)
+            else:
+                policy.update_beta(reward, current_context)
 
         else:
             # 2. The player's policy choose an arm
@@ -202,11 +236,9 @@ def delayed_play(env, policy, horizon,
             reward = all_rewards[env_id][repeatId, t, choice]
 
             #4. A random delay is drawn, from this arm at this time, the current reward(if its exists) is observed and the drawn reward is delayed for later observation
-            delay = all_delays[env_id][repeatId, t, choice]
-            add_to_window(window, t + delay, choice, reward)
-            for(arm_id, reward) in remove_from_window(window, t):
-                policy.update_reward(arm_id, reward)
-                policy.update_estimators(arm_id, reward)
+            policy.getReward(choice, reward)
+            policy.update_estimators(choice, reward)
+                
         # 5. Store the result
         result.store(t, choice, reward)
 
@@ -219,3 +251,5 @@ def delayed_play(env, policy, horizon,
          # if repeatId == 0: print("Warning: unable to get the memory consumption for policy {}, so we used a trick to measure {} bytes.".format(policy, memory_consumption))  # DEBUG
     result.memory_consumption = memory_consumption
     return result
+
+  

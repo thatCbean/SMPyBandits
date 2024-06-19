@@ -72,6 +72,7 @@ class LinUCB(ContextualBasePolicy):
                         ))
                     )
             )
+            # print("Reward: ", np.inner(theta_t, contexts[a]), "exploitation: ", self.alpha * math.sqrt(np.abs(np.inner(contexts[a],(np.linalg.inv(self.A) @ contexts[a])))))
                         # max(0, np.transpose(contexts[a]) @ (np.linalg.inv(self.A) @ contexts[a]))))
             if p_ta > max_val:
                 max_val = p_ta

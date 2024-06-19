@@ -46,7 +46,7 @@ class ContextualBasePolicy(object):
         # reward = (reward - self.lower) / self.amplitude
         self.rewards[arm] += reward
 
-    def choice(self, context):
+    def choice(self, contexts):
         """ Not defined."""
         raise NotImplementedError("This method choice() has to be implemented in the child class inheriting from BasePolicy.")
 

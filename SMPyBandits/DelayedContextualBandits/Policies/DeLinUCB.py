@@ -19,12 +19,12 @@ from SMPyBandits.DelayedContextualBandits.Policies.ContextualBasePolicyWithDelay
 ALPHA = 0.01
 
 
-class DeLinUCB(ContextualBasePolicyWithDelay):
+class DeLinUCB(ContextualBasePolicy):
     """
     The linUCB contextual bandit policy.
     """
 
-    def __init__(self, nbArms, dimension, horizon, alpha=ALPHA, lambda_reg=0.001, m=1500,
+    def __init__(self, nbArms, dimension, horizon, alpha=ALPHA, lambda_reg=1, m=500,
                  lower=0., amplitude=1.):
         super(DeLinUCB, self).__init__(nbArms, lower=lower, amplitude=amplitude)
         assert alpha > 0, "Error: the 'alpha' parameter for the LinUCB class must be greater than 0"
@@ -33,63 +33,71 @@ class DeLinUCB(ContextualBasePolicyWithDelay):
         self.alpha = alpha
         self.k = nbArms
         self.dimension = dimension
+        self.m = m
         self.lambda_reg = lambda_reg
         self.time_window = deque(maxlen=m)
-        self.time_window.append(np.zeros(dimension))
         self.f = self.compute_f_values(lambda_reg, alpha, dimension, horizon)
-        self.Vinv = np.identity(dimension)
-
-
-    def startGame(self):
-        """Start with uniform weights."""
-        super(DeLinUCB, self).startGame()
-        self.V = np.identity(self.dimension)
+        self.V = self.lambda_reg * np.identity(self.dimension)
+        self.Vinv = np.linalg.inv(self.V)
         self.B = np.zeros(self.dimension)
-        self.Vinv = np.identity(self.dimension)
-        self.a = 2 * self.f[0]
 
     def __str__(self):
-        return r"DelinUCB($\alpha: {:.3g}$)".format(self.alpha)
+        return r"OTFLinUCB($\alpha: {:.3g}$, $m={}$)".format(self.alpha, self.m)
 
-    def update_estimators(self, arm, reward, contexts):
-        self.V = self.V + np.outer(contexts[arm], contexts[arm]) + self.lambda_reg * np.identity(self.dimension)
+    def update_covariance_matrix(self, context):
+        self.V += np.outer(context, context) 
         self.Vinv = np.linalg.inv(self.V)
-        ##TODO
-        ##update_estimators is called for rewards that have already been observed, so they can be added to B
-        self.B = self.B + reward * contexts[arm]
-        self.time_window.popleft()
-        self.a = 2 * self.f[self.t] + self.helper()
-        self.time_window.append(contexts[arm])
+        self.time_window.append(context)
+    def update_beta(self, delay, reward):
+        if delay < len(self.time_window):
+            self.B += reward * self.time_window[-1 - delay]
+
+    # def update_estimators(self, delay, reward, context):
+    #     if delay < len(self.time_window):
+    #         self.B += reward * self.time_window[-1 - delay]
+    #     self.V += np.outer(context, context) 
+    #     self.Vinv = np.linalg.inv(self.V)
 
     def helper(self):
         time_window_sum = 0
         for context in self.time_window:
-            time_window_sum = time_window_sum + self.get_L2_norm(context, self.Vinv)
+            time_window_sum += self.get_L2_norm(context, self.Vinv)
 
         return time_window_sum
 
 
     def choice(self, contexts):
         theta_t = self.Vinv @ self.B
+        #confidence_interval_width = 2 * self.f[self.t] + self.helper()
+       
+        # print(self.helper())
         max_val = -np.inf
         index = -1
         for arm in range(self.k):
-            p_ta = np.inner(theta_t, contexts[arm]) + np.inner(self.a, self.get_L2_norm(contexts[arm], self.Vinv))
+            # print(np.inner(theta_t, contexts[arm]) + 0.01 * self.get_L2_norm(contexts[arm], self.Vinv),
+            #        np.inner(theta_t, contexts[arm]) + confidence_interval_width * self.get_L2_norm(contexts[arm], self.Vinv))
+            # print(confidence_interval_width)
+            #print(confidence_interval_width * self.get_L2_norm(contexts[arm], self.Vinv))
+            p_ta = np.inner(theta_t, contexts[arm]) + self.alpha * self.get_L2_norm(contexts[arm], self.Vinv)
+            # print(confidence_interval_width)
+            # print(self.f[self.t])
+            # print(confidence_interval_width * self.get_L2_norm(contexts[arm], self.Vinv))
+            # print("Reward: ", np.inner(theta_t, contexts[arm]), "exploitation: ", confidence_interval_width * self.get_L2_norm(contexts[arm], self.Vinv))
             if p_ta > max_val:
                 max_val = p_ta
                 index = arm
 
         return index
-
-    def get_L2_norm(self, a, M):
-        return np.sqrt(np.transpose(a) @ (M @ a))
+    
+    def get_L2_norm(self, x, M):
+        # return np.sqrt(x.T @ ( M @ x))
+        return np.sqrt(np.dot(x.T, np.dot(M, x)))
     
     def compute_f_values(self, lambda_, delta, d, T):
         f_values = []
-        for t in range(1, 2*T):
-            term1 = np.sqrt(lambda_)
-            term2 = np.sqrt(2 * np.log(1 / delta) + d * np.log((d * lambda_ + t) / (d * lambda_)))
-            f_t = term1 + term2
+
+        for t in range(1, T + 2):
+            f_t = np.sqrt(lambda_) + np.sqrt(2 * np.log10(1 / delta) + d * np.log10((d * lambda_ + t) / (d * lambda_)))
             f_values.append(f_t)
         return f_values
 
