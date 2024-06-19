@@ -12,10 +12,7 @@ from SMPyBandits.Delays.GeometricDelay import GeometricDelay
 from SMPyBandits.DelayedContextualBandits.Policies.DeLinUCB import DeLinUCB
 from SMPyBandits.ContextualBandits.ContextualPolicies import LinUCB
 from SMPyBandits.ContextualBandits.ContextualPolicies.ContextualBasePolicy import ContextualBasePolicy
-from SMPyBandits.DelayedContextualBandits.Policies.ContextualBasePolicyWithDelay import ContextualBasePolicyWithDelay
-from SMPyBandits.Policies import BasePolicy
 
-from SMPyBandits.Arms import Gaussian
 from SMPyBandits.Delays.PoissonDelay import PoissonDelay
 
 from SMPyBandits.DelayedContextualBandits.Policies.Exp3WithDelay import Exp3WithDelay
@@ -32,10 +29,10 @@ from SMPyBandits.ContextualBandits.ContextualArms.ContextualGaussianNoiseArm imp
 
 # Code based on:
 # https://github.com/SMPyBandits/SMPyBandits/blob/master/notebooks/Example_of_a_small_Single-Player_Simulation.ipynb
-horizon = 1000
-repetitions = 100
+horizon = 5000
+repetitions = 10
 m = 100
-n_jobs = -1
+n_jobs = 1
 verbosity = 2
 
 plot_rewards = False 
@@ -47,7 +44,9 @@ plot_regret_over_max_return = True
 plot_regret_logy = True
 plot_regret_log = True
 plot_min_max = True
+
 include_delay_info = False
+include_std_dev = True
 
 start_time = datetime.datetime.now()
 print("Starting run at {}")
@@ -102,15 +101,15 @@ policies = [
     {"archtype": LinUCBWithDelay, "params": {"dimension": 3, "alpha": 0.01}},
     {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 100}},
     {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 90}},
-    {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 80}},
-    {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 70}},
-    {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 60}},
-    {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 50}},
-    {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 40}},
-    {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 30}},
-    {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 20}},
-    {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 10}},
-    {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 0}},
+    # {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 80}},
+    # {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 70}},
+    # {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 60}},
+    # {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 50}},
+    # {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 40}},
+    # {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 30}},
+    # {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 20}},
+    # {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 10}},
+    # {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 0}},
 ]
 
 configuration = {
@@ -134,21 +133,29 @@ def plot_env(evaluation, environment_id, start_plot_title_index=1):
     _, _, text = evaluation.printFinalRanking(environment_id)
     text_list.append(text)
     if plot_regret_normalized:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, normalizedRegret=True, include_delay_info = include_delay_info, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, normalizedRegret=True, include_delay_info = include_delay_info,
+            plotSTD = include_std_dev, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
     if plot_regret_absolute:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, include_delay_info = include_delay_info, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, include_delay_info = include_delay_info,
+            plotSTD = include_std_dev, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
     if plot_expectation_based_regret_normalized:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, normalizedRegret=True, subtitle="Alt Regret Calculation\nEnvironment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, normalizedRegret=True,
+            plotSTD = include_std_dev, subtitle="Alt Regret Calculation\nEnvironment #" + str(environment_id + start_plot_title_index)))
     if plot_expectation_based_regret_absolute:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, include_delay_info = include_delay_info,  subtitle="Alt Regret Calculation\nEnvironment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, altRegret=True, include_delay_info = include_delay_info,
+            plotSTD = include_std_dev, subtitle="Alt Regret Calculation\nEnvironment #" + str(environment_id + start_plot_title_index)))
     if plot_regret_over_max_return:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, regretOverMaxReturn=True, include_delay_info = include_delay_info,  subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, regretOverMaxReturn=True, include_delay_info = include_delay_info,
+            plotSTD = include_std_dev, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
     if plot_regret_logy:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, semilogy=True, include_delay_info = include_delay_info,  subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, semilogy=True, include_delay_info = include_delay_info,\
+            plotSTD = include_std_dev, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
     if plot_regret_log:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, loglog=True, include_delay_info = include_delay_info,  subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, loglog=True, include_delay_info = include_delay_info,
+            plotSTD = include_std_dev, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
     if plot_min_max:
-        figures.append(evaluation.plotRegrets(environment_id, show=False, plotMaxMin=True, include_delay_info = include_delay_info,  subtitle="Environment #" + str(environment_id + start_plot_title_index)))
+        figures.append(evaluation.plotRegrets(environment_id, show=False, plotMaxMin=True, include_delay_info = include_delay_info,
+            plotSTD = include_std_dev, subtitle="Environment #" + str(environment_id + start_plot_title_index)))
 
     figures_list.append(figures)
 

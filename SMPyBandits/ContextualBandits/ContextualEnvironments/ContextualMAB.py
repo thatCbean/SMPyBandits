@@ -107,7 +107,8 @@ class ContextualMAB(object):
     def draw(self, armId, t=1):
         """ Return a random sample from the armId-th arm, at time t. """
         context_draw = self.draw_context(armId)
-        return context_draw, self.arms[armId].draw(self.theta_star, context_draw, t)
+        reward_draw, reward_with_noise_draw = self.arms[armId].draw(self.theta_star, context_draw, t)
+        return context_draw, reward_draw, reward_with_noise_draw
 
     def draw_nparray(self, armId, shape=(1,)):
         """

@@ -65,6 +65,7 @@ class EvaluatorDelayedContextual(EvaluatorContextual):
             np.random.seed(self.seeds[env_id])
 
         rewards = np.zeros((self.repetitions, self.horizon, env.nbArms))
+        rewards_with_noise = np.zeros((self.repetitions, self.horizon, env.nbArms))
         contexts = np.zeros((self.repetitions, self.horizon, env.nbArms, self.dimension))
         delays =  np.zeros(shape = (self.repetitions, self.horizon, env.nbArms), dtype = int)
         print(
@@ -74,13 +75,13 @@ class EvaluatorDelayedContextual(EvaluatorContextual):
             for repetitionId in tqdm(range(self.repetitions), desc="Repetitions"):
                 for t in tqdm(range(self.horizon), desc="Time steps"):
                     for arm_id in tqdm(range(len(env.arms)), desc="Arms"):
-                        contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id], delays[repetitionId, t, arm_id] = env.draw(arm_id, t)
+                        contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id], rewards_with_noise[repetitionId, t, arm_id], delays[repetitionId, t, arm_id] = env.draw(arm_id, t)
         else:
             for repetitionId in tqdm(range(self.repetitions), desc="Repetitions"):
                 for t in range(self.horizon):
                     for arm_id in range(len(env.arms)):
-                        contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id], delays[repetitionId, t, arm_id] = env.draw(arm_id, t)
-        return contexts, rewards, delays
+                        contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id], rewards_with_noise[repetitionId, t, arm_id], delays[repetitionId, t, arm_id] = env.draw(arm_id, t)
+        return contexts, rewards, rewards_with_noise, delays
     
     def startOneEnv(self, envId, env):
         """Simulate that env."""
@@ -94,8 +95,8 @@ class EvaluatorDelayedContextual(EvaluatorContextual):
             np.random.seed(self.seeds[0])
 
         # Precompute rewards
-        all_contexts, all_rewards, all_delays = self.compute_cache_rewards(env, envId)
-        self.all_contexts[envId], self.all_rewards[envId], self.all_delays[envId] = all_contexts, all_rewards, all_delays
+        all_contexts, all_rewards, all_rewards_with_noise, all_delays = self.compute_cache_rewards(env, envId)
+        self.all_contexts[envId], self.all_rewards[envId], self.all_rewards_with_noise[envId], self.all_delays[envId] = all_contexts, all_rewards, all_rewards_with_noise, all_delays
 
         def store(r, policyId, repeatId):
             """ Store the result of the #repeatId experiment, for the #policyId policy."""
@@ -119,7 +120,7 @@ class EvaluatorDelayedContextual(EvaluatorContextual):
                 if self.useJoblib:
                     repeatIdout = 0
                     for r in Parallel(n_jobs=self.cfg['n_jobs'], pre_dispatch='3*n_jobs', verbose=self.cfg['verbosity'])(
-                            delayed(delayed_play)(env, policy, self.horizon, self.all_contexts, self.all_rewards, self.all_delays, envId,
+                            delayed(delayed_play)(env, policy, self.horizon, self.all_contexts, self.all_rewards, self.all_rewards_with_noise, self.all_delays, envId,
                                                     repeatId=repeatId, verbose=(self.verbosity > 4))
                             for repeatId in range(self.repetitions)
                     ):
@@ -127,7 +128,7 @@ class EvaluatorDelayedContextual(EvaluatorContextual):
                         repeatIdout += 1
                 else:
                     for repeatId in (tqdm(range(self.repetitions), desc="Repeat") if self.verbosity > 3 else range(self.repetitions)):
-                        r = delayed_play(env, policy, self.horizon, self.all_contexts, self.all_rewards, self.all_delays, envId,
+                        r = delayed_play(env, policy, self.horizon, self.all_contexts, self.all_rewards, self.all_rewards_with_noise, self.all_delays, envId,
                                         repeatId=repeatId, verbose=(self.verbosity > 4))
                         store(r, policyId, repeatId)
 
@@ -178,7 +179,7 @@ def remove_from_buffer(buffer, t):
 
 
 def delayed_play(env, policy, horizon,
-                 all_contexts, all_rewards, all_delays,
+                 all_contexts, all_rewards, all_rewards_with_noise, all_delays,
                  env_id, repeatId=0, verbose=False):
     """Helper function for the parallelization."""
     start_time = time.time()
@@ -210,20 +211,21 @@ def delayed_play(env, policy, horizon,
             choice = policy.choice(contexts)
 
             # 3. A random reward is drawn, from this arm at this time
-            reward = all_rewards[env_id][repeatId, t, choice]
+            actual_reward = all_rewards[env_id][repeatId, t, choice]
+            observed_reward = all_rewards_with_noise[env_id][repeatId, t, choice]
 
             #4. A random delay is drawn, from this arm at this time, the current reward(if its exists) is observed and the drawn reward is delayed for later observation
             delay = all_delays[env_id][repeatId, t, choice]
             
-            add_to_buffer(buffer, t + delay, delay, reward)
+            add_to_buffer(buffer, t + delay, delay, observed_reward)
             current_context = contexts[choice]
-            policy.getReward(choice, reward, contexts)
+            policy.getReward(choice, observed_reward, contexts)
             policy.update_covariance_matrix(current_context)
             if isinstance(policy, DeLinUCB):
                 for(delay, past_reward) in remove_from_buffer(buffer, t):
                     policy.update_beta(delay, past_reward)
             else:
-                policy.update_beta(reward, current_context)
+                policy.update_beta(observed_reward, current_context)
 
         else:
             # 2. The player's policy choose an arm
@@ -233,14 +235,15 @@ def delayed_play(env, policy, horizon,
 
             # self.all_rewards[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
             # 3. A random reward is drawn, from this arm at this time
-            reward = all_rewards[env_id][repeatId, t, choice]
+            actual_reward = all_rewards[env_id][repeatId, t, choice]
+            observed_reward = all_rewards_with_noise[env_id][repeatId, t, choice]
 
             #4. A random delay is drawn, from this arm at this time, the current reward(if its exists) is observed and the drawn reward is delayed for later observation
-            policy.getReward(choice, reward)
-            policy.update_estimators(choice, reward)
+            policy.getReward(choice, observed_reward)
+            policy.update_estimators(choice, observed_reward)
                 
         # 5. Store the result
-        result.store(t, choice, reward)
+        result.store(t, choice, actual_reward)
 
     # Finally, store running time and consumed memory
     result.running_time = time.time() - start_time

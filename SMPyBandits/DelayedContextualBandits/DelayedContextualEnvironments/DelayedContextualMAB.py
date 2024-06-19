@@ -17,12 +17,12 @@ class DelayedContextualMAB(ContextualMAB):
         print(" - with 'contexts' =", self.delays)
 
     def draw(self, armId, t=1):
-        context, reward = super().draw(armId, t)
+        context, reward, reward_with_noise = super().draw(armId, t)
         drawn_delay = self.delays[armId].draw_delay()
-        return context, reward, drawn_delay
+        return context, reward, reward_with_noise, drawn_delay
     
     def draw_nparray(self, armId, shape=(1,)):
-        contexts, rewards = super().draw_nparray(armId, shape)
+        contexts, rewards, rewards_with_noise = super().draw_nparray(armId, shape)
         drawn_delays = self.delays.draw_nparray(shape)
 
-        return contexts, rewards, drawn_delays
+        return contexts, rewards, rewards_with_noise, drawn_delays

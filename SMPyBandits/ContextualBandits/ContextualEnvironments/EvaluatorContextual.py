@@ -129,6 +129,7 @@ class EvaluatorContextual(object):
         self.numberOfCPDetections = dict()  #: For each env, store the number of change-point detections by each algorithms, to print it's average at the end (to check if a certain Change-Point detector algorithm detects too few or too many changes).
         self.all_contexts = dict()
         self.all_rewards = dict()
+        self.all_rewards_with_noise = dict()
         # XXX: WARNING no memorized vectors should have dimension duration * repetitions, that explodes the RAM consumption!
         for envId in range(len(self.envs)):
             self.runningTimes[envId] = np.zeros((self.nbPolicies, self.repetitions))
@@ -137,6 +138,7 @@ class EvaluatorContextual(object):
             self.all_contexts[envId] = np.zeros(
                 (self.repetitions, self.horizon, self.envs[envId].nbArms, self.dimension))
             self.all_rewards[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
+            self.all_rewards_with_noise[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
         print("Number of environments to try:", len(self.envs))
         # To speed up plotting
         self._times = np.arange(1, 1 + self.horizon)
@@ -180,6 +182,7 @@ class EvaluatorContextual(object):
             np.random.seed(self.seeds[env_id])
 
         rewards = np.zeros((self.repetitions, self.horizon, env.nbArms))
+        rewards_with_noise = np.zeros((self.repetitions, self.horizon, env.nbArms))
         contexts = np.zeros((self.repetitions, self.horizon, env.nbArms, self.dimension))
         print(
             "\n===> Pre-computing the rewards ... Of shape {} ...\n    In order for all simulated algorithms to face the same random rewards (robust comparison of A1,..,An vs Aggr(A1,..,An)) ...\n".format(
@@ -188,13 +191,13 @@ class EvaluatorContextual(object):
             for repetitionId in tqdm(range(self.repetitions), desc="Repetitions"):
                 for t in tqdm(range(self.horizon), desc="Time steps"):
                     for arm_id in tqdm(range(len(env.arms)), desc="Arms"):
-                        contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id] = env.draw(arm_id, t)
+                        contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id], rewards_with_noise[repetitionId, t, arm_id] = env.draw(arm_id, t)
         else:
             for repetitionId in tqdm(range(self.repetitions), desc="Repetitions"):
                 for t in range(self.horizon):
                     for arm_id in range(len(env.arms)):
-                        contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id] = env.draw(arm_id, t)
-        return contexts, rewards
+                        contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id], rewards_with_noise[repetitionId, t, arm_id] = env.draw(arm_id, t)
+        return contexts, rewards, rewards_with_noise
 
     def startAllEnv(self):
         """Simulate all envs."""
@@ -213,8 +216,8 @@ class EvaluatorContextual(object):
             np.random.seed(self.seeds[0])
 
         # Precompute rewards
-        all_contexts, all_rewards = self.compute_cache_rewards(env, envId)
-        self.all_contexts[envId], self.all_rewards[envId] = all_contexts, all_rewards
+        all_contexts, all_rewards, all_rewards_with_noise = self.compute_cache_rewards(env, envId)
+        self.all_contexts[envId], self.all_rewards[envId], self.all_rewards_with_noise[envId] = all_contexts, all_rewards, all_rewards_with_noise
 
         def store(r, policyId, repeatId):
             """ Store the result of the #repeatId experiment, for the #policyId policy."""
@@ -237,7 +240,7 @@ class EvaluatorContextual(object):
             if self.useJoblib:
                 repeatIdout = 0
                 for r in Parallel(n_jobs=self.cfg['n_jobs'], pre_dispatch='3*n_jobs', verbose=self.cfg['verbosity'])(
-                            delayed(delayed_play)(env, policy, self.horizon, self.all_contexts, self.all_rewards, envId,
+                            delayed(delayed_play)(env, policy, self.horizon, self.all_contexts, self.all_rewards, self.all_rewards_with_noise, envId,
                                                 repeatId=repeatId, verbose=(self.verbosity > 4))
                     for repeatId in range(self.repetitions)
                 ):
@@ -245,7 +248,7 @@ class EvaluatorContextual(object):
                     repeatIdout += 1
             else:
                 for repeatId in (tqdm(range(self.repetitions), desc="Repeat") if self.verbosity > 3 else range(self.repetitions)):
-                    r = delayed_play(env, policy, self.horizon, self.all_contexts, self.all_rewards, envId,
+                    r = delayed_play(env, policy, self.horizon, self.all_contexts, self.all_rewards, self.all_rewards_with_noise, envId,
                                     repeatId=repeatId, verbose=(self.verbosity > 4))
                     store(r, policyId, repeatId) 
            
@@ -367,6 +370,10 @@ class EvaluatorContextual(object):
             np.mean(full_regret[:, t])
             for t in range(self.horizon)
         ])
+    
+    def getCumulativeRegretStandardDeviation(self, policyId, envId):
+        cumulative_regrets = self.getCumulatedRegrets(policyId, envId)
+        return np.std(cumulative_regrets, axis=0, ddof=0)
 
     # def getRegretRelativeToHighest(self, envId):
     #    TODO: WIP
@@ -501,12 +508,13 @@ class EvaluatorContextual(object):
                 plt.yscale('log')
             # Print standard deviation of regret
             # TODO
-            # if plotSTD and self.repetitions > 1:
-            #     stdY = self.getSTDRegret(policyId, envId, meanReward=meanReward)
-            #     if normalizedRegret:
-            #         stdY /= np.log(2 + X)
-            #     plt.fill_between(X[::self.delta_t_plot], Y[::self.delta_t_plot] - stdY[::self.delta_t_plot],
-            #                      Y[::self.delta_t_plot] + stdY[::self.delta_t_plot], facecolor=colors[policyId], alpha=0.2)
+            if plotSTD and self.repetitions > 1:
+                # stdY = self.getSTDRegret(policyId, envId, meanReward=meanReward)
+                stdY = self.getCumulativeRegretStandardDeviation(policyId, envId)
+                if normalizedRegret:
+                    stdY /= np.log(2 + X)
+                plt.fill_between(X[::self.delta_t_plot], Y[::self.delta_t_plot] - stdY[::self.delta_t_plot],
+                                 Y[::self.delta_t_plot] + stdY[::self.delta_t_plot], facecolor=colors[policyId], alpha=0.2)
 
             # Print amplitude of regret
             if plotMaxMin and self.repetitions > 1:
@@ -841,7 +849,7 @@ class EvaluatorContextual(object):
 # Helper function for the parallelization
 
 def delayed_play(env, policy, horizon,
-                 all_contexts, all_rewards,
+                 all_contexts, all_rewards, all_rewards_with_noise,
                  env_id, repeatId=0, verbose=False):
     """Helper function for the parallelization."""
     start_time = time.time()
@@ -868,25 +876,27 @@ def delayed_play(env, policy, horizon,
             choice = policy.choice(contexts)
 
             # 3. A random reward is drawn, from this arm at this time
-            reward = all_rewards[env_id][repeatId, t, choice]
+            actual_reward = all_rewards[env_id][repeatId, t, choice]
+            observed_reward = all_rewards_with_noise[env_id][repeatId, t, choice]
 
             # 4. The policy sees the reward
 
-            policy.getReward(choice, reward, contexts)
+            policy.getReward(choice, observed_reward, contexts)
         else:
             # 2. The player's policy choose an arm
             choice = policy.choice()
 
             # self.all_rewards[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
             # 3. A random reward is drawn, from this arm at this time
-            reward = all_rewards[env_id][repeatId, t, choice]
+            actual_reward = all_rewards[env_id][repeatId, t, choice]
+            observed_reward = all_rewards_with_noise[env_id][repeatId, t, choice]
 
             # 4. The policy sees the reward
 
-            policy.getReward(choice, reward)
+            policy.getReward(choice, observed_reward)
 
         # 5. Finally we store the results
-        result.store(t, choice, reward)
+        result.store(t, choice, actual_reward)
 
     # Finally, store running time and consumed memory
     result.running_time = time.time() - start_time
