@@ -12,7 +12,8 @@ import math
 import sys
 import pickle
 
-from SMPyBandits.Policies import BasePolicy
+from SMPyBandits.ContextualBandits.ContextualPolicies.LinUCB import LinUCB
+from SMPyBandits.Policies import BasePolicy, Exp3, UCB
 
 from SMPyBandits.ContextualBandits.ContextualPolicies.ContextualBasePolicy import ContextualBasePolicy
 from SMPyBandits.ContextualBandits.ContextualEnvironments.ContextualMAB import ContextualMAB
@@ -415,9 +416,9 @@ class EvaluatorContextual(object):
         for i, k in enumerate(index_of_sorting):
             policy = self.policies[k]
             stri += self.printAndReturn(
-                "- Policy '{}'\twas ranked\t{} / {} for this simulation\n\t(last regret = {:.5g},\ttotal regret = {:.5g},\ttotal reward = {:.5g},\ttotal reward std = {:.5g}.".format(
+                "\n- Policy '{}'\twas ranked\t{} / {} for this simulation\n\t(last regret = {:.5g},\ttotal regret = {:.5g},\ttotal reward = {:.5g},\ttotal regret std = {:.5g}.".format(
                     policy.__cachedstr__, i + 1, nbPolicies, lastRegret[k], totalRegret[k], totalRewards[k], totalRegretStd[k]))
-            stri += self.printAndReturn("    Alternative regret calculation results in regret of [{}] and last regret of [{}]".format(altRegret[k], lastAltRegret[k]))
+            #stri += self.printAndReturn("    Alternative regret calculation results in regret of [{}] and last regret of [{}]".format(altRegret[k], lastAltRegret[k]))
         return totalRegret, index_of_sorting, stri
 
     def _xlabel(self, envId, *args, **kwargs):
@@ -463,6 +464,29 @@ class EvaluatorContextual(object):
         if subtitle != "":
             subtitle = "\n" + subtitle
 
+        bestPoliciesToPlot = []
+        containsEXP3 = False
+        containsLinUCB = False
+        containsSALasso = False
+        containsUCB = False
+        totalRegret, index_of_sorting, stri = self.printFinalRanking(envId=envId)
+
+        print(index_of_sorting)
+
+        for i, k in enumerate(index_of_sorting):
+            if isinstance(self.policies[k], Exp3) and not containsEXP3:
+                containsEXP3 = True
+                bestPoliciesToPlot.append(k)
+            if isinstance(self.policies[k], LinUCB) and not containsLinUCB:
+                containsLinUCB = True
+                bestPoliciesToPlot.append(k)
+            if isinstance(self.policies[k], SparsityAgnosticLassoBandit) and not containsSALasso:
+                containsSALasso = True
+                bestPoliciesToPlot.append(k)
+            if isinstance(self.policies[k], UCB) and not containsUCB:
+                containsUCB = True
+                bestPoliciesToPlot.append(k)
+
         highest = np.max(
             np.array([self.getCumulatedRegretAverage(policyId, envId) for policyId in range(self.nbPolicies)])[
             :, -1])
@@ -477,64 +501,65 @@ class EvaluatorContextual(object):
                     np.array([self.getCumulatedRegretAverage(policyId, envId) for policyId in range(self.nbPolicies)])[
                     :, -1])
         for policyId, policy in enumerate(self.policies):
-            if meanReward:
-                Y = np.array(self.getCumulatedRewardAverage(policyId, envId))
-            elif regretOverMaxReturn:
-                Y = np.array(self.getCumulativeRegretAvgOverCumulativeMaxReward(policyId, envId))
-            elif altRegret:
-                Y = np.array(self.getAltRegret(policyId, envId))
-            elif relativeToBestPolicy:
-                Y = np.array()
-            else:
-                Y = np.array(self.getCumulatedRegretAverage(policyId, envId))
-            if normalizedRegret and not regretOverMaxReturn:
-                Y /= self._times
-            elif relativeRegret and not regretOverMaxReturn:
-                Y /= highest
+            if policyId in bestPoliciesToPlot:
+                if meanReward:
+                    Y = np.array(self.getCumulatedRewardAverage(policyId, envId))
+                elif regretOverMaxReturn:
+                    Y = np.array(self.getCumulativeRegretAvgOverCumulativeMaxReward(policyId, envId))
+                elif altRegret:
+                    Y = np.array(self.getAltRegret(policyId, envId))
+                elif relativeToBestPolicy:
+                    Y = np.array()
+                else:
+                    Y = np.array(self.getCumulatedRegretAverage(policyId, envId))
+                if normalizedRegret and not regretOverMaxReturn:
+                    Y /= self._times
+                elif relativeRegret and not regretOverMaxReturn:
+                    Y /= highest
 
-            # Y = Y[range_start:]
+                # Y = Y[range_start:]
 
-            if ymin is None:
-                ymin = np.min(Y)
-            else:
-                ymin = min(ymin, np.min(Y))
-            lw = 8
-            if len(self.policies) > 8: lw -= 1
-            if semilogx or loglog:
-                # FIXED for semilogx plots, truncate to only show t >= 100
-                X_to_plot_here = X[X >= 100]
-                Y_to_plot_here = Y[X >= 100]
-                plot_method(X_to_plot_here[::self.delta_t_plot], Y_to_plot_here[::self.delta_t_plot],
-                            label=policy.__cachedstr__, color=colors[policyId], marker=markers[policyId],
-                            markevery=(policyId / 50., 0.1),
-                            lw=lw, ms=int(1.5 * lw))
-            else:
-                plot_method(X[::self.delta_t_plot], Y[::self.delta_t_plot], label=policy.__cachedstr__,
-                            color=colors[policyId],
-                            marker=markers[policyId], lw=1, ms=2)
-            if semilogx or loglog:  # Manual fix for issue https://github.com/SMPyBandits/SMPyBandits/issues/38
-                plt.xscale('log')
-            if semilogy or loglog:  # Manual fix for issue https://github.com/SMPyBandits/SMPyBandits/issues/38
-                plt.yscale('log')
-            # Print standard deviation of regret
-            # TODO
-            if plotSTD and self.repetitions > 1:
-                stdY = self.getCumulativeRegretStandardDeviation(policyId, envId)
-                stdY *= 2
-                #     if normalizedRegret:
-                #         stdY /= np.log(2 + X)
-                plt.fill_between(X[::self.delta_t_plot], Y[::self.delta_t_plot] - stdY[::self.delta_t_plot],
-                                 Y[::self.delta_t_plot] + stdY[::self.delta_t_plot], facecolor=colors[policyId],
-                                 alpha=0.2)
+                if ymin is None:
+                    ymin = np.min(Y)
+                else:
+                    ymin = min(ymin, np.min(Y))
+                lw = 8
+                if len(self.policies) > 8: lw -= 1
+                if semilogx or loglog:
+                    # FIXED for semilogx plots, truncate to only show t >= 100
+                    X_to_plot_here = X[X >= 100]
+                    Y_to_plot_here = Y[X >= 100]
+                    plot_method(X_to_plot_here[::self.delta_t_plot], Y_to_plot_here[::self.delta_t_plot],
+                                label=policy.__cachedstr__, color=colors[policyId], marker=markers[policyId],
+                                markevery=(policyId / 50., 0.1),
+                                lw=lw, ms=int(1.5 * lw))
+                else:
+                    plot_method(X[::self.delta_t_plot], Y[::self.delta_t_plot], label=policy.__cachedstr__,
+                                color=colors[policyId],
+                                marker=markers[policyId], lw=1, ms=2)
+                if semilogx or loglog:  # Manual fix for issue https://github.com/SMPyBandits/SMPyBandits/issues/38
+                    plt.xscale('log')
+                if semilogy or loglog:  # Manual fix for issue https://github.com/SMPyBandits/SMPyBandits/issues/38
+                    plt.yscale('log')
+                # Print standard deviation of regret
+                # TODO
+                if plotSTD and self.repetitions > 1:
+                    stdY = self.getCumulativeRegretStandardDeviation(policyId, envId)
+                    stdY *= 2
+                    #     if normalizedRegret:
+                    #         stdY /= np.log(2 + X)
+                    plt.fill_between(X[::self.delta_t_plot], Y[::self.delta_t_plot] - stdY[::self.delta_t_plot],
+                                     Y[::self.delta_t_plot] + stdY[::self.delta_t_plot], facecolor=colors[policyId],
+                                     alpha=0.2)
 
-                # Print amplitude of regret
-            if plotMaxMin and self.repetitions > 1:
-                MaxMinY = self.getCumulatedRewardAmplitude(policyId, envId)
-                if normalizedRegret:
-                    MaxMinY /= self.horizon
-                plt.fill_between(X[::self.delta_t_plot], Y[::self.delta_t_plot] - MaxMinY[::self.delta_t_plot],
-                                 Y[::self.delta_t_plot] + MaxMinY[::self.delta_t_plot], facecolor=colors[policyId],
-                                 alpha=0.2)
+                    # Print amplitude of regret
+                if plotMaxMin and self.repetitions > 1:
+                    MaxMinY = self.getCumulatedRewardAmplitude(policyId, envId)
+                    if normalizedRegret:
+                        MaxMinY /= self.horizon
+                    plt.fill_between(X[::self.delta_t_plot], Y[::self.delta_t_plot] - MaxMinY[::self.delta_t_plot],
+                                     Y[::self.delta_t_plot] + MaxMinY[::self.delta_t_plot], facecolor=colors[policyId],
+                                     alpha=0.2)
 
             # # Print amplitude of regret
             # if plotMaxMin and self.repetitions > 1:

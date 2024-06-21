@@ -193,3 +193,7 @@ class Plotting:
         self.plot_all_regrets(envId, semilogx=SEMILOG_X, semilogy=SEMILOG_Y, loglog=LOG_LOG)
         # self.plot_normalized_regrets(envId, semilogx=SEMILOG_X, semilogy=SEMILOG_Y, loglog=LOG_LOG)
         # self.plot_histograms_regret(envId)
+        totalRegret, index_of_sorting, stri = self.evaluator.printFinalRanking(envId=envId)
+        #save the final ranking to a file
+        with open(self.mainFigure + "_ranking.txt", "w") as text_file:
+            text_file.write(stri)

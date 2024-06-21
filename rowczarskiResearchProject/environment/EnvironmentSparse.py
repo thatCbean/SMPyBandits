@@ -8,7 +8,7 @@ from SMPyBandits.ContextualBandits.Contexts.SkewedNormalContext import SkewedNor
 
 from SMPyBandits.ContextualBandits.ContextualArms.ContextualGaussianNoiseArm import ContextualGaussianNoiseArm
 
-DIMENSION = 50
+DIMENSION = 5
 N = 20
 
 
@@ -25,8 +25,8 @@ def create_sparse_coefficients(dimension, sparsity):
 
 def generate_environment(num_arms, num_contexts, dimension, sparsity):
     theta_star = create_sparse_coefficients(dimension, sparsity)
-    arms = [ContextualGaussianNoiseArm(0, 0.01) for _ in range(num_arms)]
-    contexts = [NormalContext(np.ones(dimension), np.identity(dimension) * 0.5, dimension)
+    arms = [ContextualGaussianNoiseArm(0, 0.1) for _ in range(num_arms)]
+    contexts = [NormalContext(np.zeros(dimension), np.identity(dimension) * 0.5, dimension)
                 for _ in range(num_contexts)]
     return {
         "theta_star": theta_star,
@@ -77,7 +77,7 @@ def generate_environment_exponential(num_arms, num_contexts, dimension, sparsity
         "contexts": contexts
     }
 
-S_0 = 30
+S_0 = 5
 # Generate the environment with n arms, n contexts, dimension d, sparsity s_0
 environments = [generate_environment(N, N, DIMENSION, S_0)]
 # environments = [generate_environment_skewed_normal(N, N, DIMENSION, 5, 3)]
