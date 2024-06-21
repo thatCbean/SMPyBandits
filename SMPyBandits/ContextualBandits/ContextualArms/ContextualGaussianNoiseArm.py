@@ -36,6 +36,9 @@ class ContextualGaussianNoiseArm(ContextualArm):
         assert theta_star.shape == context.shape, "theta shape must be equal to context"
         # return min(1, max(0, np.inner(context, self.theta) + normal(self.noise_mean, self.noise_var)))
         reward = abs(np.inner(context, theta_star))
+        # print(f"Theta: {theta_star}")
+        # print(f"Context: {context}")
+        # print(f"Reward: {reward}")
         return min(1, reward),  min(1, reward + normal(self.noise_mean, self.noise_var))
 
     def is_nonzero(self):

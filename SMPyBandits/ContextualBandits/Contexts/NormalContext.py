@@ -37,7 +37,8 @@ class NormalContext(BaseContext):
         # res = np.zeros(shape=self.dimension)
         # for i in range(self.dimension):
         #     res[i] = normal(self.means[i], self.covariance_matrix[i][i])
-        return res / np.linalg.norm(res) if np.linalg.norm(res) > 1 else res
+        # print(f"Drawn context: {res / np.linalg.norm(res)}")
+        return res / np.linalg.norm(res)
 
     def get_means(self):
         return self.means / self.means.sum()

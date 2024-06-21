@@ -37,4 +37,5 @@ class ExponentialContext(BaseContext):
             sample = np.random.exponential(scale=1.0 / self.rate, size=self.dimension)
         else:
             sample = np.random.exponential(scale=1.0 / np.array(self.rate), size=self.dimension)
-        return sample
+        print(sample)
+        return sample / np.linalg.norm(sample)

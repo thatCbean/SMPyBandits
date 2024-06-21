@@ -16,7 +16,7 @@ environments = environments_sparse
 policies = policies_sparse
 policies_test = policies_sparse_test
 
-configuration = Configuration(environments=environments, policies=policies).getConfigurations()
+configuration = Configuration(environments=environments, policies=policies_test).getConfigurations()
 
 evaluator = EvaluatorContextual(configuration) # For environments with context
 # evaluator = Evaluator(configuration) # Only when using non-contextual environments

@@ -9,8 +9,8 @@ AMPLITUDE = 1
 DIMENSION = 50
 
 policies = [
-    # {"archtype": UCB, "params": {}},
-    # {"archtype": Exp3, "params": {"gamma": 0.1}},
+    {"archtype": UCB, "params": {}},
+    {"archtype": Exp3, "params": {"gamma": 0.1}},
     {"archtype": LinUCB, "params": {"dimension": DIMENSION, "alpha": 0.8}},
     {"archtype": SparsityAgnosticLassoBandit, "params": {
                 "lambda_zero": 0.001, "dimension": DIMENSION,

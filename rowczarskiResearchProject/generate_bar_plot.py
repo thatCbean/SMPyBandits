@@ -52,9 +52,39 @@ ax.errorbar(data_x, data_y, yerr=2*std_data_y, fmt='-o', color='cyan', markersiz
 title_text = r'Obtained cumulative regret of LinUCB compared to SALasso' + '\n' + r'in environment with $d = 50$ and $K=20$'
 ax.set_title(title_text)
 ax.set_xlabel(r'Sparsity to density ratio $\frac{s_0}{d}$')
-ax.set_ylabel('Obtained regret compared to SALasso [%]')
+ax.set_ylabel(r'Obtained regret compared to SALasso $\frac{\mathcal{R}^{LinUCB}(1000)}{\mathcal{R}^{SALasso}(1000)}$ [%]')
 
 plt.grid(True)
 plt.tight_layout()
-# plt.savefig('cumulative_regret_plot.png', dpi=300)
+plt.savefig('cumulative_regret_plot.png')
 plt.show()
+#
+# data_x = [5/50, 10/50, 15/50, 20/50, 25/50, 30/50, 35/50, 40/50, 45/50, 50/50]
+#
+# data_y_SALasso = np.array([3.3696, 7.394, 2.491, 3.4929, 1.7536, 144.09, 149.23, 135.73, 128.7, 119.71])
+# std_SALasso = np.array([1.0829, 1.5137, 0.40484, 0.22723, 0.43656, 8.8992, 20.284, 23.669, 29.811, 23.014])
+#
+# data_y_linUCB = np.array([8.2109, 13.522, 2.3315, 2.4191, 0.091563, 149.18, 149.21, 138.01, 132.23, 126.68])
+# std_linUCB = np.array([1.3747, 1.0016, 0.32362, 0.27776, 10.386, 17.204, 19.977, 21.596, 28.201, 33.005])
+#
+#
+# ratio = data_y_linUCB / data_y_SALasso
+# std_ratio = np.abs(ratio) * np.sqrt((std_linUCB / data_y_linUCB) ** 2 + (std_SALasso / data_y_SALasso) ** 2)
+#
+# data_y = (ratio * 100) - 100
+# print(data_y)
+# std_data_y = std_ratio * 100
+#
+# fig1, ax = plt.subplots()
+# ax.bar(data_x, data_y, width=0.05)
+# ax.errorbar(data_x, data_y, yerr=2*std_data_y, fmt='-o', color='cyan', markersize=5, capsize=3,)
+# #ax.axhline(y=0, color='gray', linestyle='--', label='y = 0')
+# title_text = r'Obtained cumulative regret of LinUCB compared to SALasso' + '\n' + r'in environment with $d = 50$ and $K=20$'
+# ax.set_title(title_text)
+# ax.set_xlabel(r'Sparsity to density ratio $\frac{s_0}{d}$')
+# ax.set_ylabel('Obtained regret compared to SALasso [%]')
+#
+# plt.grid(True)
+# plt.tight_layout()
+# # plt.savefig('cumulative_regret_plot.png', dpi=300)
+# plt.show()

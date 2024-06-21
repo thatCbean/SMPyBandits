@@ -54,6 +54,7 @@ class SparsityAgnosticLassoBandit(ContextualBasePolicy):
 
             self.lassoModel.fit(all_context, all_reward)
             self.betaHat = self.lassoModel.coef_
+            #print(self.betaHat)
 
     def update_lamda_t(self):
         self.lambda_t = self.lambda_zero * np.sqrt((4 * np.log(self.t) + 2 * np.log(self.dimension)) / self.t)

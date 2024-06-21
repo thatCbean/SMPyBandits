@@ -17,13 +17,16 @@ def create_sparse_coefficients(dimension, sparsity):
     beta = np.zeros(dimension)
     indices = np.random.choice(range(dimension), sparsity, replace=False)
     beta[indices] = np.random.uniform(0., 1., sparsity)
-    return beta
+
+    print("Sparse coefficient vector beta = {} with sparsity = {}.".format(beta, sparsity))
+
+    return beta / np.linalg.norm(beta)
 
 
 def generate_environment(num_arms, num_contexts, dimension, sparsity):
     theta_star = create_sparse_coefficients(dimension, sparsity)
     arms = [ContextualGaussianNoiseArm(0, 0.01) for _ in range(num_arms)]
-    contexts = [NormalContext(np.zeros(dimension), np.identity(dimension) * 0.5, dimension)
+    contexts = [NormalContext(np.ones(dimension), np.identity(dimension) * 0.5, dimension)
                 for _ in range(num_contexts)]
     return {
         "theta_star": theta_star,
@@ -66,7 +69,7 @@ def generate_environment_elliptical(num_arms, num_contexts, dimension, sparsity)
 
 def generate_environment_exponential(num_arms, num_contexts, dimension, sparsity, rate):
     theta_star = create_sparse_coefficients(dimension, sparsity)
-    arms = [ContextualGaussianNoiseArm(0, 0.01) for _ in range(num_arms)]
+    arms = [ContextualGaussianNoiseArm(0, 0.1) for _ in range(num_arms)]
     contexts = [ExponentialContext(dimension, rate) for _ in range(num_contexts)]
     return {
         "theta_star": theta_star,
@@ -74,7 +77,7 @@ def generate_environment_exponential(num_arms, num_contexts, dimension, sparsity
         "contexts": contexts
     }
 
-S_0 = 50
+S_0 = 30
 # Generate the environment with n arms, n contexts, dimension d, sparsity s_0
 environments = [generate_environment(N, N, DIMENSION, S_0)]
 # environments = [generate_environment_skewed_normal(N, N, DIMENSION, 5, 3)]
