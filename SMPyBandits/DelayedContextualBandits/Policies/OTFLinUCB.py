@@ -19,14 +19,14 @@ from SMPyBandits.DelayedContextualBandits.Policies.ContextualBasePolicyWithDelay
 ALPHA = 0.01
 
 
-class DeLinUCB(ContextualBasePolicy):
+class OTFLinUCB(ContextualBasePolicy):
     """
     The linUCB contextual bandit policy.
     """
 
     def __init__(self, nbArms, dimension, horizon, alpha=ALPHA, lambda_reg=1, m=500,
                  lower=0., amplitude=1.):
-        super(DeLinUCB, self).__init__(nbArms, lower=lower, amplitude=amplitude)
+        super(OTFLinUCB, self).__init__(nbArms, lower=lower, amplitude=amplitude)
         assert alpha > 0, "Error: the 'alpha' parameter for the LinUCB class must be greater than 0"
         assert dimension > 0, "Error: the 'dimension' parameter for the LinUCB class must be greater than 0"
         print("Initiating policy LinUCB with {} arms, dimension: {}, alpha: {}".format(nbArms, dimension, alpha))

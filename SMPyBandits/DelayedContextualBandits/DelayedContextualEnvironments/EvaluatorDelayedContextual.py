@@ -12,7 +12,7 @@ from SMPyBandits.ContextualBandits.ContextualEnvironments.EvaluatorContextual im
 from SMPyBandits.ContextualBandits.ContextualPolicies.ContextualBasePolicy import ContextualBasePolicy
 from SMPyBandits.DelayedContextualBandits.DelayedContextualEnvironments.DelayedContextualMAB import DelayedContextualMAB
 from SMPyBandits.DelayedContextualBandits.Policies.ContextualBasePolicyWithDelay import ContextualBasePolicyWithDelay
-from SMPyBandits.DelayedContextualBandits.Policies.DeLinUCB import DeLinUCB
+from SMPyBandits.DelayedContextualBandits.Policies.OTFLinUCB import OTFLinUCB
 from SMPyBandits.Environment.Result import Result
 from SMPyBandits.Environment.memory_consumption import getCurrentMemory, sizeof_fmt
 from SMPyBandits.Environment.usetqdm import USE_TQDM, tqdm
@@ -156,7 +156,7 @@ class EvaluatorDelayedContextual(EvaluatorContextual):
              verticalalignment='top', horizontalalignment='left', linespacing=3,
              bbox=dict(boxstyle='round,pad=0.5', facecolor='white', alpha=0.5))
             
-        fig.subplots_adjust(right=0.65)
+        fig.subplots_adjust(right=0.7)
         return fig  
 
 
@@ -221,7 +221,7 @@ def delayed_play(env, policy, horizon,
             current_context = contexts[choice]
             policy.getReward(choice, observed_reward, contexts)
             policy.update_covariance_matrix(current_context)
-            if isinstance(policy, DeLinUCB):
+            if isinstance(policy, OTFLinUCB):
                 for(delay, past_reward) in remove_from_buffer(buffer, t):
                     policy.update_beta(delay, past_reward)
             else:

@@ -4,12 +4,10 @@ from os import makedirs, path
 import sys
 import numpy as np
 
-sys.path.append("C:\\Users\\Dragos\\Desktop\\SMPyBandits")
-
 from SMPyBandits.Delays.NegativeBinomialDelay import NegativeBinomialDelay
 from SMPyBandits.Delays.UniformDelay import UniformDelay
 from SMPyBandits.Delays.GeometricDelay import GeometricDelay
-from SMPyBandits.DelayedContextualBandits.Policies.DeLinUCB import DeLinUCB
+from SMPyBandits.DelayedContextualBandits.Policies.OTFLinUCB import OTFLinUCB
 from SMPyBandits.ContextualBandits.ContextualPolicies import LinUCB
 from SMPyBandits.ContextualBandits.ContextualPolicies.ContextualBasePolicy import ContextualBasePolicy
 
@@ -26,26 +24,34 @@ from SMPyBandits.DelayedContextualBandits.DelayedContextualEnvironments.Evaluato
 from SMPyBandits.ContextualBandits.Contexts.NormalContext import NormalContext
 from SMPyBandits.ContextualBandits.ContextualArms.ContextualGaussianNoiseArm import \
     ContextualGaussianNoiseArm
-
+ 
 # Code based on:
 # https://github.com/SMPyBandits/SMPyBandits/blob/master/notebooks/Example_of_a_small_Single-Player_Simulation.ipynb
-horizon = 5000
-repetitions = 10
-m = 100
-n_jobs = 1
-verbosity = 2
+horizon = 10000
+repetitions = 50
+n_jobs = -1
+verbosity = 0
 
+# plot_rewards = False 
+# plot_regret_normalized = True
+# plot_regret_absolute = True
+# plot_expectation_based_regret_normalized = False
+# plot_expectation_based_regret_absolute = False
+# plot_regret_over_max_return = True
+# plot_regret_logy = True
+# plot_regret_log = True
+# plot_min_max = True
 plot_rewards = False 
-plot_regret_normalized = True
+plot_regret_normalized = False
 plot_regret_absolute = True
 plot_expectation_based_regret_normalized = False
 plot_expectation_based_regret_absolute = False
-plot_regret_over_max_return = True
-plot_regret_logy = True
-plot_regret_log = True
-plot_min_max = True
+plot_regret_over_max_return = False
+plot_regret_logy = False
+plot_regret_log = False
+plot_min_max = False
 
-include_delay_info = False
+include_delay_info = True
 include_std_dev = True
 
 start_time = datetime.datetime.now()
@@ -59,36 +65,26 @@ environments = [
             ContextualGaussianNoiseArm(0, 0.01),
             ContextualGaussianNoiseArm(0, 0.01),
             ContextualGaussianNoiseArm(0, 0.01),
-            ContextualGaussianNoiseArm(0, 0.01),
-            ContextualGaussianNoiseArm(0, 0.01)
         ],
         "contexts": [
             NormalContext([0.2, 0.4, 0.6], np.identity(3) * 0.3, 3),
             NormalContext([0.1, 0.3, 0.5], np.identity(3) * 0.5, 3),
             NormalContext([0.6, 0.05, 0.01], np.identity(3) * 0.7, 3),
             NormalContext([0.2, 0.7, 0.001], np.identity(3) * 0.3, 3),
-            NormalContext([0.4, 0.1, 0.2], np.identity(3) * 0.5, 3),
-            NormalContext([0.3, 0.5, 0.15], np.identity(3) * 0.7, 3),
         ],
         "delays": [
-            # PoissonDelay(3, 0, 0, 500),
-            # PoissonDelay(3, 0, 0, 400),
             # PoissonDelay(3, 0, 0, 300),
-            # PoissonDelay(3, 0, 0, 600),
-            # PoissonDelay(3, 0, 0, 800),
-            # PoissonDelay(3, 0, 0, 900),
-            UniformDelay(3, 0, 100),
-            UniformDelay(3, 0, 100),
-            UniformDelay(3, 0, 100),
-            UniformDelay(3, 0, 100),
-            UniformDelay(3, 0, 100),
-            UniformDelay(3, 0, 100),
-            # GeometricDelay(3, 0, 0, 400),
-            # GeometricDelay(3, 0, 0, 500),
-            # GeometricDelay(3, 0, 0, 600),
-            # GeometricDelay(3, 0, 0, 700),
-            # GeometricDelay(3, 0, 0, 800),
-            # GeometricDelay(3, 0, 0, 900),
+            # PoissonDelay(3, 0, 0, 300),
+            # PoissonDelay(3, 0, 0, 300),
+            # PoissonDelay(3, 0, 0, 300),
+            # UniformDelay(3, 0, 1000),
+            # UniformDelay(3, 0, 1000),
+            # UniformDelay(3, 0, 1000),
+            # UniformDelay(3, 0, 1000),
+            GeometricDelay(3, 0, 0, 500),
+            GeometricDelay(3, 0, 0, 500),
+            GeometricDelay(3, 0, 0, 500),
+            GeometricDelay(3, 0, 0, 500),
         ]
     }
 ]
@@ -96,14 +92,12 @@ environments = [
 policies = [
     # {"archtype": UCBWithDelay, "params": {}},
     # {"archtype": Exp3WithDelay, "params": {"gamma": 0.01}},
-    # {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 700}},
-
     {"archtype": LinUCBWithDelay, "params": {"dimension": 3, "alpha": 0.01}},
-    {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 100}},
-    {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 90}},
+    {"archtype": OTFLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 500}},
+    # {"archtype": OTFLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 350}},
     # {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 80}},
     # {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 70}},
-    # {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 60}},
+    # {"archtype": DeLinUCB, "params":  {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 60}},
     # {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 50}},
     # {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 40}},
     # {"archtype": DeLinUCB, "params": {"dimension": 3, "alpha": 0.01, "horizon": horizon, "lambda_reg" : 1, "m" : 30}},

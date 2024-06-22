@@ -511,18 +511,14 @@ class EvaluatorContextual(object):
             if plotSTD and self.repetitions > 1:
                 # stdY = self.getSTDRegret(policyId, envId, meanReward=meanReward)
                 stdY = self.getCumulativeRegretStandardDeviation(policyId, envId)
-                if normalizedRegret:
-                    stdY /= np.log(2 + X)
-                plt.fill_between(X[::self.delta_t_plot], Y[::self.delta_t_plot] - stdY[::self.delta_t_plot],
-                                 Y[::self.delta_t_plot] + stdY[::self.delta_t_plot], facecolor=colors[policyId], alpha=0.2)
+                plt.fill_between(X[::self.delta_t_plot], Y[::self.delta_t_plot] - 2 * stdY[::self.delta_t_plot],
+                                 Y[::self.delta_t_plot] + 2 *  stdY[::self.delta_t_plot], facecolor=colors[policyId], alpha=0.2)
 
             # Print amplitude of regret
             if plotMaxMin and self.repetitions > 1:
                 MaxMinY = self.getCumulatedRewardAmplitude(policyId, envId)
-                if normalizedRegret:
-                    MaxMinY /= self.horizon
-                plt.fill_between(X[::self.delta_t_plot], Y[::self.delta_t_plot] - MaxMinY[::self.delta_t_plot],
-                                 Y[::self.delta_t_plot] + MaxMinY[::self.delta_t_plot], facecolor=colors[policyId],
+                plt.fill_between(X[::self.delta_t_plot], Y[::self.delta_t_plot] - 2 * MaxMinY[::self.delta_t_plot],
+                                 Y[::self.delta_t_plot] + 2 * MaxMinY[::self.delta_t_plot], facecolor=colors[policyId],
                                  alpha=0.2)
         self._xlabel(envId, r"Time steps $t = 1...T$, horizon $T = {}$".format(self.horizon))
         if not meanReward:
@@ -530,7 +526,7 @@ class EvaluatorContextual(object):
                 ymin = max(0, ymin)
             plt.ylim(ymin, plt.ylim()[1])
         # Get a small string to add to ylabel
-        ylabel2 = r"%s%s" % (r", $\pm 1$ standard deviation" if (plotSTD and not plotMaxMin) else "",
+        ylabel2 = r"%s%s" % (r", $\pm 2$ standard deviation" if (plotSTD and not plotMaxMin) else "",
                              r", $\pm 1$ amplitude" if (plotMaxMin and not plotSTD) else "")
         if meanReward:
             legend()
