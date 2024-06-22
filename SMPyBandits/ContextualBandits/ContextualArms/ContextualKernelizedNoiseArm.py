@@ -34,10 +34,17 @@ class ContextualKernelizedNoiseArm(ContextualArm):
         assert isinstance(context, np.ndarray), "context must be an np.ndarray"
         assert theta_star.shape == context.shape, "theta shape must be equal to context"
         # return min(1, max(0, np.inner(context, self.theta) + normal(self.noise_mean, self.noise_var)))
-        prod = abs(np.inner(context, theta_star))
-        res = np.sin(prod) + np.cos(prod) + normal(self.noise_mean, self.noise_var)
-        return min(1, res)
-        return min(1, abs(np.inner(context, theta_star) + normal(self.noise_mean, self.noise_var)))
+        x = abs(np.inner(context, theta_star))
+        #reward = np.sin(x) + np.cos(x)
+        #reward = np.sqrt(x)
+        #reward = np.power(x, 3) + np.power(x, 2) + x
+        #reward = np.sin(x) / np.power(x, 2)
+        #reward = np.sqrt(np.sin(x) * np.cos(x))
+        #reward = np.sin(x) * np.cos(x)
+        #reward = np.tan(x)
+        #reward = x
+        reward = np.log(x)
+        return min(1, reward),  min(1, reward + normal(self.noise_mean, self.noise_var))
 
     def is_nonzero(self):
         return True

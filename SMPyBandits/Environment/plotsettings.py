@@ -217,8 +217,8 @@ def show_and_save(showplot=True, savefig=None, formats=FORMATS, pickleit=False, 
 
     - Inspired by https://tomspur.blogspot.fr/2015/08/publication-ready-figures-with.html#Save-the-figure
     """
-    if showplot:
-        maximizeWindow()
+    #if showplot:
+    #    maximizeWindow()
     if savefig is not None:
         if pickleit and fig is not None:
             form = "pickle"

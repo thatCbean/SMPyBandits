@@ -39,8 +39,8 @@ class KernelUCB(ContextualBasePolicy):
         self.pulled = []
         # list of rewards corresponding to chosen actions to the moment
         self.a_rewards = []
-        # define a dictionary to store kernel matrix inverse in each t
-        self.Kinv = {}
+        self.Kinv = []
+        self.KinvLast = []
         
 
     def startGame(self):
@@ -85,10 +85,10 @@ class KernelUCB(ContextualBasePolicy):
         
         # building inverse of kernel matrix for first round is different from consequent rounds.
         if self.t==0:
-            self.Kinv[self.t] = 1.0/(self.kern(x_t,x_t) + self.gamma)
+            self.Kinv = 1.0/(self.kern(x_t,x_t) + self.gamma)
         else:
             # set inverse of kernel matrix as the kernel matrix inverse of the previous round
-            Kinv = self.Kinv[self.t-1]
+            Kinv = self.KinvLast
             # set b as k_(x_t) excluding the kernel value of the current round
             b = k_x[arm][:-1]
             # reshape b into the valid numpy column vector
@@ -111,14 +111,14 @@ class KernelUCB(ContextualBasePolicy):
             K21 = np.reshape(K21,(1,self.t))
             K22 = np.reshape(K22,(1,1))
             # stack components into an array of shape(self.t, self.t)
-            self.Kinv[self.t] = np.vstack((np.hstack((K11,K12)),np.hstack((K21,K22)))) 
+            self.Kinv = np.vstack((np.hstack((K11,K12)),np.hstack((K21,K22)))) 
 
         super(KernelUCB, self).getReward(arm, reward, context)  # XXX Call to BasePolicy
 
     def choice(self, context):
         # get the flattened context and reshape it to an array of shape (narms,ndims)
         context = np.reshape(context, (self.narms,self.ndims))
-        
+        self.KinvLast = self.Kinv
         if self.t == 0:
             # Always start with action 1
             self.u[0] = 1.0
@@ -149,15 +149,9 @@ class KernelUCB(ContextualBasePolicy):
             for i in range(self.narms):
                 self.sigma[i] = np.sqrt(
                     self.kern(context[i].reshape(1, -1), context[i].reshape(1,-1)) -
-                        k_x[i].T.dot(self.Kinv[self.t - 1]).dot(k_x[i]))  
-                self.u[i] = k_x[i].T.dot(self.Kinv[self.t-1]).dot(self.y) + (self.eta/np.sqrt(self.gamma))*self.sigma[i]
+                        k_x[i].T.dot(self.KinvLast).dot(k_x[i]))  
+                self.u[i] = k_x[i].T.dot(self.KinvLast).dot(self.y) + (self.eta/np.sqrt(self.gamma))*self.sigma[i]
             
         # Breaking ties arbitrarily
         action = np.random.choice(np.where(self.u==max(self.u))[0])
-        #print("============= T : " + str(self.t) + " =============")
-        #print("ACTION : " + str(action))
-        #print("REWARDS : " + str(self.a_rewards))
-        #print("U : " + str(self.u))
-        #print("SIGMA : " + str(self.sigma))
-        #print("CONTEXT : " + str(context))
         return action
