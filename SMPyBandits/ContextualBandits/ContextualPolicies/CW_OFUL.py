@@ -25,6 +25,10 @@ class CW_OFUL(ContextualBasePolicy):
     The CW-OFUL contextual adversarial bandit policy.
     """
 
+    @staticmethod
+    def name():
+        return "CW-OFUL"
+
     def __init__(self, nbArms, dimension, alpha=ALPHA,
                  beta=BETA, labda=LAMBDA, lower=0.,
                  amplitude=1., group=-1):
@@ -51,6 +55,9 @@ class CW_OFUL(ContextualBasePolicy):
         self.theta_k = np.zeros(self.dimension)
 
     def __str__(self):
+        return r"CW_OFUL($\alpha: {:.3g}, \beta: {:.3g}, \lambda: {:.3g}$)".format(self.alpha, self.beta, self.labda)
+
+    def __repr__(self):
         return r"CW_OFUL($\alpha: {:.3g}, \beta: {:.3g}, \lambda: {:.3g}$)".format(self.alpha, self.beta, self.labda)
 
     def getReward(self, arm, reward, contexts, t=0):

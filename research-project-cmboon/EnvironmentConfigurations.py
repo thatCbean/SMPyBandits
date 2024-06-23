@@ -76,7 +76,10 @@ class EnvironmentConfigurations(object):
         return cfg
 
     arm_counts = [5]
-    noise_variances = [0.1]
+    # noise_variances = [0.01, 0.1, 0.315227766]
+    noise_variances = [0.01]
+    # noise_variances = [0.1]
+    # noise_variances = [0.315227766]
 
     def base_vectors(self, dimension):
         return [
@@ -175,7 +178,7 @@ class EnvironmentConfigurations(object):
         res = list()
         for i in range(len(thetas_vectors)):
             for j in range(len(change_schemes)):
-                if i == j:
+                if (i == 0 and j == 0) or (i == 1 and j == 1) or (i == 3 and j == 2) or (i == 4 and j == 3):
                     continue
 
                 thetas_vectors_i = [thetas_vectors[i]]
@@ -187,8 +190,8 @@ class EnvironmentConfigurations(object):
     def thetas_for_slow_changing(self, dimension):
         thetas_vectors = self.base_vectors(dimension)
         res = list()
-        res.append([thetas_vectors[0]])
-        res.append([thetas_vectors[1]])
+        # res.append([thetas_vectors[0]])
+        # res.append([thetas_vectors[1]])
         res.append([thetas_vectors[0], thetas_vectors[1]])
         res.append([thetas_vectors[1], thetas_vectors[3]])
         res.append([thetas_vectors[4], thetas_vectors[5]])
@@ -201,9 +204,9 @@ class EnvironmentConfigurations(object):
             # 1,
             # 2,
             # 4,
-            math.floor(horizon / 5),
+            # math.floor(horizon / 5),
             math.floor(horizon / 10),
-            # math.floor(horizon / 20),
+            math.floor(horizon / 20),
         ]
 
     def base_interval(self, horizon, change_count):
@@ -248,6 +251,14 @@ class EnvironmentConfigurations(object):
                     for context_mean_id, context_means in enumerate(self.non_neg_vector_subset(arm_count)):
                         for context_variance_id, context_variance in enumerate(self.non_neg_vector_subset(arm_count)):
                             env.append(self.generateContextualGaussianNoiseNormalContextEnvironment("Contextual environment", arm_count, noise_variance, theta_star, context_means, context_variance, dimension))
+        return env
+
+    def getEnvContextualNoiseTest(self, horizon, dimension):
+        env = list()
+
+        for noise_variance_id, noise_variance in enumerate(self.noise_variances):
+            env.append(self.generateContextualGaussianNoiseNormalContextEnvironment("Contextual environment", 5, noise_variance, self.base_vectors(20)[1], self.base_vectors(20)[4], self.base_vectors(20)[1], dimension))
+
         return env
 
     def getEnvPerturbed(self, horizon, dimension):

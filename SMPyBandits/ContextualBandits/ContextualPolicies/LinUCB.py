@@ -22,6 +22,10 @@ class LinUCB(ContextualBasePolicy):
     The linUCB contextual bandit policy.
     """
 
+    @staticmethod
+    def name():
+        return "linUCB"
+
     def __init__(self, nbArms, dimension, alpha=ALPHA,
                  lower=0., amplitude=1., group=-1):
         super(LinUCB, self).__init__(nbArms, lower=lower, amplitude=amplitude, group=group)
@@ -41,6 +45,9 @@ class LinUCB(ContextualBasePolicy):
         self.b = np.zeros(self.dimension)
 
     def __str__(self):
+        return r"linUCB($\alpha: {:.3g}$)".format(self.alpha)
+
+    def __repr__(self):
         return r"linUCB($\alpha: {:.3g}$)".format(self.alpha)
 
     def getReward(self, arm, reward, contexts, t=0):

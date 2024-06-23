@@ -21,7 +21,7 @@ class PolicyConfigurations(object):
 
     def generatePolicySetContextualMany(self, dimension, horizon):
         return [
-            {"archtype": UCB, "params": {"group": 5}},
+            {"archtype": UCB, "params": {"group": 0}},
 
             {"archtype": Exp3, "params": {"gamma": 0.01, "group": 1}},
             {"archtype": Exp3, "params": {"gamma": 0.1, "group": 1}},
@@ -45,46 +45,55 @@ class PolicyConfigurations(object):
 
             {"archtype": CW_OFUL, "params": {"dimension": dimension, "alpha": 0.1, "beta": 0.5, "labda": 0.1, "group": 3}},
             {"archtype": CW_OFUL, "params": {"dimension": dimension, "alpha": 0.01, "beta": 0.5, "labda": 0.1, "group": 3}},
+
             {"archtype": CW_OFUL, "params": {"dimension": dimension, "alpha": 0.1, "beta": 0.1, "labda": 0.1, "group": 3}},
             {"archtype": CW_OFUL, "params": {"dimension": dimension, "alpha": 0.01, "beta": 0.1, "labda": 0.1, "group": 3}},
+
             {"archtype": CW_OFUL, "params": {"dimension": dimension, "alpha": 0.1, "beta": 0.5, "labda": 0.5, "group": 3}},
             {"archtype": CW_OFUL, "params": {"dimension": dimension, "alpha": 0.01, "beta": 0.5, "labda": 0.5, "group": 3}},
+
             {"archtype": CW_OFUL, "params": {"dimension": dimension, "alpha": 0.1, "beta": 0.1, "labda": 3, "group": 3}},
             {"archtype": CW_OFUL, "params": {"dimension": dimension, "alpha": 0.01, "beta": 0.5, "labda": 3, "group": 3}},
+
             {"archtype": CW_OFUL, "params": {"dimension": dimension, "alpha": 0.1, "beta": 0.5, "labda": 3, "group": 3}},
             {"archtype": CW_OFUL, "params": {"dimension": dimension, "alpha": 0.01, "beta": 0.5, "labda": 10, "group": 3}},
             {"archtype": CW_OFUL, "params": {"dimension": dimension, "alpha": 0.001, "beta": 0.5, "labda": 3, "group": 3}},
             {"archtype": CW_OFUL, "params": {"dimension": dimension, "alpha": 0.001, "beta": 0.5, "labda": 10, "group": 3}},
 
+            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 50, "R": 0.1, "L": 1, "S": 1, "labda": 1, "delta": 1, "group": 4}},
+            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 200, "R": 0.1, "L": 1, "S": 1, "labda": 1, "delta": 1, "group": 4}},
             {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 50, "R": 0.1, "L": 1, "S": 1, "labda": 3, "delta": 1, "group": 4}},
-            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 100, "R": 0.1, "L": 1, "S": 1, "labda": 3, "delta": 1, "group": 4}},
             {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 200, "R": 0.1, "L": 1, "S": 1, "labda": 3, "delta": 1, "group": 4}},
-            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 500, "R": 0.1, "L": 1, "S": 1, "labda": 3, "delta": 1, "group": 4}},
-            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 50, "R": 0.1, "L": 1, "S": 1, "labda": 10, "delta": 1, "group": 4}},
-            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 100, "R": 0.1, "L": 1, "S": 1, "labda": 10, "delta": 1, "group": 4}},
-            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 200, "R": 0.1, "L": 1, "S": 1, "labda": 10, "delta": 1, "group": 4}},
-            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 500, "R": 0.1, "L": 1, "S": 1, "labda": 10, "delta": 1, "group": 4}},
             {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 50, "R": 0.4, "L": 1, "S": 1, "labda": 3, "delta": 1, "group": 4}},
             {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 200, "R": 0.4, "L": 1, "S": 1, "labda": 3, "delta": 1, "group": 4}},
-            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 500, "R": 0.4, "L": 1, "S": 1, "labda": 3, "delta": 1, "group": 4}},
-            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 50, "R": 0.1, "L": 1, "S": 1, "labda": 10, "delta": 0.6, "group": 4}},
-            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 200, "R": 0.1, "L": 1, "S": 1, "labda": 10, "delta": 0.6, "group": 4}},
-            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 500, "R": 0.1, "L": 1, "S": 1, "labda": 10, "delta": 0.6, "group": 4}},
+            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 50, "R": 0.1, "L": 1, "S": 1, "labda": 3, "delta": 0.5, "group": 4}},
+            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 200, "R": 0.1, "L": 1, "S": 1, "labda": 3, "delta": 0.5, "group": 4}},
+            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 50, "R": 0.1, "L": 1, "S": 1, "labda": 0.5, "delta": 0.5, "group": 4}},
+            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 200, "R": 0.1, "L": 1, "S": 1, "labda": 0.5, "delta": 0.5, "group": 4}}
+        ]
 
-            # {"archtype": BOB, "params": {"dimension": dimension, "horizon": horizon, "R": 0.1, "L": 1, "S": 1, "labda": 3}}
+    def generatePolicySetContextualManySpecific(self, dimension, horizon):
+        return [
+            {"archtype": UCB, "params": {"group": 0}},
+
+            {"archtype": Exp3, "params": {"gamma": 0.1, "group": 1}},
+
+            {"archtype": LinUCB, "params": {"dimension": dimension, "alpha": 0.5, "group": 2}},
+
+            {"archtype": CW_OFUL, "params": {"dimension": dimension, "alpha": 0.01, "beta": 0.5, "labda": 0.5, "group": 3}},
+
+            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 500, "R": 0.4, "L": 1, "S": 1, "labda": 3, "delta": 1, "group": 4}},
         ]
 
     def generatePolicySetContextualOneEach(self, dimension, horizon):
         return [
-            {"archtype": UCB, "params": {}},
+            {"archtype": UCB, "params": {"group": 0}},
 
-            {"archtype": Exp3, "params": {"gamma": 0.1}},
+            {"archtype": Exp3, "params": {"gamma": 0.1, "group": 1}},
 
-            {"archtype": LinUCB, "params": {"dimension": dimension, "alpha": 0.1}},
+            {"archtype": LinUCB, "params": {"dimension": dimension, "alpha": 0.1, "group": 2}},
 
-            {"archtype": CW_OFUL, "params": {"dimension": dimension, "alpha": 0.1, "beta": 0.5, "labda": 0.1}},
+            {"archtype": CW_OFUL, "params": {"dimension": dimension, "alpha": 0.1, "beta": 0.5, "labda": 0.1, "group": 3}},
 
-            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 1000, "R": 0.01, "L": 1, "S": 1, "labda": 1, "delta": 0.2}},
-
-            # {"archtype": BOB, "params": {"dimension": dimension, "horizon": horizon, "R": 0.01, "L": 1, "S": 1, "labda": 1}}
+            {"archtype": SW_UCB, "params": {"dimension": dimension, "window_size": 1000, "R": 0.01, "L": 1, "S": 1, "labda": 1, "delta": 0.2, "group": 4}},
         ]

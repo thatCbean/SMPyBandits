@@ -35,14 +35,14 @@ class NonContextualSimulatingContextualArm(ContextualArm):
         return "NonContextualGaussian(mu: {}, sigma^2: {}, dimension: {})".format(self.reward_mean, self.reward_var, self.dimension)
 
     def draw(self, theta_star, context, t=None):
-        return min(
+        r = min(
             1.0,
             abs(
                 normal(
                     self.reward_mean, self.reward_var
                 )
-            )
-        )
+            ))
+        return r, r
 
     def is_nonzero(self):
         return True

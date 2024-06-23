@@ -32,6 +32,10 @@ class ContextualBasePolicy(object):
         """ -> str"""
         return self.__class__.__name__
 
+    def __repr__(self):
+        """ -> repr str"""
+        return self.__class__.__name__
+
     # --- Start game, and receive rewards
 
     def startGame(self):

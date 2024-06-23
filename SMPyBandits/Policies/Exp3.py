@@ -34,6 +34,10 @@ class Exp3(BasePolicy):
     See also [Evaluation and Analysis of the Performance of the EXP3 Algorithm in Stochastic Environments, Y. Seldin & C. Szepasvari & P. Auer & Y. Abbasi-Adkori, 2012](http://proceedings.mlr.press/v24/seldin12a/seldin12a.pdf).
     """
 
+    @staticmethod
+    def name():
+        return "Exp3"
+
     def __init__(self, nbArms, gamma=GAMMA,
                  unbiased=UNBIASED, lower=0., amplitude=1., group=-1):
         super(Exp3, self).__init__(nbArms, lower=lower, amplitude=amplitude, group=group)
@@ -55,6 +59,9 @@ class Exp3(BasePolicy):
         self.weights.fill(1. / self.nbArms)
 
     def __str__(self):
+        return r"Exp3($\gamma: {:.3g}$)".format(self.gamma)
+
+    def __repr__(self):
         return r"Exp3($\gamma: {:.3g}$)".format(self.gamma)
 
     # This decorator @property makes this method an attribute, cf. https://docs.python.org/3/library/functions.html#property

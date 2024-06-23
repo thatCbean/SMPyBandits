@@ -130,6 +130,7 @@ class EvaluatorContextual(object):
         self.numberOfCPDetections = dict()  #: For each env, store the number of change-point detections by each algorithms, to print it's average at the end (to check if a certain Change-Point detector algorithm detects too few or too many changes).
         self.all_contexts = dict()
         self.all_rewards = dict()
+        self.all_rewards_with_noise = dict()
         # XXX: WARNING no memorized vectors should have dimension duration * repetitions, that explodes the RAM consumption!
         for envId in range(len(self.envs)):
             self.runningTimes[envId] = np.zeros((self.nbPolicies, self.repetitions))
@@ -202,6 +203,7 @@ class EvaluatorContextual(object):
             np.random.seed(self.seeds[env_id])
 
         rewards = np.zeros((self.repetitions, self.horizon, env.nbArms))
+        rewards_with_noise = np.zeros((self.repetitions, self.horizon, env.nbArms))
         contexts = np.zeros((self.repetitions, self.horizon, env.nbArms, self.dimension))
         if self.verbosity > 2:
             print(
@@ -211,13 +213,13 @@ class EvaluatorContextual(object):
             for repetitionId in tqdm(range(self.repetitions), desc="Repetitions"):
                 for t in tqdm(range(self.horizon), desc="Time steps"):
                     for arm_id in tqdm(range(len(env.arms)), desc="Arms"):
-                        contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id] = env.draw(arm_id, t)
+                        contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id], rewards_with_noise[repetitionId, t, arm_id] = env.draw(arm_id, t)
         else:
             for repetitionId in tqdm(range(self.repetitions), desc="Repetitions"):
                 for t in range(self.horizon):
                     for arm_id in range(len(env.arms)):
-                        contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id] = env.draw(arm_id, t)
-        return contexts, rewards
+                        contexts[repetitionId, t, arm_id], rewards[repetitionId, t, arm_id], rewards_with_noise[repetitionId, t, arm_id] = env.draw(arm_id, t)
+        return contexts, rewards, rewards_with_noise
 
     def clear_generated_data(self, envId):
         # self.all_contexts[envId] = np.zeros(
@@ -225,6 +227,7 @@ class EvaluatorContextual(object):
         self.all_rewards.pop(envId)
         # self.all_rewards[envId] = np.zeros((self.repetitions, self.horizon, self.envs[envId].nbArms))
         self.all_contexts.pop(envId)
+        self.all_rewards_with_noise.pop(envId)
         # self.rewards = np.zeros((self.repetitions, self.nbPolicies, len(self.envs),
         #                          self.horizon))  #: For each env, history of rewards, ie accumulated rewards
         # self.sumRewards = np.zeros((self.nbPolicies, len(self.envs),
@@ -251,8 +254,8 @@ class EvaluatorContextual(object):
             np.random.seed(self.seeds[0])
 
         # Precompute rewards
-        all_contexts, all_rewards = self.compute_cache_rewards(env, envId)
-        self.all_contexts[envId], self.all_rewards[envId] = all_contexts, all_rewards
+        all_contexts, all_rewards, rewards_with_noise = self.compute_cache_rewards(env, envId)
+        self.all_contexts[envId], self.all_rewards[envId], self.all_rewards_with_noise[envId] = all_contexts, all_rewards, rewards_with_noise
 
         def store(r, policyId, repeatId):
             """ Store the result of the #repeatId experiment, for the #policyId policy."""
@@ -277,7 +280,7 @@ class EvaluatorContextual(object):
             if self.useJoblib:
                 repeatIdout = 0
                 for r in Parallel(n_jobs=self.cfg['n_jobs'], pre_dispatch='3*n_jobs', verbose=self.cfg['verbosity'])(
-                        delayed(delayed_play)(env, policy, self.horizon, self.all_contexts, self.all_rewards, envId,
+                        delayed(delayed_play)(env, policy, self.horizon, self.all_contexts, self.all_rewards_with_noise, envId,
                                               repeatId=repeatId, verbose=(self.verbosity > 5))
                         for repeatId in range(self.repetitions)
                 ):
@@ -287,7 +290,7 @@ class EvaluatorContextual(object):
             else:
                 for repeatId in (
                         tqdm(range(self.repetitions), desc="Repeat") if self.verbosity > 4 else range(self.repetitions)):
-                    r = delayed_play(env, policy, self.horizon, self.all_contexts, self.all_rewards, envId,
+                    r = delayed_play(env, policy, self.horizon, self.all_contexts, self.all_rewards_with_noise, envId,
                                      repeatId=repeatId, verbose=(self.verbosity > 5))
                     store(r, policyId, repeatId)
 
@@ -429,11 +432,11 @@ class EvaluatorContextual(object):
     def getCumulativeRegretStandardDeviation(self, policyId, envId):
         cumulative_regrets = self.getCumulatedRegrets(policyId, envId)
         mean_regret = np.array([np.mean(cumulative_regrets[:, t]) for t in range(self.horizon)])
-        mean_regret_blocked = np.repeat(mean_regret, self.repetitions).reshape(self.repetitions, self.horizon)
+        mean_regret_blocked = np.array([mean_regret for _ in range(self.repetitions)])
         cumulative_regrets -= mean_regret_blocked
         cumulative_regrets **= 2
         sum_of_squared_deviations = np.array([np.sum(cumulative_regrets[:, t]) for t in range(self.horizon)])
-        sum_of_squared_deviations /= np.arange(1, self.horizon + 1)
+        sum_of_squared_deviations /= self.repetitions
         return np.sqrt(sum_of_squared_deviations)
 
     def getCumulativeRegretStandardDeviationBounds(self, policyId, envId):
@@ -527,7 +530,8 @@ class EvaluatorContextual(object):
             normalizedRegret=False, relativeRegret=False,
             regretOverMaxReturn=False, altRegret=False,
             bestPolicyRegret=False, relativeToBestPolicy=False,
-            showOnlyBestInGroup=False, subtitle=""
+            showOnlyBestInGroup=False, subtitle="",
+            hiddenGroups=[]
     ):
         """
         Plot the centralized cumulated regret, support more than one environment
@@ -562,7 +566,7 @@ class EvaluatorContextual(object):
             best_group_indices = self.getBestInGroupIndices(envId)
 
         for policyId, policy in enumerate(self.policies):
-            if showOnlyBestInGroup and policyId not in best_group_indices:
+            if (showOnlyBestInGroup and policyId not in best_group_indices) or (len(hiddenGroups) > 0 and policy.group in hiddenGroups):
                 continue
 
             if meanReward:

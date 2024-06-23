@@ -24,9 +24,19 @@ class UCB(IndexPolicy):
     - Reference: [Lai & Robbins, 1985].
     """
 
+    @staticmethod
+    def name():
+        return "UCB"
+
     def __init__(self, nbArms, group=-1):
 
         super(UCB, self).__init__(nbArms, group=group)
+
+    def __str__(self):
+        return "UCB"
+
+    def __repr__(self):
+        return "UCB"
 
     def computeIndex(self, arm):
         r""" Compute the current index, at time t and after :math:`N_k(t)` pulls of arm k:

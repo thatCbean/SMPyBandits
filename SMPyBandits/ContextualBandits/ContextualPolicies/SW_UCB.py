@@ -28,6 +28,10 @@ class SW_UCB(ContextualBasePolicy):
     The SW-UCB contextual changing-reward bandit policy.
     """
 
+    @staticmethod
+    def name():
+        return "SW-UCB"
+
     def __init__(self, nbArms, dimension, window_size=WINDOW_SIZE, R=_R, L=_L, S=_S, labda=LAMBDA, delta=DELTA, lower=0.,
                  amplitude=1., group=-1):
         super(SW_UCB, self).__init__(nbArms, lower=lower, amplitude=amplitude, group=group)
@@ -55,6 +59,9 @@ class SW_UCB(ContextualBasePolicy):
         self.window_index = 0
 
     def __str__(self):
+        return r"SW_UCB($window size: {}, R: {:.1g}, L: {:.1g}, S: {:.1g}, \lambda: {:.3g}, \delta: {:.3g}$)".format(self.window_size, self.R, self.L, self.S, self.labda, self.delta)
+
+    def __repr__(self):
         return r"SW_UCB($window size: {}, R: {:.1g}, L: {:.1g}, S: {:.1g}, \lambda: {:.3g}, \delta: {:.3g}$)".format(self.window_size, self.R, self.L, self.S, self.labda, self.delta)
 
     def getReward(self, arm, reward, contexts, t=0):

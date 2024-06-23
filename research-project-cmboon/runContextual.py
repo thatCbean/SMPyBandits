@@ -41,6 +41,7 @@ plot_rewards_best_in_group = True
 
 plot_regret_normalized_best_in_group = False
 plot_regret_absolute_best_in_group = True
+plot_regret_absolute_best_in_group_with_hidden_groups = True
 plot_best_policy_regret_best_in_group = False
 plot_relative_to_best_policy_regret_best_in_group = False
 plot_expectation_based_regret_normalized_best_in_group = False # Does not work in changing environments yet!!!
@@ -67,13 +68,15 @@ except OSError as exc:
         raise
 
 
-horizon = 5000
-repetitions = 24
+horizon = 3000
+repetitions = 10
 
-n_jobs = 12
+n_jobs = 10
 verbosity = 2
 
 dimension = 20
+
+hiddenGroups = [0, 1]
 
 
 print("Constructing environments and policies...")
@@ -84,18 +87,22 @@ environments = []
 # environments += environments_gen.getEnvPerturbedOld(horizon, dimension)
 # environments += environments_gen.getEnvSlowChangingOld(horizon, dimension)
 #
+# environments += environments_gen.getEnvContextualNoiseTest(horizon, dimension)
+#
 # environments += environments_gen.getEnvStochastic(horizon, dimension)
 # environments += environments_gen.getEnvContextual(horizon, dimension)
-# environments += environments_gen.getEnvPerturbed(horizon, dimension)[0:51]
-environments += environments_gen.getEnvSlowChanging(horizon, dimension)[18:]
+# environments += environments_gen.getEnvPerturbed(horizon, dimension)[::10]
+environments += environments_gen.getEnvSlowChanging(horizon, dimension)
 
 start_env_index = 1
-env_index_step = 5
-# environments = environments[43:]
+env_index_step = 1
+# environments = [environments[12]]
+# environments = environments[-2:]
 
+# policies = policies_gen.generatePolicySetStochastic(dimension, horizon)
 # policies = policies_gen.generatePolicySetContextualOneEach(dimension, horizon)
 policies = policies_gen.generatePolicySetContextualMany(dimension, horizon)
-# policies = policies_gen.generatePolicySetStochastic(dimension, horizon)
+# policies = policies_gen.generatePolicySetContextualManySpecific(dimension, horizon)
 
 print("Finished constructing {} environments and {} policies".format(len(environments), len(policies)))
 
@@ -133,6 +140,8 @@ def plot_env(evaluation, environment_id, start_plot_title_index=1, step_plot_tit
         figures.append(evaluation.plotRegrets(environment_id, show=False, normalizedRegret=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_regret_absolute_best_in_group:
         figures.append(evaluation.plotRegrets(environment_id, show=False, plotSTD=plot_std, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
+    if plot_regret_absolute_best_in_group:
+        figures.append(evaluation.plotRegrets(environment_id, show=False, plotSTD=plot_std, showOnlyBestInGroup=True, hiddenGroups=hiddenGroups, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_best_policy_regret_best_in_group:
         figures.append(evaluation.plotRegrets(environment_id, show=False, bestPolicyRegret=True, showOnlyBestInGroup=True, subtitle="Environment #" + str(environment_id * step_plot_title_index + start_plot_title_index)))
     if plot_relative_to_best_policy_regret_best_in_group:
@@ -209,7 +218,20 @@ configuration = {
 }
 
 with open(file_root + "configuration.txt", "w") as f:
-    f.write(str(configuration))
+    f.write("Horizon: " + str(horizon))
+    f.write("\nRepetitions: " + str(configuration["repetitions"]))
+    f.write("\nDimension: " + str(dimension))
+    f.write("\n\nPolicies: [\n")
+    for policy in configuration["policies"]:
+        f.write(policy["archtype"].name() + " with params: " + str(policy["params"]) + "\n")
+    f.write("]\n\nEnvironments: [\n")
+    for i, environment in enumerate(configuration["environment"]):
+        f.write("Environment " + str(i * env_index_step + start_env_index) + ":\n" + str(environment) + "\n\n")
+    f.write("]")
+
+
+# Exit here to only print configuration
+# exit(0)
 
 evaluator = EvaluatorContextual(configuration)
 
